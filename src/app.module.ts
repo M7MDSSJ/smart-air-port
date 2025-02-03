@@ -8,14 +8,14 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env', // Explicit env file path
+      envFilePath: '.env',
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGO_URI', 'mongodb://localhost:27017/test1'), // Fallback value
+        uri: config.get<string>('MONGO_URI', 'mongodb://localhost:27017/test1'),
         retryAttempts: 2, // Basic connection retry
-        serverSelectionTimeoutMS: 5000, // Fail fast if no DB
+        serverSelectionTimeoutMS: 5000,
       }),
       inject: [ConfigService],
     }),
@@ -25,7 +25,7 @@ import { UsersModule } from './modules/users/users.module';
   providers: [
     {
       provide: CustomLogger,
-      useValue: new CustomLogger('AppModule'), // Ensure logger is instantiated
+      useValue: new CustomLogger('AppModule'),
     },
   ],
 })
