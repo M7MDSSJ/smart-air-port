@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
+import { UserRepository } from './repositories/user.repository';
+import { PasswordResetService } from './services/password.service';
+import { AuthenticationService } from './services/authentication.service';
+import { UserManagementService } from './services/user-management.service';
 import { UserSchema } from './schemas/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { EmailModule } from 'src/core/auth/email/email.module';
+import { EmailModule } from 'src/modules/email/email.module';
 
 @Module({
   imports: [
@@ -13,7 +16,14 @@ import { EmailModule } from 'src/core/auth/email/email.module';
     EmailModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, JwtService, JwtAuthGuard],
-  exports: [UsersService],
+  providers: [
+    AuthenticationService,
+    UserManagementService,
+    PasswordResetService,
+    JwtService,
+    JwtAuthGuard,
+    { provide: 'IUserRepository', useClass: UserRepository },
+  ],
+  exports: [UserManagementService, PasswordResetService, AuthenticationService],
 })
 export class UsersModule {}

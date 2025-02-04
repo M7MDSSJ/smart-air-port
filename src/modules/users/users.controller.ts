@@ -8,7 +8,9 @@ import {
   Get,
   Patch,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UserManagementService } from './services/user-management.service';
+import { AuthenticationService } from './services/authentication.service';
+import { PasswordResetService } from './services/password.service';
 import { CreateUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -21,20 +23,24 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { BadRequestException } from '@nestjs/common';
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly authService: AuthenticationService,
+    private readonly userManagementService: UserManagementService,
+    private readonly passwordResetService: PasswordResetService,
+  ) {}
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.register(createUserDto);
+    return this.userManagementService.register(createUserDto);
   }
   @Post('verify-email')
   async verifyEmail(@Body('token') token: string) {
-    return this.usersService.verifyEmail(token);
+    return this.userManagementService.verifyEmail(token);
   }
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
-    return this.usersService.validateUser(loginUserDto);
+    return this.authService.validateUser(loginUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -54,33 +60,29 @@ export class UsersController {
     if (!userId) {
       throw new Error('User ID is required');
     }
-    return this.usersService.changePassword(userId, changePasswordDto);
+    return this.passwordResetService.changePassword(userId, changePasswordDto);
   }
 
   @Post('request-password-reset')
   async requestPasswordReset(@Body('email') email: string) {
-    return this.usersService.requestPasswordReset(email);
+    return this.passwordResetService.requestPasswordReset(email);
   }
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.usersService.resetPassword(resetPasswordDto);
+    return this.passwordResetService.resetPassword(resetPasswordDto);
   }
   @UseGuards(JwtAuthGuard)
   @Post('profile')
   async getProfile(@Body() body: { email: string }) {
-    return await this.usersService.getProfile(body.email);
+    return await this.userManagementService.getProfile(body.email);
   }
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@GetUser() user: UserDocument) {
-    return this.usersService.logout(user._id.toString());
+    return this.userManagementService.logout(user._id.toString());
   }
-  @UseGuards(JwtAuthGuard)
-  @Put('delete-user/:email')
-  async deleteUser(@Param('email') email: string) {
-    return this.usersService.deleteUser(email);
-  }
+
   @Get('admin-dashboard')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -101,10 +103,17 @@ export class UsersController {
     @Body() updateRolesDto: { roles: string[] },
   ) {
     // Prevent self-role modification if needed
-    const currentUser = await this.usersService.getUserById(userId);
-    if (currentUser?.roles.includes('admin')) {
+    const currentUser = (await this.userManagementService.getById(
+      userId,
+    )) as UserDocument;
+    if (
+      currentUser &&
+      currentUser.roles &&
+      currentUser.roles.includes('admin')
+    ) {
       throw new BadRequestException('Admins cannot modify their own roles');
     }
-    return this.usersService.updateRoles(userId, updateRolesDto.roles);
+
+    return this.authService.updateRoles(userId, updateRolesDto.roles);
   }
 }
