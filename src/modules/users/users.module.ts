@@ -4,7 +4,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UserSchema } from './schemas/user.schema';
 import { JwtService } from '@nestjs/jwt';
-import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { EmailModule } from 'src/core/auth/email/email.module';
 
 @Module({

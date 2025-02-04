@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CustomLogger } from './core/logger/logger.service';
-import { UsersModule } from './modules/users/users.module';
-
+import { CustomLogger } from '../core/logger/logger.service';
+import { UsersModule } from '../modules/users/users.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +28,14 @@ import { UsersModule } from './modules/users/users.module';
     {
       provide: CustomLogger,
       useValue: new CustomLogger('AppModule'),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpExceptionFilter,
     },
   ],
 })

@@ -97,7 +97,7 @@ async function bootstrap() {
 
   // 5. Graceful Shutdown
   process.on('SIGINT', () => {
-    fastify.log.info('🛑 Shutting down gracefully...');
+    fastify.log.info(' Shutting down gracefully...');
     app
       .close()
       .then(() => process.exit(0))
