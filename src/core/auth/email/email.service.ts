@@ -24,7 +24,7 @@ export class EmailService implements OnModuleInit {
           pass: this.config.get<string>('MAIL_PASS'),
         },
         tls: {
-          rejectUnauthorized: false, // Allow self-signed certificates
+          rejectUnauthorized: false,
         },
         connectionTimeout: 10000,
         socketTimeout: 10000,
