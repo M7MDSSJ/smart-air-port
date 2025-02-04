@@ -1,9 +1,9 @@
 import {
   Injectable,
-  ConflictException,
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -16,7 +16,7 @@ import { CreateUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { EmailService } from '../../core/auth/email/email.service';
 
 @Injectable()
@@ -28,44 +28,64 @@ export class UsersService {
     private emailService: EmailService,
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<User> {
-    // Check for existing user
-    const existingUser = await this.userModel.findOne({
-      $or: [
-        { email: createUserDto.email },
-        { phoneNumber: createUserDto.phoneNumber },
-      ],
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email or phone number already exists');
+  // src/users/users.service.ts
+  async register(
+    createUserDto: CreateUserDto,
+  ): Promise<{ message: string; user: Partial<User> }> {
+    // Ensure roles cannot be set manually
+    if ('roles' in createUserDto) {
+      throw new BadRequestException('Role assignment is not allowed');
     }
 
-    // Hash password
+    // Count existing users
+    const userCount = await this.userModel.countDocuments();
+
+    // Determine the user's role: First user → Admin, Others → User
+    const assignedRoles = userCount === 0 ? ['admin'] : ['user'];
+
+    // Hash password before saving
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    // Create user
+    // Create a new user object
     const newUser = new this.userModel({
       ...createUserDto,
+      roles: assignedRoles,
       password: hashedPassword,
       isVerified: false,
       verificationToken: this.generateToken(),
     });
 
-    // Save user
+    // Save user to the database
     const savedUser = await newUser.save();
 
-    // Send verification email
-    await this.emailService.sendVerificationEmail(
-      savedUser.email,
-      savedUser.verificationToken as string,
-    );
+    // Send verification email (failures are logged but do not block registration)
+    try {
+      await this.emailService.sendVerificationEmail(
+        savedUser.email,
+        savedUser.verificationToken as string,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to send verification email to ${savedUser.email}:`,
+        error,
+      );
+    }
 
-    // Return user without sensitive data
-    return this.excludeSensitiveFields(savedUser);
+    return {
+      message:
+        userCount === 0
+          ? 'First admin user created successfully'
+          : 'User registered successfully',
+      user: this.excludeSensitiveFields(savedUser),
+    };
   }
 
-  async validateUser(loginUserDto: LoginUserDto): Promise<User> {
+  async validateUser(loginUserDto: LoginUserDto): Promise<{
+    message: string;
+    user: User;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const user = await this.userModel.findOne({ email: loginUserDto.email });
 
     if (!user) {
@@ -80,13 +100,22 @@ export class UsersService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    const castedUser = user as User & { _id: Types.ObjectId };
 
-    return this.excludeSensitiveFields(user);
+    const { accessToken, refreshToken } = await this.generateTokens(castedUser);
+
+    return {
+      message: 'User logged in successfully',
+      user: this.excludeSensitiveFields(user),
+      accessToken,
+      refreshToken,
+    };
   }
+  // users.service.ts
   async generateTokens(user: User & { _id: Types.ObjectId }) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: user._id, email: user.email },
+        { sub: user._id.toString() },
         {
           secret: this.config.get('JWT_ACCESS_SECRET'),
           expiresIn: '15m',
@@ -101,6 +130,7 @@ export class UsersService {
       ),
     ]);
 
+    // Optionally store refreshToken in DB for future use (e.g., to handle refresh token logic)
     await this.userModel.findByIdAndUpdate(
       user._id,
       { refreshToken },
@@ -110,22 +140,73 @@ export class UsersService {
     return { accessToken, refreshToken };
   }
 
-  async requestPasswordReset(email: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    const { oldPassword, newPassword } = changePasswordDto;
+
+    // Find the user by ID
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify that the provided old password matches the current password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException('Old password is incorrect');
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update and save the new password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    user.resetToken = this.generateToken();
+    const resetToken = this.jwtService.sign(
+      { email: user.email },
+      {
+        secret: this.config.get('JWT_ACCESS_SECRET'),
+        expiresIn: '1h',
+      },
+    );
+    user.resetToken = resetToken;
     user.resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
     await this.emailService.sendPasswordResetEmail(user.email, user.resetToken);
+
+    return { message: 'if this user exists an email will be sent' };
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<User> {
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string; User: User }> {
+    interface JwtPayload {
+      email: string;
+    }
+
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify<JwtPayload>(resetPasswordDto.token, {
+        secret: this.config.get('JWT_ACCESS_SECRET'),
+      });
+    } catch {
+      throw new BadRequestException('Invalid or expired token');
+    }
     const user = await this.userModel.findOne({
+      email: payload.email,
       resetToken: resetPasswordDto.token,
       resetTokenExpiry: { $gt: new Date() },
     });
@@ -139,10 +220,13 @@ export class UsersService {
     user.resetTokenExpiry = undefined;
     await user.save();
 
-    return this.excludeSensitiveFields(user);
+    return {
+      message: 'Password reset successfully',
+      User: this.excludeSensitiveFields(user),
+    };
   }
 
-  async verifyEmail(token: string): Promise<User> {
+  async verifyEmail(token: string): Promise<{ message: string; User: User }> {
     const user = await this.userModel.findOne({ verificationToken: token });
 
     if (!user) {
@@ -153,13 +237,16 @@ export class UsersService {
     user.verificationToken = undefined;
     await user.save();
 
-    return this.excludeSensitiveFields(user);
+    return {
+      message: 'account verified',
+      User: this.excludeSensitiveFields(user),
+    };
   }
 
   async updateProfile(
     userId: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<{ message: string; User: User }> {
     const user = await this.userModel.findById(userId);
 
     if (!user) {
@@ -186,20 +273,72 @@ export class UsersService {
     Object.assign(user, updateUserDto);
     await user.save();
 
-    return this.excludeSensitiveFields(user);
+    return {
+      message: 'Profile Updated',
+      User: this.excludeSensitiveFields(user),
+    };
   }
-  async getProfile(userId: string): Promise<User> {
-    const user = await this.userModel.findById(userId);
+  async getUserById(userId: string): Promise<UserDocument | null> {
+    return this.userModel.findById(userId); // Query the database to find the user by their ID
+  }
+  async getProfile(email: string): Promise<{ message: string; User: User }> {
+    try {
+      const user = await this.userModel.findOne({ email });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return {
+        message: 'Profile Fetched',
+        User: this.excludeSensitiveFields(user),
+      };
+    } catch (error) {
+      console.error('Error fetching user profile:', error); // Log the error
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  async deleteUser(email: string): Promise<{ message: string }> {
+    await this.userModel.findOneAndDelete({ email });
+    return { message: 'User deleted successfully' };
+  }
+  async logout(userId: string): Promise<{ message: string }> {
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      { refreshToken: null },
+      { new: true },
+    );
+    return { message: 'Logged out successfully' };
+  }
+  // users.service.ts
+  async updateRoles(
+    userId: string,
+    roles: string[],
+  ): Promise<{ message: string; user: User }> {
+    // Prevent removing admin role from first user
+    const targetUser = await this.userModel.findById(userId);
+    if (targetUser?.roles.includes('admin')) {
+      const adminCount = await this.userModel.countDocuments({
+        roles: 'admin',
+      });
+      if (adminCount === 1) {
+        throw new BadRequestException('Cannot remove last admin');
+      }
     }
 
-    return this.excludeSensitiveFields(user);
-  }
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { roles },
+      { new: true },
+    );
 
-  async deleteUser(userId: string): Promise<void> {
-    await this.userModel.findByIdAndDelete(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    return {
+      message: 'Roles updated successfully',
+      user: this.excludeSensitiveFields(user),
+    };
   }
 
   private generateToken(): string {

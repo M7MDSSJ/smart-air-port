@@ -1,7 +1,6 @@
+// src/users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-export type UserDocument = User & Document;
+import { Document, Types } from 'mongoose';
 
 @Schema()
 export class User {
@@ -17,10 +16,13 @@ export class User {
   @Prop({ required: true })
   password: string;
 
+  @Prop({ type: [String], default: ['user'] })
+  roles: string[];
+
   @Prop()
   phoneNumber?: string;
 
-  @Prop()
+  @Prop({ default: false })
   isVerified?: boolean;
 
   @Prop()
@@ -33,7 +35,12 @@ export class User {
   resetTokenExpiry?: Date;
 
   @Prop()
-  refreshToken?: string; // Add this line
+  refreshToken?: string;
 }
+
+export type UserDocument = User &
+  Document & {
+    _id: Types.ObjectId;
+  };
 
 export const UserSchema = SchemaFactory.createForClass(User);
