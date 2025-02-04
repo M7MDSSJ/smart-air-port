@@ -36,12 +36,11 @@ export class UsersController {
   async login(@Body() loginUserDto: LoginUserDto) {
     return this.usersService.validateUser(loginUserDto);
   }
-  // src/users/users.controller.ts
 
   @UseGuards(JwtAuthGuard)
   @Put('change-password')
   async changePassword(
-    @GetUser() user: UserDocument, // Get the authenticated user
+    @GetUser() user: UserDocument,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     // Ensure `user` is defined before accessing _id
@@ -72,7 +71,6 @@ export class UsersController {
   async getProfile(@Body() body: { email: string }) {
     return await this.usersService.getProfile(body.email);
   }
-  // users.controller.ts
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@GetUser() user: UserDocument) {

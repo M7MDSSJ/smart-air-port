@@ -28,7 +28,6 @@ export class UsersService {
     private emailService: EmailService,
   ) {}
 
-  // src/users/users.service.ts
   async register(
     createUserDto: CreateUserDto,
   ): Promise<{ message: string; user: Partial<User> }> {
@@ -111,7 +110,6 @@ export class UsersService {
       refreshToken,
     };
   }
-  // users.service.ts
   async generateTokens(user: User & { _id: Types.ObjectId }) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
