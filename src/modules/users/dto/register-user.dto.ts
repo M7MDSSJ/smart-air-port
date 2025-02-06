@@ -36,7 +36,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  roles?: string[]; // Optional field (only admins can set this)
+  roles?: string[];
 
   @IsOptional()
   @IsString()

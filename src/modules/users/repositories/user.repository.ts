@@ -27,9 +27,13 @@ export class UserRepository implements IUserRepository {
   }
   async updateRefreshToken(
     userId: string,
-    refreshToken: string,
+    refreshToken: string | null,
   ): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, { refreshToken });
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      { refreshToken },
+      { new: true },
+    );
   }
 
   async update(

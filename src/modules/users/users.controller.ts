@@ -20,7 +20,8 @@ import { UserDocument } from './schemas/user.schema';
 import { GetUser } from '../../common/decorators/user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
-import { BadRequestException } from '@nestjs/common';
+import { Role } from 'src/common/enums/role.enum';
+import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 @Controller('users')
 export class UsersController {
   constructor(
@@ -49,14 +50,11 @@ export class UsersController {
     @GetUser() user: UserDocument,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    // Ensure `user` is defined before accessing _id
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Type assertion to ensure _id is treated as Types.ObjectId
     const userId = user._id ? user._id.toString() : null;
-    // Pass the string userId to the service
     if (!userId) {
       throw new Error('User ID is required');
     }
@@ -79,41 +77,36 @@ export class UsersController {
   }
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@GetUser() user: UserDocument) {
-    return this.userManagementService.logout(user._id.toString());
+  async logout(
+    @GetUser() user: UserDocument,
+    @Body('refreshToken') refreshToken: string,
+  ) {
+    return this.userManagementService.logout(user._id.toString(), refreshToken);
   }
 
   @Get('admin-dashboard')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(Role.Admin, Role.Mod)
   getAdminDashboard() {
     return { message: 'Admin-only content' };
   }
   @Get('flight-management')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'airline_staff')
+  @Roles(Role.Admin, Role.Mod)
   manageFlights() {
     return { message: 'Flight management dashboard' };
   }
-  @Patch(':id/roles')
+  @Patch('roles')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(Role.Admin)
   async updateRoles(
-    @Param('id') userId: string,
-    @Body() updateRolesDto: { roles: string[] },
+    @Body() updateUserRolesDto: UpdateUserRolesDto, // User ID and roles are now passed in the body
+    @GetUser() currentUser: UserDocument, // Get the currently authenticated user (admin)
   ) {
-    // Prevent self-role modification if needed
-    const currentUser = (await this.userManagementService.getById(
-      userId,
-    )) as UserDocument;
-    if (
-      currentUser &&
-      currentUser.roles &&
-      currentUser.roles.includes('admin')
-    ) {
-      throw new BadRequestException('Admins cannot modify their own roles');
-    }
-
-    return this.authService.updateRoles(userId, updateRolesDto.roles);
+    return this.authService.updateRoles(
+      updateUserRolesDto.userId, // Use userId from the body
+      updateUserRolesDto, // The roles to update
+      currentUser, // The current user who is performing the update (should be admin)
+    );
   }
 }

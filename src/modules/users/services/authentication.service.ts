@@ -1,4 +1,11 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -6,6 +13,8 @@ import { IUserRepository } from '../repositories/user.repository.interface';
 import { User, UserDocument } from '../schemas/user.schema';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { Types } from 'mongoose';
+import { Role } from 'src/common/enums/role.enum';
+import { UpdateUserRolesDto } from '../dto/update-user-roles.dto';
 
 @Injectable()
 export class AuthenticationService {
@@ -36,10 +45,13 @@ export class AuthenticationService {
     );
 
     const refreshToken = this.jwtService.sign(
-      { userId: user._id },
+      { userId: user._id, email: user.email },
       { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
     );
-
+    await this.userRepository.updateRefreshToken(
+      user._id.toString(),
+      refreshToken,
+    );
     return {
       message: 'User logged in successfully',
       accessToken,
@@ -64,15 +76,41 @@ export class AuthenticationService {
         expiresIn: '7d',
       },
     );
-    // Optionally update the user record with the refresh token.
-    await this.userRepository.update(user._id.toString(), { refreshToken });
+    await this.userRepository.updateRefreshToken(
+      user._id.toString(),
+      refreshToken,
+    );
     return { accessToken, refreshToken };
   }
 
   async updateRoles(
-    userId: string,
-    roles: string[],
-  ): Promise<UserDocument | null> {
-    return this.userRepository.updateRoles(userId, roles);
+    targetUserId: string,
+    updateUserRolesDto: UpdateUserRolesDto,
+    currentUser: UserDocument,
+  ): Promise<{ message: string; user: UserDocument }> {
+    // Ensure only admins can update roles
+    if (!currentUser.roles.includes(Role.Admin)) {
+      throw new ForbiddenException('Only admins can update roles');
+    }
+
+    // Prevent admins from modifying their own roles
+    if (currentUser._id.toString() === targetUserId) {
+      throw new BadRequestException('Admins cannot modify their own roles');
+    }
+
+    // Fetch user to update
+    const user = await this.userRepository.findById(targetUserId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update roles
+    user.roles = updateUserRolesDto.roles;
+    await user.save();
+
+    return {
+      message: 'User roles updated successfully',
+      user,
+    };
   }
 }
