@@ -1,5 +1,9 @@
 // src/modules/users/services/user-management.service.ts
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { IUserRepository } from '../repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/register-user.dto';
 import { User, UserDocument } from '../schemas/user.schema';
@@ -41,7 +45,6 @@ export class UserManagementService {
 
     const savedUser = await this.userRepository.create(newUser);
 
-    // Send verification email (errors can be handled or logged)
     try {
       await this.emailService.sendVerificationEmail(
         savedUser.email,
@@ -98,8 +101,18 @@ export class UserManagementService {
   async getById(userId: string): Promise<UserDocument | null> {
     return this.userRepository.findById(userId);
   }
-  async logout(userId: string): Promise<{ message: string }> {
-    await this.userRepository.findByIdAndUpdate(userId);
+  async logout(
+    userId: string,
+    providedRefreshToken: string,
+  ): Promise<{ message: string }> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (user.refreshToken !== providedRefreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    await this.userRepository.updateRefreshToken(userId, null);
     return { message: 'Logged out successfully' };
   }
 
