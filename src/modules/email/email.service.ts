@@ -21,7 +21,7 @@ export class EmailService implements OnModuleInit {
         secure: false,
         auth: {
           user: this.config.get<string>('MAIL_USER'),
-          pass: this.config.get<string>('MAIL_PASS'),
+          pass: this.config.get<string>('MAIL_PASSWORD'),
         },
         tls: {
           rejectUnauthorized: false,
