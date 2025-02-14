@@ -27,6 +27,9 @@ export class User {
   @Prop()
   verificationToken?: string;
 
+  @Prop({ type: Date })
+  verificationTokenExpiry?: Date;
+
   @Prop()
   resetToken?: string;
 

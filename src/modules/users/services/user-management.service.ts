@@ -41,6 +41,7 @@ export class UserManagementService {
       password: hashedPassword,
       isVerified: false,
       verificationToken: this.generateToken(),
+      verificationTokenExpiry: new Date(Date.now() + 3600000),
     };
 
     const savedUser = await this.userRepository.create(newUser);
@@ -66,25 +67,38 @@ export class UserManagementService {
     };
   }
   async verifyEmail(token: string): Promise<{ message: string }> {
+    // 1. Find user with valid token and expiry
     const user = await this.userRepository.findByToken(token);
 
-    if (!user) {
+    // 2. Validate all required properties exist
+    if (!user?.verificationToken || !user.verificationTokenExpiry) {
       throw new BadRequestException('Invalid verification token');
     }
 
+    // 3. Type-safe date comparison
+    const expirationDate = new Date(user.verificationTokenExpiry);
+    const currentDate = new Date();
+
+    if (expirationDate < currentDate) {
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    // 4. Check verification status
     if (user.isVerified) {
       throw new BadRequestException('User is already verified');
     }
 
+    // 5. Update user
     user.isVerified = true;
     user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
     await user.save();
 
     return { message: 'Email verified successfully' };
   }
-  async getProfile(email: string): Promise<{ message: string; user: User }> {
+  async getProfile(userId: string): Promise<{ message: string; user: User }> {
     try {
-      const user = await this.userRepository.findByEmail(email);
+      const user = await this.userRepository.findById(userId);
 
       if (!user) {
         throw new BadRequestException('User not found');

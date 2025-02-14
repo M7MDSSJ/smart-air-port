@@ -37,11 +37,14 @@ export class AuthenticationService {
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Email not verified');
+    }
 
     // Generate Tokens
     const accessToken = this.jwtService.sign(
       { sub: user._id, email: user.email, roles: user.roles },
-      { secret: process.env.JWT_SECRET, expiresIn: '15m' },
+      { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
     );
 
     const refreshToken = this.jwtService.sign(
