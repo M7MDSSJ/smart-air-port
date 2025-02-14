@@ -1,0 +1,19 @@
+14-feb-friday
+admin user
+{
+  "firstName": "admin",
+  "lastName": "admin",
+  "email": "admin@example.com",
+  "password": "Admin@@Admin123"
+}
+--change password
+{
+    "oldPassword": "Admin@@Admin123",
+    "newPassword":"412@a!432DASAC"
+}
+--reset password
+{
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzM5NDk5MDQxLCJleHAiOjE3Mzk1MDI2NDF9.2YSta4UJAWpOjUlzMYgZz0umi8qRMvS9lCcFbCmdsy8",
+    "newPassword":"@ASDLQW12awd"  <newest password>
+
+}
