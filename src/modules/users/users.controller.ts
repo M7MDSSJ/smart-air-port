@@ -2,11 +2,11 @@ import {
   Controller,
   Post,
   Body,
-  Param,
   Put,
   UseGuards,
   Get,
   Patch,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserManagementService } from './services/user-management.service';
 import { AuthenticationService } from './services/authentication.service';
@@ -71,9 +71,12 @@ export class UsersController {
     return this.passwordResetService.resetPassword(resetPasswordDto);
   }
   @UseGuards(JwtAuthGuard)
-  @Post('profile')
-  async getProfile(@Body() body: { email: string }) {
-    return await this.userManagementService.getProfile(body.email);
+  @Get('profile')
+  async getProfile(@GetUser() user: UserDocument) {
+    if (!user || !user._id) {
+      throw new UnauthorizedException('Invalid user credentials');
+    }
+    return this.userManagementService.getProfile(user._id.toString());
   }
   @UseGuards(JwtAuthGuard)
   @Post('logout')

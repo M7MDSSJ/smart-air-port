@@ -6,6 +6,8 @@ import {
 import { AppModule } from '../src/app/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
+import helmet from '@fastify/helmet';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -43,6 +45,7 @@ async function bootstrap() {
       },
     }),
   );
+  await app.register(helmet, { contentSecurityPolicy: false });
 
   // ===== ENHANCEMENTS =====
   // 1. Request-Response Timing
@@ -106,7 +109,10 @@ async function bootstrap() {
         process.exit(1);
       });
   });
-
+  await app.register(rateLimit, {
+    max: 100, // maximum number of requests per IP
+    timeWindow: '1 minute',
+  });
   // Existing Config
   await app.register(import('@fastify/cors'), { origin: true });
   app.useGlobalPipes(
