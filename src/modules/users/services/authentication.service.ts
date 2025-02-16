@@ -49,7 +49,7 @@ export class AuthenticationService {
 
     const refreshToken = this.jwtService.sign(
       { userId: user._id, email: user.email },
-      { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
+      { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
     );
     await this.userRepository.updateRefreshToken(
       user._id.toString(),
@@ -73,7 +73,7 @@ export class AuthenticationService {
       },
     );
     const refreshToken = await this.jwtService.signAsync(
-      { sub: user._id.toString(), email: user.email },
+      { sub: user._id.toString() },
       {
         secret: this.config.get('JWT_REFRESH_SECRET'),
         expiresIn: '7d',

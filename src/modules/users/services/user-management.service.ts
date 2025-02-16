@@ -10,6 +10,7 @@ import { User, UserDocument } from '../schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../email/email.service';
 import { Inject } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UserManagementService {
@@ -131,7 +132,7 @@ export class UserManagementService {
   }
 
   private generateToken(): string {
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    return randomBytes(32).toString('hex'); // Cryptographically secure
   }
 
   private excludeSensitiveFields(user: User): User {
