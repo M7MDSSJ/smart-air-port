@@ -12,6 +12,7 @@ export interface Flight extends Document {
   aircraft?: string;
   price: number;
   seats: number;
+  seatsAvailable: number;
   stops?: Array<{
     airport: string;
     arrivalTime: Date;
@@ -37,6 +38,13 @@ export const FlightSchema = new Schema<Flight>(
     aircraft: { type: String },
     price: { type: Number, required: true },
     seats: { type: Number, required: true },
+    seatsAvailable: {
+      type: Number,
+      required: true,
+      default: function () {
+        return this.seats;
+      },
+    },
     stops: { type: [StopSchema], default: [] },
   },
   {
@@ -46,6 +54,5 @@ export const FlightSchema = new Schema<Flight>(
 
 // Create indexes for better query performance
 FlightSchema.index({ departureAirport: 1, departureTime: 1 });
-FlightSchema.index({ flightNumber: 1 });
 
 export default FlightSchema;
