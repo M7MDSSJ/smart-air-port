@@ -16,3 +16,9 @@ export interface IFlightRepository {
   delete(id: string): Promise<Flight>;
   // Optionally, add custom queries like searchByAirport, etc.
 }
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
+}
