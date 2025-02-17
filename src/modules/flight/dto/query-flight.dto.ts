@@ -1,4 +1,5 @@
-import { IsOptional, IsString, IsDateString } from 'class-validator';
+// query-flight.dto.ts
+import { IsOptional, IsDateString, IsString } from 'class-validator';
 
 export class QueryFlightDto {
   @IsOptional()
@@ -10,6 +11,14 @@ export class QueryFlightDto {
   arrivalAirport?: string;
 
   @IsOptional()
-  @IsDateString({ strict: true })
+  @IsDateString()
   departureDate?: string;
+}
+export interface FlightQueryFilter {
+  departureAirport?: string;
+  arrivalAirport?: string;
+  departureTime?: {
+    $gte: Date;
+    $lte: Date;
+  };
 }

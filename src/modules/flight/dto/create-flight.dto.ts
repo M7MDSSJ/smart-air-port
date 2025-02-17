@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsNumber,
   IsArray,
+  Validate,
   ValidateNested,
   IsPositive,
   Min,
@@ -22,7 +23,7 @@ export class CreateFlightDto {
 
   @IsString()
   @IsNotEmpty()
-  airLine: string;
+  airline: string;
 
   @IsString()
   @IsNotEmpty()
@@ -33,7 +34,7 @@ export class CreateFlightDto {
   arrivalAirport: string;
 
   @IsDateString({ strict: true })
-  @IsBefore('arrivalTime')
+  @Validate(IsBefore, ['arrivalTime'])
   departureTime: string;
 
   @IsDateString({ strict: true })

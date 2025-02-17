@@ -26,6 +26,12 @@ export class FlightController {
     return this.flightService.create(createFlightDto);
   }
 
+  @Get('search/available')
+  @ApiOperation({ summary: 'Search available flights' })
+  searchAvailableFlights(@Query() query: QueryFlightDto) {
+    return this.flightService.searchAvailableFlights(query);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all flights' })
   findAll(@Query() query: QueryFlightDto) {
@@ -48,11 +54,5 @@ export class FlightController {
   @ApiOperation({ summary: 'Delete flight' })
   remove(@Param('id') id: string) {
     return this.flightService.remove(id);
-  }
-
-  @Get('search/available')
-  @ApiOperation({ summary: 'Search available flights' })
-  searchAvailableFlights(@Query() query: QueryFlightDto) {
-    return this.flightService.searchAvailableFlights(query);
   }
 }

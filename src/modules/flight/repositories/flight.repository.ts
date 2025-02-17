@@ -1,3 +1,4 @@
+// src/modules/flights/repositories/flight.repository.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -6,7 +7,8 @@ import { IFlightRepository } from './flight.repository.interface';
 import { CreateFlightDto } from '../dto/create-flight.dto';
 import { UpdateFlightDto } from '../dto/update-flight.dto';
 import { QueryFlightDto } from '../dto/query-flight.dto';
-
+import { FlightAvailabilityQuery } from '../dto/available-flight-query.dto';
+import { FlightQueryFilter } from '../dto/query-flight.dto';
 @Injectable()
 export class FlightRepository implements IFlightRepository {
   constructor(
@@ -23,22 +25,32 @@ export class FlightRepository implements IFlightRepository {
   }
 
   async searchFlights(query: QueryFlightDto): Promise<Flight[]> {
-    // Manually pick allowed fields
-    const { departureAirport, arrivalAirport, departureDate } = query;
-    const sanitizedQuery: Partial<QueryFlightDto> = {
-      departureAirport,
-      arrivalAirport,
-      departureDate,
-    };
-    return this.flightModel.find(sanitizedQuery).exec();
+    const filter: FlightQueryFilter = {};
+    if (query.departureAirport) {
+      filter.departureAirport = query.departureAirport;
+    }
+    if (query.arrivalAirport) {
+      filter.arrivalAirport = query.arrivalAirport;
+    }
+    if (query.departureDate) {
+      const date = new Date(query.departureDate);
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.departureTime = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+    return this.flightModel.find(filter).exec();
   }
 
-  async searchAvailableFlights(query: QueryFlightDto): Promise<Flight[]> {
-    const criteria = {
-      ...query,
-      seats: { $gt: 0 },
-    };
-    return this.flightModel.find(criteria).exec();
+  async searchAvailableFlights(
+    query: FlightAvailabilityQuery,
+  ): Promise<Flight[]> {
+    // The query now must include a seatsAvailable filter.
+    return this.flightModel.find(query).exec();
   }
 
   async findById(id: string): Promise<Flight | null> {
