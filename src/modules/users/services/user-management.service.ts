@@ -97,6 +97,41 @@ export class UserManagementService {
 
     return { message: 'Email verified successfully' };
   }
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    // Find the user by email
+    const user = await this.userRepository.findByEmail(email);
+    if (!user)
+      return {
+        message: 'If this user exists, a verification email will be sent',
+      };
+    if (user.isVerified) {
+      throw new BadRequestException('User is already verified');
+    }
+
+    // Generate a new verification token and expiry
+    user.verificationToken = this.generateToken();
+    user.verificationTokenExpiry = new Date(Date.now() + 3600000); // 1 hour validity
+
+    // Save the updated user
+    await user.save();
+
+    // Attempt to send the verification email
+    try {
+      await this.emailService.sendVerificationEmail(
+        user.email,
+        user.verificationToken,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to resend verification email to ${user.email}:`,
+        error,
+      );
+      throw new BadRequestException('Failed to send verification email');
+    }
+
+    return { message: 'Verification email sent successfully' };
+  }
+
   async getProfile(userId: string): Promise<{ message: string; user: User }> {
     try {
       const user = await this.userRepository.findById(userId);
@@ -132,7 +167,7 @@ export class UserManagementService {
   }
 
   private generateToken(): string {
-    return randomBytes(32).toString('hex'); // Cryptographically secure
+    return randomBytes(32).toString('hex');
   }
 
   private excludeSensitiveFields(user: User): User {

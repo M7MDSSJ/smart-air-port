@@ -56,6 +56,12 @@ export class FlightRepository implements IFlightRepository {
   async findById(id: string): Promise<Flight | null> {
     return this.flightModel.findById(id).exec();
   }
+  async findOneAndUpdate(
+    filter: { _id: string; version: number },
+    update: UpdateFlightDto,
+  ): Promise<Flight | null> {
+    return this.flightModel.findOneAndUpdate(filter, update, { new: true });
+  }
 
   async findByFlightNumber(flightNumber: string): Promise<Flight | null> {
     return this.flightModel.findOne({ flightNumber }).exec();

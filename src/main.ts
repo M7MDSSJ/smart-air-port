@@ -110,8 +110,19 @@ async function bootstrap() {
       });
   });
   await app.register(rateLimit, {
-    max: 100, // maximum number of requests per IP
-    timeWindow: '1 minute',
+    global: true,
+    max: 100,
+    timeWindow: '1 minute', // or 60 * 1000 for milliseconds
+  });
+  fastify.addHook('onRoute', (routeOptions) => {
+    if (routeOptions.url === '/users/login') {
+      routeOptions.config = {
+        rateLimit: {
+          max: 5,
+          timeWindow: '1 minute',
+        },
+      };
+    }
   });
   // Existing Config
   await app.register(import('@fastify/cors'), { origin: true });

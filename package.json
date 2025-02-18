@@ -1,5 +1,5 @@
 {
-  "name": "prisma-nestjs",
+  "name": "nestjs-smartairport",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -30,9 +30,8 @@
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/platform-fastify": "^11.0.7",
+    "@nestjs/platform-fastify": "^11.0.10",
     "@nestjs/swagger": "^11.0.3",
-    "@nestjs/throttler": "^6.4.0",
     "@prisma/client": "^6.3.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",

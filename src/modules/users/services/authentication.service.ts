@@ -15,9 +15,12 @@ import { LoginUserDto } from '../dto/login-user.dto';
 import { Types } from 'mongoose';
 import { Role } from 'src/common/enums/role.enum';
 import { UpdateUserRolesDto } from '../dto/update-user-roles.dto';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class AuthenticationService {
+  private readonly logger = new Logger(AuthenticationService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
@@ -66,7 +69,7 @@ export class AuthenticationService {
     user: User & { _id: Types.ObjectId },
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.jwtService.signAsync(
-      { sub: user._id.toString() },
+      { sub: user._id.toString(), email: user.email, roles: user.roles },
       {
         secret: this.config.get('JWT_SECRET'),
         expiresIn: '15m',
@@ -85,12 +88,48 @@ export class AuthenticationService {
     );
     return { accessToken, refreshToken };
   }
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    try {
+      // Verify the provided refresh token and extract payload
+      const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      // Ensure the user exists and that the provided token matches what's stored
+      const user = await this.userRepository.findById(payload.sub);
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Invalidate the old refresh token
+      await this.userRepository.updateRefreshToken(payload.sub, null);
+
+      // Generate new tokens (this will also update the refresh token in the repository)
+      const { accessToken, refreshToken: newToken } =
+        await this.generateTokens(user);
+      return { accessToken, refreshToken: newToken };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 
   async updateRoles(
     targetUserId: string,
     updateUserRolesDto: UpdateUserRolesDto,
     currentUser: UserDocument,
   ): Promise<{ message: string; user: UserDocument }> {
+    if (updateUserRolesDto.roles.length === 0) {
+      throw new BadRequestException('User must have at least one role');
+    }
+    if (
+      updateUserRolesDto.roles.some(
+        (role) => !Object.values(Role).includes(role),
+      )
+    ) {
+      throw new BadRequestException('Invalid role provided');
+    }
     // Ensure only admins can update roles
     if (!currentUser.roles.includes(Role.Admin)) {
       throw new ForbiddenException('Only admins can update roles');
@@ -100,6 +139,9 @@ export class AuthenticationService {
     if (currentUser._id.toString() === targetUserId) {
       throw new BadRequestException('Admins cannot modify their own roles');
     }
+    this.logger.log(
+      `Admin ${currentUser.email} updating roles for user ${targetUserId}`,
+    );
 
     // Fetch user to update
     const user = await this.userRepository.findById(targetUserId);
@@ -110,6 +152,9 @@ export class AuthenticationService {
     // Update roles
     user.roles = updateUserRolesDto.roles;
     await user.save();
+    this.logger.log(
+      `Roles updated for ${user.email}: ${user.roles.join(', ')}`,
+    );
 
     return {
       message: 'User roles updated successfully',

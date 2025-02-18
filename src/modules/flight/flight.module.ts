@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { FlightService } from './flight.service';
 import { FlightController } from './flight.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { IFlightRepository } from './repositories/flight.repository.interface';
 import { FlightRepository } from './repositories/flight.repository';
 import { FlightSchema } from './schemas/flight.schema';
 import { FLIGHT_REPOSITORY } from './repositories/flight.repository.interface';

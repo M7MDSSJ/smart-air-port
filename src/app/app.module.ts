@@ -6,11 +6,10 @@ import { UsersModule } from '../modules/users/users.module';
 import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
-import { ThrottlerModule } from '@nestjs/throttler';
-
+import { FlightModule } from '../modules/flight/flight.module';
+import { BookingModule } from 'src/modules/booking/booking.module';
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -25,6 +24,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
       inject: [ConfigService],
     }),
     UsersModule,
+    FlightModule,
+    BookingModule,
   ],
   controllers: [],
   providers: [
