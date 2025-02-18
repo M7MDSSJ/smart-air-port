@@ -9,6 +9,10 @@ export interface IFlightRepository {
   create(createFlightDto: CreateFlightDto): Promise<Flight>;
   findAll(): Promise<Flight[]>;
   findById(id: string): Promise<Flight | null>;
+  findOneAndUpdate(
+    filter: { _id: string; version: number },
+    update: UpdateFlightDto,
+  ): Promise<Flight | null>;
   findByFlightNumber(flightNumber: string): Promise<Flight | null>;
   searchFlights(query: QueryFlightDto): Promise<Flight[]>;
   searchAvailableFlights(query: FlightAvailabilityQuery): Promise<Flight[]>;

@@ -1,6 +1,5 @@
 import { Schema, Document } from 'mongoose';
 import { StopSchema } from './stop.schema';
-
 export interface Flight extends Document {
   flightNumber: string;
   airline: string;
@@ -20,15 +19,15 @@ export interface Flight extends Document {
   }>;
   createdAt: Date;
   updatedAt: Date;
+  version: number; // Added version property for optimistic locking
 }
-
 export const FlightSchema = new Schema<Flight>(
   {
     flightNumber: { type: String, required: true, unique: true },
     airline: { type: String, required: true },
-    departureAirport: { type: String, required: true },
-    arrivalAirport: { type: String, required: true },
-    departureTime: { type: Date, required: true },
+    departureAirport: { type: String, required: true, index: true },
+    arrivalAirport: { type: String, required: true, index: true },
+    departureTime: { type: Date, required: true, index: true },
     arrivalTime: { type: Date, required: true },
     status: {
       type: String,
@@ -49,10 +48,8 @@ export const FlightSchema = new Schema<Flight>(
   },
   {
     timestamps: true,
+    versionKey: 'version', // Use 'version' instead of the default '__v'
   },
 );
-
-// Create indexes for better query performance
-FlightSchema.index({ departureAirport: 1, departureTime: 1 });
 
 export default FlightSchema;

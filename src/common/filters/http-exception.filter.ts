@@ -42,7 +42,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           : errorType;
     }
 
-    response.status(status).json({
+    response.status(status).send({
       success: false,
       message,
       error: errorType,

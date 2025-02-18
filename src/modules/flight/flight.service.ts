@@ -56,9 +56,15 @@ export class FlightService {
   }
 
   async update(id: string, updateFlightDto: UpdateFlightDto) {
-    const flight = await this.flightRepository.update(id, updateFlightDto);
+    if (updateFlightDto.version === undefined) {
+      throw new BadRequestException('Version is required for update');
+    }
+    const flight = await this.flightRepository.findOneAndUpdate(
+      { _id: id, version: updateFlightDto.version },
+      updateFlightDto,
+    );
     if (!flight) {
-      throw new NotFoundException('Flight not found');
+      throw new NotFoundException('Flight not found or outdated');
     }
     return flight;
   }

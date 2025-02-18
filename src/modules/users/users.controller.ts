@@ -5,6 +5,7 @@ import {
   Put,
   UseGuards,
   Get,
+  Param,
   Patch,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -37,6 +38,15 @@ export class UsersController {
   @Post('verify-email')
   async verifyEmail(@Body('token') token: string) {
     return this.userManagementService.verifyEmail(token);
+  }
+  @Post('resend-verification')
+  async resendVerificationEmail(@Body('email') email: string) {
+    return this.userManagementService.resendVerificationEmail(email);
+  }
+
+  @Post('refresh-token')
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshToken(refreshToken);
   }
 
   @Post('login')
@@ -110,6 +120,20 @@ export class UsersController {
       updateUserRolesDto.userId, // Use userId from the body
       updateUserRolesDto, // The roles to update
       currentUser, // The current user who is performing the update (should be admin)
+    );
+  }
+  @Patch(':userId/roles')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async updateRolesByParam(
+    @Param('userId') userId: string,
+    @Body() updateUserRolesDto: UpdateUserRolesDto,
+    @GetUser() currentUser: UserDocument,
+  ) {
+    return this.authService.updateRoles(
+      userId,
+      updateUserRolesDto,
+      currentUser,
     );
   }
 }
