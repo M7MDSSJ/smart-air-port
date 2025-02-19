@@ -1,5 +1,9 @@
 // src/modules/flights/repositories/flight.repository.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Flight } from '../schemas/flight.schema';
@@ -9,6 +13,7 @@ import { UpdateFlightDto } from '../dto/update-flight.dto';
 import { QueryFlightDto } from '../dto/query-flight.dto';
 import { FlightAvailabilityQuery } from '../dto/available-flight-query.dto';
 import { FlightQueryFilter } from '../dto/query-flight.dto';
+import { FlightUpdateSeatsParams } from '../dto/flight-update-seats.dto';
 @Injectable()
 export class FlightRepository implements IFlightRepository {
   constructor(
@@ -65,6 +70,26 @@ export class FlightRepository implements IFlightRepository {
 
   async findByFlightNumber(flightNumber: string): Promise<Flight | null> {
     return this.flightModel.findOne({ flightNumber }).exec();
+  }
+  async updateSeats(params: FlightUpdateSeatsParams): Promise<Flight | null> {
+    // The query checks both flightId and the expected version.
+    const updatedFlight = await this.flightModel.findOneAndUpdate(
+      {
+        _id: params.flightId,
+        version: params.expectedVersion, // optimistic locking check
+      },
+      {
+        $inc: { seatsAvailable: params.seatDelta, version: 1 },
+      },
+      {
+        new: true, // return the updated document
+      },
+    );
+
+    if (!updatedFlight) {
+      throw new ConflictException('Seat inventory changed, please refresh');
+    }
+    return updatedFlight;
   }
 
   async update(id: string, updateFlightDto: UpdateFlightDto): Promise<Flight> {
