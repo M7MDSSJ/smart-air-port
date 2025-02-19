@@ -40,6 +40,7 @@ export const FlightSchema = new Schema<Flight>(
     seatsAvailable: {
       type: Number,
       required: true,
+      min: 0,
       default: function () {
         return this.seats;
       },

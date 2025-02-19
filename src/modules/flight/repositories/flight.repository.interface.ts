@@ -3,6 +3,7 @@ import { CreateFlightDto } from '../dto/create-flight.dto';
 import { UpdateFlightDto } from '../dto/update-flight.dto';
 import { QueryFlightDto } from '../dto/query-flight.dto';
 import { FlightAvailabilityQuery } from '../dto/available-flight-query.dto';
+import { FlightUpdateSeatsParams } from '../dto/flight-update-seats.dto';
 export const FLIGHT_REPOSITORY = 'FLIGHT_REPOSITORY';
 
 export interface IFlightRepository {
@@ -16,6 +17,7 @@ export interface IFlightRepository {
   findByFlightNumber(flightNumber: string): Promise<Flight | null>;
   searchFlights(query: QueryFlightDto): Promise<Flight[]>;
   searchAvailableFlights(query: FlightAvailabilityQuery): Promise<Flight[]>;
+  updateSeats(params: FlightUpdateSeatsParams): Promise<Flight | null>;
   update(id: string, updateFlightDto: UpdateFlightDto): Promise<Flight>;
   delete(id: string): Promise<Flight>;
   // Optionally, add custom queries like searchByAirport, etc.

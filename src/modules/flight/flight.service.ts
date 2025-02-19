@@ -14,7 +14,8 @@ import { QueryFlightDto } from './dto/query-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { FlightAvailabilityQuery } from './dto/available-flight-query.dto';
 import { Logger } from '@nestjs/common';
-
+import { Flight } from './schemas/flight.schema';
+import { FlightUpdateSeatsParams } from './dto/flight-update-seats.dto';
 @Injectable()
 export class FlightService {
   private readonly logger = new Logger(FlightService.name);
@@ -25,18 +26,23 @@ export class FlightService {
   ) {}
 
   async create(createFlightDto: CreateFlightDto) {
-    if (
-      new Date(createFlightDto.departureTime) >=
-      new Date(createFlightDto.arrivalTime)
-    ) {
+    // Validate dates
+    const departureTime = new Date(createFlightDto.departureTime);
+    const arrivalTime = new Date(createFlightDto.arrivalTime);
+
+    if (isNaN(departureTime.getTime()) || isNaN(arrivalTime.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+
+    if (departureTime >= arrivalTime) {
       throw new BadRequestException('Departure must be before arrival');
     }
+
     const existingFlight = await this.flightRepository.findByFlightNumber(
       createFlightDto.flightNumber,
     );
 
     if (existingFlight) {
-      // Handle the duplicate case, e.g., throw an exception
       throw new ConflictException('Flight with this number already exists');
     }
 
@@ -54,17 +60,54 @@ export class FlightService {
     }
     return flight;
   }
+  async updateSeats(params: FlightUpdateSeatsParams): Promise<Flight> {
+    this.logger.log(
+      `Updating seats for flight ${params.flightId}, delta: ${params.seatDelta}, expectedVersion: ${params.expectedVersion}`,
+    );
+
+    try {
+      const updatedFlight = await this.flightRepository.updateSeats(params);
+
+      if (!updatedFlight) {
+        throw new NotFoundException('Flight not found');
+      }
+
+      this.logger.log(
+        `Seats updated successfully for flight ${params.flightId}`,
+      );
+      return updatedFlight;
+    } catch (error: unknown) {
+      let errorMessage = 'Unknown error occurred';
+      let stackTrace: string | undefined;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        stackTrace = error.stack;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      this.logger.error(
+        `Failed to update seats for flight ${params.flightId}: ${errorMessage}`,
+        stackTrace || 'No stack trace available',
+      );
+
+      throw new ConflictException('Could not update seat availability');
+    }
+  }
 
   async update(id: string, updateFlightDto: UpdateFlightDto) {
-    if (updateFlightDto.version === undefined) {
+    if (!updateFlightDto.version) {
       throw new BadRequestException('Version is required for update');
     }
+
     const flight = await this.flightRepository.findOneAndUpdate(
       { _id: id, version: updateFlightDto.version },
       updateFlightDto,
     );
+
     if (!flight) {
-      throw new NotFoundException('Flight not found or outdated');
+      throw new NotFoundException('Flight not found or version mismatch');
     }
     return flight;
   }
@@ -72,35 +115,45 @@ export class FlightService {
   async searchAvailableFlights(query: QueryFlightDto) {
     const filter: FlightAvailabilityQuery = {
       seatsAvailable: { $gt: 0 },
-      departureAirport: query.departureAirport,
-      arrivalAirport: query.arrivalAirport,
     };
+
+    // Add optional filters
+    if (query.departureAirport) {
+      filter.departureAirport = query.departureAirport;
+    }
+    if (query.arrivalAirport) {
+      filter.arrivalAirport = query.arrivalAirport;
+    }
 
     if (query.departureDate) {
       const date = new Date(query.departureDate);
+      if (isNaN(date.getTime())) {
+        throw new BadRequestException('Invalid departure date format');
+      }
+
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
-      filter.departureTime = { $gte: startOfDay, $lte: endOfDay };
-    }
 
-    // Clean undefined values
-    Object.keys(filter).forEach((key) => {
-      if (filter[key] === undefined) {
-        delete filter[key];
-      }
-    });
+      filter.departureTime = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
 
     return this.flightRepository.searchAvailableFlights(filter);
   }
 
   async remove(id: string) {
-    this.logger.warn(`Attempting to delete flight ${id}`);
-    const flight = await this.flightRepository.delete(id);
-    if (!flight) {
+    this.logger.log(`Attempting to delete flight ${id}`);
+    const result = await this.flightRepository.delete(id);
+
+    if (!result) {
       throw new NotFoundException('Flight not found');
     }
-    return flight;
+
+    this.logger.log(`Successfully deleted flight ${id}`);
+    return result;
   }
 }

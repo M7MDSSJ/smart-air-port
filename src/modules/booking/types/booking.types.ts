@@ -1,0 +1,18 @@
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'expired';
+
+export type PaymentProvider = 'stripe' | 'paypal' | 'mobile_wallet';
+
+export type SeatClass = 'economy' | 'premium_economy' | 'business' | 'first';
+export interface PaymentIntent {
+  id: string;
+  amount: number;
+  currency: string;
+  status:
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'requires_action'
+    | 'processing'
+    | 'requires_capture'
+    | 'canceled'
+    | 'succeeded';
+}
