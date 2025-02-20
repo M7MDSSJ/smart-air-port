@@ -6,6 +6,8 @@ import {
   BadRequestException,
   Inject,
   Logger,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   IFlightRepository,
@@ -121,19 +123,40 @@ export class FlightService {
   }
 
   async update(id: string, updateFlightDto: UpdateFlightDto) {
-    if (!updateFlightDto.version) {
-      throw new BadRequestException('Version is required for update');
+    if (typeof updateFlightDto.version !== 'number') {
+      throw new BadRequestException(
+        'Optimistic locking requires current version number',
+      );
     }
 
-    const flight = await this.flightRepository.findOneAndUpdate(
-      { _id: id, version: updateFlightDto.version },
-      updateFlightDto,
-    );
+    try {
+      const updateData = {
+        ...updateFlightDto,
+        version: updateFlightDto.version + 1,
+      };
+      const flight = await this.flightRepository.findOneAndUpdate(
+        { _id: id, version: updateFlightDto.version },
+        updateData,
+      );
 
-    if (!flight) {
-      throw new NotFoundException('Flight not found or version mismatch');
+      if (!flight) {
+        const current = await this.flightRepository.findById(id);
+        throw new ConflictException(
+          `Version mismatch. Current version: ${current?.version || 0}`,
+        );
+      }
+      return flight;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(`Flight update failed: ${error.message}`);
+      } else {
+        this.logger.error('Flight update failed: Unknown error');
+      }
+      throw new HttpException(
+        'Update failed - refresh and try again',
+        HttpStatus.CONFLICT,
+      );
     }
-    return flight;
   }
 
   async searchAvailableFlights(query: QueryFlightDto) {

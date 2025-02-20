@@ -63,11 +63,19 @@ export class PaymentService {
   }
 
   async handleWebhookEvent(payload: Buffer, signature: string): Promise<void> {
+    // Verify that the webhook secret is configured
+    if (!this.configService.get('STRIPE_WEBHOOK_SECRET')) {
+      throw new Error('Webhook secret not configured');
+    }
+
     try {
+      const webhookSecret = this.configService.getOrThrow<string>(
+        'STRIPE_WEBHOOK_SECRET',
+      );
       const event = this.stripe.webhooks.constructEvent(
         payload,
         signature,
-        this.configService.getOrThrow<string>('STRIPE_WEBHOOK_SECRET'),
+        webhookSecret,
       );
 
       switch (event.type) {
@@ -92,7 +100,7 @@ export class PaymentService {
       this.logger.error(`Webhook handling failed: ${error.message}`);
       throw new PaymentProcessingError('Webhook handling failed');
     }
-    // Add a dummy await so that the function includes an await expression.
+    // Dummy await to ensure the function includes an await expression.
     await Promise.resolve();
   }
 
