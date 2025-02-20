@@ -9,7 +9,6 @@ import {
   ValidateNested,
   IsPositive,
   Min,
-  IsInt,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -55,8 +54,6 @@ export class CreateFlightDto {
   @IsPositive()
   @Min(1)
   seats: number;
-  @IsInt()
-  version: number;
 
   @IsArray()
   @ValidateNested({ each: true })

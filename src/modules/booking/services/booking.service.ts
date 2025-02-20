@@ -203,6 +203,7 @@ export class BookingService implements OnModuleInit {
     );
   }
 
+  // In BookingService
   async cancelBooking(
     bookingId: string,
     userId: string,
@@ -211,24 +212,41 @@ export class BookingService implements OnModuleInit {
     if (!booking || booking.user.toString() !== userId) {
       throw new NotFoundException('Booking not found');
     }
-    if (booking.status !== 'confirmed') {
-      throw new ConflictException('Only confirmed bookings can be cancelled');
+    // Allow cancellation if confirmed or if pending and expired (only if expiresAt is defined)
+    if (
+      booking.status === 'confirmed' ||
+      (booking.status === 'pending' &&
+        booking.expiresAt &&
+        booking.expiresAt <= new Date())
+    ) {
+      if (booking.paymentIntentId) {
+        try {
+          await this.paymentService.processRefund(booking.paymentIntentId);
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(`Refund attempt failed: ${errorMessage}`);
+        }
+      }
+      // Release seats
+      const flight = await this.flightService.findOne(
+        booking.flight.toString(),
+      );
+      await this.flightService.updateSeats({
+        flightId: booking.flight.toString(),
+        seatDelta: booking.totalSeats,
+        expectedVersion: flight.version,
+      });
+      return this.bookingRepository.update(
+        { _id: bookingId },
+        {
+          status: 'cancelled',
+          cancellationReason:
+            booking.status === 'pending' ? 'Expired' : 'User requested',
+        },
+      );
     }
-    if (booking.paymentIntentId) {
-      await this.paymentService.processRefund(booking.paymentIntentId);
-    }
-    const flight = await this.flightService.findOne(booking.flight.toString());
-    await this.flightService.updateSeats({
-      flightId: booking.flight.toString(),
-      seatDelta: booking.totalSeats,
-      expectedVersion: flight.version,
-    });
-    const updatedBooking = await this.bookingRepository.update(
-      { _id: bookingId },
-      { status: 'cancelled', cancellationReason: 'User requested' },
-    );
-    if (!updatedBooking) throw new NotFoundException('Booking update failed');
-    return updatedBooking;
+    throw new ConflictException('Booking cannot be cancelled');
   }
 
   async confirmBookingByPayment(

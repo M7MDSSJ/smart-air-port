@@ -11,3 +11,13 @@ user
   "email": "user1@example.com",
   "password": "User1@@User1"
 }
+
+
+improvements
+
+Component	Priority	Description
+Booking History	High	User-facing endpoint with pagination
+Admin Dashboard	Medium	Booking analytics & management UI
+Seat Map Service	High	Visual seat selection integration
+Payment Retries	Medium	Automated failed payment recovery
+Ticket Generation	Low	PDF ticket creation & email delivery
