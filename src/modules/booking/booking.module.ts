@@ -1,3 +1,4 @@
+// src/modules/booking/booking.module.ts
 import { Module } from '@nestjs/common';
 import { BookingService } from './services/booking.service';
 import { BookingController } from './controllers/booking.controller';
@@ -8,6 +9,8 @@ import { PaymentService } from './services/payment.service';
 import { BOOKING_REPOSITORY } from './repositories/booking.repository.interface';
 import { BookingRepository } from './repositories/booking.repository';
 import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.scheduler';
+import { EventBus } from 'src/common/event-bus.service';
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Booking', schema: BookingSchema }]),
@@ -16,8 +19,9 @@ import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.schedule
   controllers: [BookingController],
   providers: [
     BookingService,
-    ExpiredBookingsScheduler,
     PaymentService,
+    EventBus,
+    ExpiredBookingsScheduler,
     {
       provide: BOOKING_REPOSITORY,
       useClass: BookingRepository,
