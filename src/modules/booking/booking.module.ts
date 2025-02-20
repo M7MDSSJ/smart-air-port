@@ -7,7 +7,7 @@ import { FlightModule } from '../flight/flight.module';
 import { PaymentService } from './services/payment.service';
 import { BOOKING_REPOSITORY } from './repositories/booking.repository.interface';
 import { BookingRepository } from './repositories/booking.repository';
-
+import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.scheduler';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Booking', schema: BookingSchema }]),
@@ -16,6 +16,7 @@ import { BookingRepository } from './repositories/booking.repository';
   controllers: [BookingController],
   providers: [
     BookingService,
+    ExpiredBookingsScheduler,
     PaymentService,
     {
       provide: BOOKING_REPOSITORY,

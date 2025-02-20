@@ -7,12 +7,14 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Req,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
 import { UserDocument } from '../../users/schemas/user.schema';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingDocument } from '../schemas/booking.schema';
+import { Request } from 'express';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('booking')
@@ -22,13 +24,20 @@ export class BookingController {
   @Post()
   async createBooking(
     @Body() createBookingDto: CreateBookingDto,
+    @Req() req: Request, // Extract the authenticated user from the request
   ): Promise<any> {
     try {
-      // Replace with your actual user extraction logic.
-      const dummyUser = { _id: 'USER_OBJECT_ID' } as UserDocument;
-      const idempotencyKey = createBookingDto.idempotencyKey ?? 'default-key';
+      if (!createBookingDto.idempotencyKey) {
+        throw new HttpException(
+          'Idempotency key is required',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      // Use the user provided by the JWT strategy
+      const user = req.user as UserDocument;
+      const idempotencyKey = createBookingDto.idempotencyKey;
       return this.bookingService.createBooking(
-        dummyUser,
+        user,
         createBookingDto,
         idempotencyKey,
       );

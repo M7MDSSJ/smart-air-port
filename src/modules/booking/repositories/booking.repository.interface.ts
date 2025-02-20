@@ -10,6 +10,7 @@ export interface IBookingRepository {
   findOne(
     filter: FilterQuery<BookingDocument>,
   ): Promise<BookingDocument | null>;
+  find(query: any): Promise<BookingDocument[]>;
 
   update(
     filter: FilterQuery<BookingDocument>,

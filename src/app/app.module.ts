@@ -8,6 +8,8 @@ import { TransformInterceptor } from 'src/common/interceptors/transform.intercep
 import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { FlightModule } from '../modules/flight/flight.module';
 import { BookingModule } from 'src/modules/booking/booking.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +28,7 @@ import { BookingModule } from 'src/modules/booking/booking.module';
     UsersModule,
     FlightModule,
     BookingModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [

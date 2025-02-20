@@ -5,6 +5,7 @@ import {
   IsString,
   ValidateNested,
   IsNumber,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SeatClass } from '../types/booking.types';
@@ -40,5 +41,6 @@ export class CreateBookingDto {
   // Require the idempotencyKey.
   @IsString()
   @IsNotEmpty({ message: 'Idempotency key is required' })
+  @IsUUID(4)
   idempotencyKey: string;
 }

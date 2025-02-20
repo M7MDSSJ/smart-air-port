@@ -1,4 +1,3 @@
-// src/modules/booking/repositories/booking.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery, UpdateQuery } from 'mongoose';
@@ -30,6 +29,10 @@ export class BookingRepository implements IBookingRepository {
     filter: FilterQuery<BookingDocument>,
   ): Promise<BookingDocument | null> {
     return this.bookingModel.findOne(filter).exec();
+  }
+
+  async find(query: FilterQuery<BookingDocument>): Promise<BookingDocument[]> {
+    return this.bookingModel.find(query).exec();
   }
 
   async update(
