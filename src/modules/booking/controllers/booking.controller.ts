@@ -1,4 +1,3 @@
-// src/modules/booking/controllers/booking.controller.ts
 import {
   Controller,
   Post,
@@ -15,6 +14,7 @@ import { UserDocument } from '../../users/schemas/user.schema';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingDocument } from '../schemas/booking.schema';
 import { Request } from 'express';
+import { GetUser } from 'src/common/decorators/user.decorator';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('booking')
@@ -51,7 +51,8 @@ export class BookingController {
   @Post('confirm/:bookingId')
   async confirmBooking(
     @Param('bookingId') bookingId: string,
+    @GetUser() user: UserDocument,
   ): Promise<BookingDocument> {
-    return this.bookingService.confirmBooking(bookingId);
+    return this.bookingService.confirmBooking(bookingId, user._id.toString());
   }
 }

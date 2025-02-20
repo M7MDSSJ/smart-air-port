@@ -1,9 +1,11 @@
+// flight.service.ts
 import {
   ConflictException,
   Injectable,
   NotFoundException,
   BadRequestException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import {
   IFlightRepository,
@@ -13,9 +15,13 @@ import { CreateFlightDto } from './dto/create-flight.dto';
 import { QueryFlightDto } from './dto/query-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { FlightAvailabilityQuery } from './dto/available-flight-query.dto';
-import { Logger } from '@nestjs/common';
 import { Flight } from './schemas/flight.schema';
 import { FlightUpdateSeatsParams } from './dto/flight-update-seats.dto';
+import Redlock from 'redlock';
+interface ILock {
+  release(): Promise<void>;
+}
+
 @Injectable()
 export class FlightService {
   private readonly logger = new Logger(FlightService.name);
@@ -23,6 +29,8 @@ export class FlightService {
   constructor(
     @Inject(FLIGHT_REPOSITORY)
     private readonly flightRepository: IFlightRepository,
+    @Inject('REDLOCK')
+    private readonly redlock: Redlock,
   ) {}
 
   async create(createFlightDto: CreateFlightDto) {
@@ -60,14 +68,25 @@ export class FlightService {
     }
     return flight;
   }
+
   async updateSeats(params: FlightUpdateSeatsParams): Promise<Flight> {
     this.logger.log(
       `Updating seats for flight ${params.flightId}, delta: ${params.seatDelta}, expectedVersion: ${params.expectedVersion}`,
     );
 
-    try {
-      const updatedFlight = await this.flightRepository.updateSeats(params);
+    // Create a unique lock key for the flight seats update
+    const lockKey = `flight:${params.flightId}:seat_lock`;
+    let lock: ILock | undefined = undefined;
 
+    try {
+      // Cast this.redlock to a type with an acquire method returning ILock
+      const redlockInstance = this.redlock as unknown as {
+        acquire(keys: string[], ttl: number): Promise<ILock>;
+      };
+      lock = await redlockInstance.acquire([lockKey], 5000);
+
+      // Execute the seat update logic
+      const updatedFlight = await this.flightRepository.updateSeats(params);
       if (!updatedFlight) {
         throw new NotFoundException('Flight not found');
       }
@@ -93,6 +112,11 @@ export class FlightService {
       );
 
       throw new ConflictException('Could not update seat availability');
+    } finally {
+      // Safely release the lock if it was acquired
+      if (lock) {
+        await lock.release();
+      }
     }
   }
 

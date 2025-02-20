@@ -2,6 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
+import { EventBus } from 'src/common/event-bus.service';
 
 type PaymentIntentParams = {
   amount: number;
@@ -15,7 +16,10 @@ export class PaymentService {
   private stripe: Stripe;
   private readonly logger = new Logger(PaymentService.name);
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private eventBus: EventBus, // Only EventBus is injected
+  ) {
     const stripeKey =
       this.configService.getOrThrow<string>('STRIPE_SECRET_KEY');
     this.stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
@@ -33,8 +37,9 @@ export class PaymentService {
       });
       this.logger.log(`Payment intent created: ${paymentIntent.id}`);
       return paymentIntent;
-    } catch (error) {
-      this.logger.error(`Payment failed: ${error}`);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.logger.error(`Payment failed: ${error.message}`);
       throw new PaymentProcessingError('Payment processing failed');
     }
   }
@@ -50,8 +55,9 @@ export class PaymentService {
     }
     try {
       await this.stripe.paymentIntents.confirm(paymentIntentId);
-    } catch (error) {
-      this.logger.error(`Payment confirmation failed: ${error}`);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.logger.error(`Payment confirmation failed: ${error.message}`);
       throw new PaymentProcessingError('Payment confirmation failed');
     }
   }
@@ -67,25 +73,35 @@ export class PaymentService {
       switch (event.type) {
         case 'payment_intent.succeeded':
           this.logger.log('Payment succeeded');
+          this.eventBus.publish('payment.succeeded', {
+            paymentIntentId: event.data.object.id,
+          });
           break;
         case 'payment_intent.payment_failed':
           this.logger.error('Payment failed');
+          this.eventBus.publish('payment.failed', {
+            paymentIntentId: event.data.object.id,
+            reason: 'Payment failed',
+          });
           break;
         default:
           this.logger.warn(`Unhandled event type: ${event.type}`);
       }
-    } catch (error) {
-      this.logger.error(`Webhook handling failed: ${error}`);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.logger.error(`Webhook handling failed: ${error.message}`);
       throw new PaymentProcessingError('Webhook handling failed');
     }
-    return Promise.resolve();
+    // Add a dummy await so that the function includes an await expression.
+    await Promise.resolve();
   }
 
   async processRefund(paymentIntentId: string): Promise<void> {
     try {
       await this.stripe.refunds.create({ payment_intent: paymentIntentId });
-    } catch (error) {
-      this.logger.error(`Refund failed: ${error}`);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      this.logger.error(`Refund failed: ${error.message}`);
       throw new PaymentProcessingError('Refund processing failed');
     }
   }

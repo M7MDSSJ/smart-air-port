@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import {
   IBookingRepository,
@@ -19,59 +20,98 @@ import { PaymentService } from './payment.service';
 import { UserDocument } from '../../users/schemas/user.schema';
 import { BookingDocument } from '../schemas/booking.schema';
 import { PaymentIntent } from '../types/booking.types';
-import { Types } from 'mongoose';
+import { EventBus } from 'src/common/event-bus.service';
+import { Types, Connection } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
 
 function isDuplicateKeyError(error: unknown): error is { code: number } {
-  if (typeof error !== 'object' || error === null) {
-    return false;
-  }
+  if (typeof error !== 'object' || error === null) return false;
   const err = error as { code?: unknown };
   return typeof err.code === 'number';
 }
 
 @Injectable()
-export class BookingService {
+export class BookingService implements OnModuleInit {
   private readonly logger = new Logger(BookingService.name);
 
   constructor(
     @Inject(BOOKING_REPOSITORY)
     private readonly bookingRepository: IBookingRepository,
     private readonly flightService: FlightService,
-    private readonly paymentService: PaymentService,
+    private readonly paymentService: PaymentService, // For createPaymentIntent, confirmPayment, processRefund
+    private readonly eventBus: EventBus,
+    @InjectConnection() private readonly connection: Connection, // Fixed injection
   ) {}
+
+  onModuleInit(): void {
+    this.eventBus.subscribe(
+      'payment.succeeded',
+      (data: { paymentIntentId: string }) => {
+        void (async () => {
+          try {
+            await this.confirmBookingByPayment(data.paymentIntentId);
+          } catch (error) {
+            this.logger.error(
+              `Failed to confirm booking: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            );
+          }
+        })();
+      },
+    );
+
+    this.eventBus.subscribe(
+      'payment.failed',
+      (data: { paymentIntentId: string; reason: string }) => {
+        void (async () => {
+          try {
+            await this.failBooking(data.paymentIntentId, data.reason);
+          } catch (error) {
+            this.logger.error(
+              `Failed to mark booking as failed: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            );
+          }
+        })();
+      },
+    );
+  }
 
   async createBooking(
     user: UserDocument,
     createBookingDto: CreateBookingDto,
     idempotencyKey: string,
   ): Promise<BookingDocument> {
-    // (Optional) Pre-check: if a booking with the given idempotency key already exists, return it.
-    // Note: This check is not atomic, so we still need to handle duplicate key errors below.
-    const preExisting = await this.bookingRepository.findOne({
-      idempotencyKey,
-    });
-    if (preExisting) return preExisting;
-
-    // 1. Fetch the flight and check seat availability.
-    const flight = await this.flightService.findOne(createBookingDto.flightId);
-    const availableSeats =
-      flight.seatsAvailable - createBookingDto.seats.length;
-    if (availableSeats < 0) {
-      throw new ConflictException('Not enough available seats');
-    }
-
-    // Save the current flight version for optimistic locking.
-    const currentVersion = flight.version;
+    const session = await this.connection.startSession();
+    session.startTransaction();
 
     try {
-      // 2. Update seats on the flight using optimistic locking.
+      const preExisting = await this.bookingRepository.findOne({
+        idempotencyKey,
+      });
+      if (preExisting) {
+        await session.commitTransaction();
+        return preExisting;
+      }
+
+      const flight = await this.flightService.findOne(
+        createBookingDto.flightId,
+      );
+      const availableSeats =
+        flight.seatsAvailable - createBookingDto.seats.length;
+      if (availableSeats < 0) {
+        throw new ConflictException('Not enough available seats');
+      }
+
+      const currentVersion = flight.version;
       await this.flightService.updateSeats({
         flightId: createBookingDto.flightId,
         seatDelta: -createBookingDto.seats.length,
         expectedVersion: currentVersion,
       });
 
-      // 3. Create a payment intent.
       const paymentIntent: PaymentIntent =
         await this.paymentService.createPaymentIntent({
           amount: createBookingDto.seats.reduce(
@@ -86,79 +126,81 @@ export class BookingService {
           },
         });
 
-      // 4. Prepare the complete booking data.
       const bookingData: CreateBookingInput = {
         ...createBookingDto,
         user: user._id,
         flight: new Types.ObjectId(createBookingDto.flightId),
-        status: 'pending', // or use a BookingStatus enum if defined
+        status: 'pending',
         totalPrice: paymentIntent.amount,
         totalSeats: createBookingDto.seats.length,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // Expires in 30 minutes
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
         paymentIntentId: paymentIntent.id,
-        idempotencyKey, // included in the booking data
+        idempotencyKey,
       };
 
       let booking: BookingDocument;
-
-      // Wrap the booking creation in a try/catch block to handle duplicate key errors.
       try {
         booking = await this.bookingRepository.create(bookingData);
       } catch (error: unknown) {
-        // Use our type guard to safely access error.code.
         if (isDuplicateKeyError(error) && error.code === 11000) {
-          // Fetch the existing booking created by the concurrent request.
           const existing = await this.bookingRepository.findOne({
             idempotencyKey,
           });
-          if (existing) return existing;
+          if (existing) {
+            await session.commitTransaction();
+            return existing;
+          }
         }
-        // Rethrow if it's not a duplicate key error.
         throw error;
       }
 
-      // Log key metrics.
-      this.logger.log(`Booking created: ${booking.id}`);
-      return booking;
-    } catch (error: unknown) {
-      // In case of any error, revert the seat update.
-      const flightToRevert = await this.flightService.findOne(
-        createBookingDto.flightId,
-      );
-      await this.flightService.updateSeats({
-        flightId: createBookingDto.flightId,
-        seatDelta: createBookingDto.seats.length, // revert by adding back the seats
-        expectedVersion: flightToRevert.version,
+      this.logger.log({
+        event: 'booking_created',
+        bookingId: String(booking.id),
+        userId: user._id.toString(),
+        seats: booking.totalSeats,
       });
 
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new HttpException(
-          'Booking creation failed',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      await session.commitTransaction();
+      return booking;
+    } catch (error: unknown) {
+      await session.abortTransaction();
+      if (error instanceof Error) throw error;
+      throw new HttpException(
+        'Booking creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      void session.endSession();
     }
   }
+
   async findExpiredPendingBookings(): Promise<BookingDocument[]> {
-    return await this.bookingRepository.find({
+    return this.bookingRepository.find({
       status: 'pending',
       expiresAt: { $lte: new Date() },
     });
   }
 
-  async confirmBooking(bookingId: string): Promise<BookingDocument> {
+  async confirmBooking(
+    bookingId: string,
+    userId: string,
+  ): Promise<BookingDocument> {
     const booking = await this.bookingRepository.findById(bookingId);
-    if (!booking) {
+    if (!booking || booking.user.toString() !== userId) {
       throw new NotFoundException('Booking not found');
     }
-    // Update the booking status to 'confirmed'
-    const updatedBooking = await this.bookingRepository.update(
+    if (!booking.paymentIntentId) {
+      throw new NotFoundException('Payment intent not found for booking');
+    }
+    await this.paymentService.confirmPayment(
+      booking.paymentIntentId,
+      booking.totalPrice,
+    );
+    return this.bookingRepository.update(
       { _id: bookingId },
       { status: 'confirmed' },
     );
-    return updatedBooking;
   }
 
   async cancelBooking(
@@ -166,37 +208,63 @@ export class BookingService {
     userId: string,
   ): Promise<BookingDocument> {
     const booking = await this.bookingRepository.findById(bookingId);
-
     if (!booking || booking.user.toString() !== userId) {
       throw new NotFoundException('Booking not found');
     }
-
     if (booking.status !== 'confirmed') {
       throw new ConflictException('Only confirmed bookings can be cancelled');
     }
-
-    // Process refund if applicable.
     if (booking.paymentIntentId) {
       await this.paymentService.processRefund(booking.paymentIntentId);
     }
-
-    // Release seats: re-fetch the flight to get its current version.
     const flight = await this.flightService.findOne(booking.flight.toString());
     await this.flightService.updateSeats({
       flightId: booking.flight.toString(),
-      seatDelta: booking.totalSeats, // add back the seats
+      seatDelta: booking.totalSeats,
       expectedVersion: flight.version,
     });
-
     const updatedBooking = await this.bookingRepository.update(
       { _id: bookingId },
       { status: 'cancelled', cancellationReason: 'User requested' },
     );
+    if (!updatedBooking) throw new NotFoundException('Booking update failed');
+    return updatedBooking;
+  }
 
-    if (!updatedBooking) {
-      throw new NotFoundException('Booking update failed');
+  async confirmBookingByPayment(
+    paymentIntentId: string,
+  ): Promise<BookingDocument> {
+    const booking = await this.bookingRepository.findOne({ paymentIntentId });
+    if (!booking) {
+      throw new NotFoundException(
+        `Booking not found for payment intent: ${paymentIntentId}`,
+      );
     }
+    const updatedBooking = await this.bookingRepository.update(
+      { _id: booking.id },
+      { status: 'confirmed' },
+    );
+    this.logger.log(`Booking confirmed via payment: ${updatedBooking.id}`);
+    return updatedBooking;
+  }
 
+  async failBooking(
+    paymentIntentId: string,
+    reason: string,
+  ): Promise<BookingDocument> {
+    const booking = await this.bookingRepository.findOne({ paymentIntentId });
+    if (!booking) {
+      throw new NotFoundException(
+        `Booking not found for payment intent: ${paymentIntentId}`,
+      );
+    }
+    const updatedBooking = await this.bookingRepository.update(
+      { _id: booking.id },
+      { status: 'failed', failureReason: reason },
+    );
+    this.logger.warn(
+      `Booking marked as failed via payment: ${updatedBooking.id}, Reason: ${reason}`,
+    );
     return updatedBooking;
   }
 }

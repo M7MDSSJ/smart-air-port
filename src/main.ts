@@ -1,3 +1,4 @@
+// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
@@ -8,6 +9,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -45,6 +48,11 @@ async function bootstrap() {
       },
     }),
   );
+
+  registerInstrumentations({
+    instrumentations: [new FastifyInstrumentation({})],
+  });
+
   await app.register(helmet, { contentSecurityPolicy: false });
 
   // ===== ENHANCEMENTS =====
@@ -100,7 +108,7 @@ async function bootstrap() {
 
   // 5. Graceful Shutdown
   process.on('SIGINT', () => {
-    fastify.log.info(' Shutting down gracefully...');
+    fastify.log.info('Shutting down gracefully...');
     app
       .close()
       .then(() => process.exit(0))
@@ -112,7 +120,7 @@ async function bootstrap() {
   await app.register(rateLimit, {
     global: true,
     max: 100,
-    timeWindow: '1 minute', // or 60 * 1000 for milliseconds
+    timeWindow: '1 minute',
   });
   fastify.addHook('onRoute', (routeOptions) => {
     if (routeOptions.url === '/users/login') {
@@ -124,7 +132,6 @@ async function bootstrap() {
       };
     }
   });
-  // Existing Config
   await app.register(import('@fastify/cors'), { origin: true });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
@@ -132,7 +139,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  fastify.log.info(` Server ready on ${await app.getUrl()}`);
+  fastify.log.info(`Server ready on ${await app.getUrl()}`);
 }
 
 void bootstrap();
