@@ -29,7 +29,7 @@ export class Booking {
   })
   seats: Array<{
     seatNumber: string;
-    class: SeatClass; // Ensure SeatClass is defined correctly
+    class: SeatClass;
     price: number;
   }>;
 
@@ -63,3 +63,7 @@ export class Booking {
 
 export type BookingDocument = Booking & Document;
 export const BookingSchema = SchemaFactory.createForClass(Booking);
+BookingSchema.virtual('id').get(function () {
+  return this._id.toHexString();
+});
+BookingSchema.set('toJSON', { virtuals: true });

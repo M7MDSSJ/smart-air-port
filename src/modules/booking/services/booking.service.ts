@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import {
   IBookingRepository,
@@ -19,7 +20,15 @@ import { UserDocument } from '../../users/schemas/user.schema';
 import { BookingDocument } from '../schemas/booking.schema';
 import { PaymentIntent } from '../types/booking.types';
 import { Types } from 'mongoose';
-import { Logger } from '@nestjs/common';
+
+function isDuplicateKeyError(error: unknown): error is { code: number } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const err = error as { code?: unknown };
+  return typeof err.code === 'number';
+}
+
 @Injectable()
 export class BookingService {
   private readonly logger = new Logger(BookingService.name);
@@ -36,9 +45,12 @@ export class BookingService {
     createBookingDto: CreateBookingDto,
     idempotencyKey: string,
   ): Promise<BookingDocument> {
-    // Idempotency check: if a booking with the given key exists, return it.
-    const existing = await this.bookingRepository.findOne({ idempotencyKey });
-    if (existing) return existing;
+    // (Optional) Pre-check: if a booking with the given idempotency key already exists, return it.
+    // Note: This check is not atomic, so we still need to handle duplicate key errors below.
+    const preExisting = await this.bookingRepository.findOne({
+      idempotencyKey,
+    });
+    if (preExisting) return preExisting;
 
     // 1. Fetch the flight and check seat availability.
     const flight = await this.flightService.findOne(createBookingDto.flightId);
@@ -48,7 +60,7 @@ export class BookingService {
       throw new ConflictException('Not enough available seats');
     }
 
-    // Save current flight version for optimistic locking.
+    // Save the current flight version for optimistic locking.
     const currentVersion = flight.version;
 
     try {
@@ -87,13 +99,29 @@ export class BookingService {
         idempotencyKey, // included in the booking data
       };
 
-      // Create the booking including the idempotency key.
-      const booking = await this.bookingRepository.create(bookingData);
-      // Log key metrics:
+      let booking: BookingDocument;
+
+      // Wrap the booking creation in a try/catch block to handle duplicate key errors.
+      try {
+        booking = await this.bookingRepository.create(bookingData);
+      } catch (error: unknown) {
+        // Use our type guard to safely access error.code.
+        if (isDuplicateKeyError(error) && error.code === 11000) {
+          // Fetch the existing booking created by the concurrent request.
+          const existing = await this.bookingRepository.findOne({
+            idempotencyKey,
+          });
+          if (existing) return existing;
+        }
+        // Rethrow if it's not a duplicate key error.
+        throw error;
+      }
+
+      // Log key metrics.
       this.logger.log(`Booking created: ${booking.id}`);
       return booking;
     } catch (error: unknown) {
-      // If something goes wrong, revert the seat update.
+      // In case of any error, revert the seat update.
       const flightToRevert = await this.flightService.findOne(
         createBookingDto.flightId,
       );
@@ -102,9 +130,8 @@ export class BookingService {
         seatDelta: createBookingDto.seats.length, // revert by adding back the seats
         expectedVersion: flightToRevert.version,
       });
+
       if (error instanceof Error) {
-        // Example: Handle specific Stripe errors if needed.
-        // if (error instanceof Stripe.errors.StripeError) { ... }
         throw error;
       } else {
         throw new HttpException(
@@ -114,6 +141,13 @@ export class BookingService {
       }
     }
   }
+  async findExpiredPendingBookings(): Promise<BookingDocument[]> {
+    return await this.bookingRepository.find({
+      status: 'pending',
+      expiresAt: { $lte: new Date() },
+    });
+  }
+
   async confirmBooking(bookingId: string): Promise<BookingDocument> {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
@@ -126,6 +160,7 @@ export class BookingService {
     );
     return updatedBooking;
   }
+
   async cancelBooking(
     bookingId: string,
     userId: string,
