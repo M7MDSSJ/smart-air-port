@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../schemas/user.schema';
 import { IUserRepository } from './user.repository.interface';
+
 @Injectable()
 export class UserRepository implements IUserRepository {
   constructor(
@@ -11,6 +12,14 @@ export class UserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
+  }
+
+  // Added method to fetch the user with the password field included
+  async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({ email })
+      .select('+password')
+      .exec() as Promise<UserDocument | null>;
   }
 
   async findById(userId: string): Promise<UserDocument | null> {
@@ -25,6 +34,7 @@ export class UserRepository implements IUserRepository {
   async findByToken(token: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ verificationToken: token });
   }
+
   async updateRefreshToken(
     userId: string,
     refreshToken: string | null,
@@ -47,6 +57,7 @@ export class UserRepository implements IUserRepository {
     await this.userModel.findByIdAndUpdate(userId, { refreshToken: null });
     return { message: 'Logged out successfully' };
   }
+
   async updateRoles(
     userId: string,
     roles: string[],

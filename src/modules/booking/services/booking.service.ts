@@ -38,9 +38,9 @@ export class BookingService implements OnModuleInit {
     @Inject(BOOKING_REPOSITORY)
     private readonly bookingRepository: IBookingRepository,
     private readonly flightService: FlightService,
-    private readonly paymentService: PaymentService, // For createPaymentIntent, confirmPayment, processRefund
+    private readonly paymentService: PaymentService,
     private readonly eventBus: EventBus,
-    @InjectConnection() private readonly connection: Connection, // Fixed injection
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   onModuleInit(): void {
@@ -99,6 +99,17 @@ export class BookingService implements OnModuleInit {
       const flight = await this.flightService.findOne(
         createBookingDto.flightId,
       );
+
+      // Update each seat's price to match the flight's price if needed.
+      for (const seat of createBookingDto.seats) {
+        if (seat.price !== flight.price) {
+          this.logger.warn(
+            `Seat price ${seat.price} does not match flight price ${flight.price}. Updating seat price to match flight price.`,
+          );
+          seat.price = flight.price;
+        }
+      }
+
       const availableSeats =
         flight.seatsAvailable - createBookingDto.seats.length;
       if (availableSeats < 0) {
@@ -175,14 +186,7 @@ export class BookingService implements OnModuleInit {
     }
   }
 
-  async findExpiredPendingBookings(): Promise<BookingDocument[]> {
-    return this.bookingRepository.find({
-      status: 'pending',
-      expiresAt: { $lte: new Date() },
-    });
-  }
-
-  async confirmBooking(
+  public async confirmBooking(
     bookingId: string,
     userId: string,
   ): Promise<BookingDocument> {
@@ -203,53 +207,7 @@ export class BookingService implements OnModuleInit {
     );
   }
 
-  // In BookingService
-  async cancelBooking(
-    bookingId: string,
-    userId: string,
-  ): Promise<BookingDocument> {
-    const booking = await this.bookingRepository.findById(bookingId);
-    if (!booking || booking.user.toString() !== userId) {
-      throw new NotFoundException('Booking not found');
-    }
-    // Allow cancellation if confirmed or if pending and expired (only if expiresAt is defined)
-    if (
-      booking.status === 'confirmed' ||
-      (booking.status === 'pending' &&
-        booking.expiresAt &&
-        booking.expiresAt <= new Date())
-    ) {
-      if (booking.paymentIntentId) {
-        try {
-          await this.paymentService.processRefund(booking.paymentIntentId);
-        } catch (error: unknown) {
-          const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
-          this.logger.error(`Refund attempt failed: ${errorMessage}`);
-        }
-      }
-      // Release seats
-      const flight = await this.flightService.findOne(
-        booking.flight.toString(),
-      );
-      await this.flightService.updateSeats({
-        flightId: booking.flight.toString(),
-        seatDelta: booking.totalSeats,
-        expectedVersion: flight.version,
-      });
-      return this.bookingRepository.update(
-        { _id: bookingId },
-        {
-          status: 'cancelled',
-          cancellationReason:
-            booking.status === 'pending' ? 'Expired' : 'User requested',
-        },
-      );
-    }
-    throw new ConflictException('Booking cannot be cancelled');
-  }
-
-  async confirmBookingByPayment(
+  public async confirmBookingByPayment(
     paymentIntentId: string,
   ): Promise<BookingDocument> {
     const booking = await this.bookingRepository.findOne({ paymentIntentId });
@@ -284,5 +242,59 @@ export class BookingService implements OnModuleInit {
       `Booking marked as failed via payment: ${updatedBooking.id}, Reason: ${reason}`,
     );
     return updatedBooking;
+  }
+
+  // NEW: Find all expired pending bookings
+  async findExpiredPendingBookings(): Promise<BookingDocument[]> {
+    return this.bookingRepository.find({
+      status: 'pending',
+      expiresAt: { $lte: new Date() },
+    });
+  }
+
+  // NEW: Cancel a booking (for expired or user-requested cancellation)
+  async cancelBooking(
+    bookingId: string,
+    userId: string,
+  ): Promise<BookingDocument> {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking || booking.user.toString() !== userId) {
+      throw new NotFoundException('Booking not found');
+    }
+    // Allow cancellation if confirmed or if pending and expired
+    if (
+      booking.status === 'confirmed' ||
+      (booking.status === 'pending' &&
+        booking.expiresAt &&
+        booking.expiresAt <= new Date())
+    ) {
+      if (booking.paymentIntentId) {
+        try {
+          await this.paymentService.processRefund(booking.paymentIntentId);
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(`Refund attempt failed: ${errorMessage}`);
+        }
+      }
+      // Release seats
+      const flight = await this.flightService.findOne(
+        booking.flight.toString(),
+      );
+      await this.flightService.updateSeats({
+        flightId: booking.flight.toString(),
+        seatDelta: booking.totalSeats,
+        expectedVersion: flight.version,
+      });
+      return this.bookingRepository.update(
+        { _id: bookingId },
+        {
+          status: 'cancelled',
+          cancellationReason:
+            booking.status === 'pending' ? 'Expired' : 'User requested',
+        },
+      );
+    }
+    throw new ConflictException('Booking cannot be cancelled');
   }
 }

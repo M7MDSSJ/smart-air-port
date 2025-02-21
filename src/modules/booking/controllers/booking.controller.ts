@@ -7,6 +7,8 @@ import {
   HttpStatus,
   Param,
   Req,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
@@ -19,32 +21,78 @@ import { GetUser } from 'src/common/decorators/user.decorator';
 @UseGuards(AuthGuard('jwt'))
 @Controller('booking')
 export class BookingController {
+  private readonly logger = new Logger(BookingController.name);
+
   constructor(private readonly bookingService: BookingService) {}
 
   @Post()
   async createBooking(
     @Body() createBookingDto: CreateBookingDto,
-    @Req() req: Request, // Extract the authenticated user from the request
-  ): Promise<any> {
+    @Req() req: Request,
+  ) {
     try {
+      this.logger.log('Received createBooking request');
+
+      // Log the request body for debugging
+      this.logger.log(`Request Body: ${JSON.stringify(createBookingDto)}`);
+
       if (!createBookingDto.idempotencyKey) {
-        throw new HttpException(
-          'Idempotency key is required',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new BadRequestException('Idempotency key is required');
       }
+
       // Use the user provided by the JWT strategy
       const user = req.user as UserDocument;
+      if (!user) {
+        throw new BadRequestException('User not found in request');
+      }
+
+      this.logger.log(`User ID: ${user._id.toString()}`);
+
       const idempotencyKey = createBookingDto.idempotencyKey;
-      return this.bookingService.createBooking(
+      this.logger.log(`Idempotency Key: ${idempotencyKey}`);
+
+      // Validate flightId
+      if (!createBookingDto.flightId) {
+        throw new BadRequestException('Flight ID is required');
+      }
+
+      // Validate seats
+      if (!createBookingDto.seats || createBookingDto.seats.length === 0) {
+        throw new BadRequestException('At least one seat is required');
+      }
+
+      // Validate paymentProvider
+      if (!createBookingDto.paymentProvider) {
+        throw new BadRequestException('Payment provider is required');
+      }
+
+      const booking = await this.bookingService.createBooking(
         user,
         createBookingDto,
         idempotencyKey,
       );
+
+      this.logger.log(`Booking created successfully: ${booking.id}`);
+      return booking;
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+      this.logger.error(
+        `Error creating booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      if (error instanceof BadRequestException) {
+        throw new HttpException(
+          {
+            success: false,
+            message: error.message,
+            error: 'Validation Failed',
+            statusCode: 400,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      throw new HttpException(
+        'Internal error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -53,6 +101,9 @@ export class BookingController {
     @Param('bookingId') bookingId: string,
     @GetUser() user: UserDocument,
   ): Promise<BookingDocument> {
-    return this.bookingService.confirmBooking(bookingId, user._id.toString());
+    return await this.bookingService.confirmBooking(
+      bookingId,
+      user._id.toString(),
+    );
   }
 }

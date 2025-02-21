@@ -1,10 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
+// src/auth/strategies/jwt.strategy.ts
+import { Injectable, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserDocument } from 'src/modules/users/schemas/user.schema';
 import { UnauthorizedException } from '@nestjs/common';
 import { IUserRepository } from 'src/modules/users/repositories/user.repository.interface';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -23,11 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     sub: string;
     email: string;
   }): Promise<UserDocument> {
-    // Fetch the full user from the database using the user ID
     const user = await this.userRepository.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    return user; // This will return the full UserDocument, which includes all the Mongoose methods
+    return user;
   }
 }

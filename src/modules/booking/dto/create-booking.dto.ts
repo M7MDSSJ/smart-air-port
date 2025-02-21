@@ -5,7 +5,8 @@ import {
   IsString,
   ValidateNested,
   IsNumber,
-  IsUUID,
+  IsEnum,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SeatClass } from '../types/booking.types';
@@ -16,11 +17,15 @@ export class SeatSelectionDto {
   @IsNotEmpty()
   seatNumber: string;
 
-  @IsString()
+  @IsEnum(['economy', 'premium_economy', 'business', 'first'] as const, {
+    message:
+      'Invalid seat class. Valid values: economy, premium_economy, business, first',
+  })
   @IsNotEmpty()
   class: SeatClass;
 
-  @IsNumber()
+  @IsNumber({}, { message: 'Price must be a number' })
+  @Min(0, { message: 'Price must be positive' })
   price: number;
 }
 
@@ -41,6 +46,5 @@ export class CreateBookingDto {
   // Require the idempotencyKey.
   @IsString()
   @IsNotEmpty({ message: 'Idempotency key is required' })
-  @IsUUID(4)
   idempotencyKey: string;
 }
