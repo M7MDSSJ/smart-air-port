@@ -22,8 +22,14 @@ import { EmailModule } from 'src/modules/email/email.module';
     PasswordResetService,
     JwtService,
     JwtAuthGuard,
-    { provide: 'IUserRepository', useClass: UserRepository },
+    { provide: 'IUserRepository', useClass: UserRepository }, // Provider declaration
   ],
-  exports: [UserManagementService, PasswordResetService, AuthenticationService],
+  exports: [
+    // Add this line to export the repository
+    'IUserRepository',
+    UserManagementService,
+    PasswordResetService,
+    AuthenticationService,
+  ],
 })
 export class UsersModule {}

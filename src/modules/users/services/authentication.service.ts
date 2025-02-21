@@ -31,7 +31,10 @@ export class AuthenticationService {
   async validateUser(
     loginDto: LoginUserDto,
   ): Promise<{ accessToken: string; refreshToken: string; message: string }> {
-    const user = await this.userRepository.findByEmail(loginDto.email);
+    // Use the new repository method to fetch the user with the password
+    const user = await this.userRepository.findByEmailWithPassword(
+      loginDto.email,
+    );
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -54,10 +57,12 @@ export class AuthenticationService {
       { userId: user._id, email: user.email },
       { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
     );
+
     await this.userRepository.updateRefreshToken(
       user._id.toString(),
       refreshToken,
     );
+
     return {
       message: 'User logged in successfully',
       accessToken,
