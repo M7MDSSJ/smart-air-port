@@ -99,12 +99,12 @@ export class BookingController {
         html,
       );
 
-      // Return a sanitized object
       return instanceToPlain(booking.toObject()) as BookingDocument;
     } catch (error: unknown) {
       this.logger.error(
         `Error creating booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
+
       if (error instanceof BadRequestException) {
         throw new HttpException(
           {
@@ -115,6 +115,9 @@ export class BookingController {
           },
           HttpStatus.BAD_REQUEST,
         );
+      } else if (error instanceof HttpException) {
+        // Preserve original HttpException status codes (e.g., 409 Conflict)
+        throw error;
       }
       throw new HttpException(
         'Internal error',
@@ -140,6 +143,7 @@ export class BookingController {
       bookingId,
       user._id.toString(),
     );
+
     // Notify the user about the booking confirmation.
     const html = `
       <p>Dear ${user.firstName || 'User'},</p>
@@ -151,6 +155,7 @@ export class BookingController {
       'Booking Confirmed - Important Notification',
       html,
     );
+
     return instanceToPlain(booking.toObject()) as BookingDocument;
   }
 }

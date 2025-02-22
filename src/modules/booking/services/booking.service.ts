@@ -96,14 +96,9 @@ export class BookingService implements OnModuleInit {
         idempotencyKey,
       });
       if (preExisting) {
-        // If the flight IDs differ, reject the request.
-        if (preExisting.flight.toString() !== createBookingDto.flightId) {
-          throw new ConflictException(
-            'Idempotency key has already been used for a different booking.',
-          );
-        }
-        await session.commitTransaction();
-        return preExisting;
+        throw new ConflictException(
+          'Idempotency key already exists. Please use a unique key.',
+        );
       }
 
       // Re-fetch the flight for consistency.
@@ -111,7 +106,7 @@ export class BookingService implements OnModuleInit {
         createBookingDto.flightId,
       );
 
-      // Strict price validation
+      // Strict price validation.
       for (const seat of createBookingDto.seats) {
         if (seat.price !== flightAfterCheck.price) {
           throw new BadRequestException(
@@ -174,13 +169,9 @@ export class BookingService implements OnModuleInit {
         booking = await this.bookingRepository.create(bookingData);
       } catch (error: unknown) {
         if (isDuplicateKeyError(error) && error.code === 11000) {
-          const existing = await this.bookingRepository.findOne({
-            idempotencyKey,
-          });
-          if (existing) {
-            await session.commitTransaction();
-            return existing;
-          }
+          throw new ConflictException(
+            'Idempotency key already exists. Please use a unique key.',
+          );
         }
         throw error;
       }
