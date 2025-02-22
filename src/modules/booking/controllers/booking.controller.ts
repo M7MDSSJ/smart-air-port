@@ -1,3 +1,4 @@
+// src/modules/booking/controllers/booking.controller.ts
 import {
   Controller,
   Post,
@@ -20,13 +21,17 @@ import { Request } from 'express';
 import { GetUser } from 'src/common/decorators/user.decorator';
 import { isMongoId } from 'class-validator';
 import { instanceToPlain } from 'class-transformer';
+import { EmailService } from '../../email/email.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('booking')
 export class BookingController {
   private readonly logger = new Logger(BookingController.name);
 
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly emailService: EmailService, // Inject EmailService
+  ) {}
 
   @Post()
   async createBooking(
@@ -82,6 +87,18 @@ export class BookingController {
 
       this.logger.log(`Booking created successfully: ${booking.id}`);
 
+      // Send an important email notification to the user.
+      const html = `
+        <p>Dear ${user.firstName || 'User'},</p>
+        <p>Your booking <strong>${booking.id}</strong> has been created and is pending confirmation.</p>
+        <p>Thank you for choosing our service.</p>
+      `;
+      await this.emailService.sendImportantEmail(
+        user.email,
+        'Booking Created - Important Notification',
+        html,
+      );
+
       // Return a sanitized object
       return instanceToPlain(booking.toObject()) as BookingDocument;
     } catch (error: unknown) {
@@ -122,6 +139,17 @@ export class BookingController {
     const booking = await this.bookingService.confirmBooking(
       bookingId,
       user._id.toString(),
+    );
+    // Notify the user about the booking confirmation.
+    const html = `
+      <p>Dear ${user.firstName || 'User'},</p>
+      <p>Your booking <strong>${booking.id}</strong> has been confirmed.</p>
+      <p>Thank you for choosing our service.</p>
+    `;
+    await this.emailService.sendImportantEmail(
+      user.email,
+      'Booking Confirmed - Important Notification',
+      html,
     );
     return instanceToPlain(booking.toObject()) as BookingDocument;
   }

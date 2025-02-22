@@ -1,3 +1,4 @@
+// src/modules/flight/flight.controller.ts
 import {
   Controller,
   Get,
@@ -15,11 +16,15 @@ import { QueryFlightDto } from './dto/query-flight.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Flight } from './schemas/flight.schema';
+import { EmailService } from '../email/email.service';
 
 @ApiTags('Flights')
 @Controller('flights')
 export class FlightController {
-  constructor(private readonly flightService: FlightService) {}
+  constructor(
+    private readonly flightService: FlightService,
+    private readonly emailService: EmailService, // Inject EmailService
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create new flight' })
@@ -30,7 +35,12 @@ export class FlightController {
   })
   async create(@Body() createFlightDto: CreateFlightDto) {
     const flight = await this.flightService.create(createFlightDto);
-
+    // Send notification to admins about the new flight.
+    await this.emailService.sendImportantEmail(
+      'admin@example.com',
+      'New Flight Created',
+      `Flight ${flight.flightNumber} has been created.`,
+    );
     return new ApiResponseDto({
       success: true,
       message: 'Flight created successfully',
@@ -47,7 +57,6 @@ export class FlightController {
   })
   async searchAvailableFlights(@Query() query: QueryFlightDto) {
     const flights = await this.flightService.searchAvailableFlights(query);
-
     return new ApiResponseDto({
       success: true,
       message: `Found ${flights.length} available flights`,
@@ -64,7 +73,6 @@ export class FlightController {
   })
   async findAll(@Query() query: QueryFlightDto) {
     const flights = await this.flightService.findAll(query);
-
     return new ApiResponseDto({
       success: true,
       message: `Found ${flights.length} flights`,
@@ -81,7 +89,6 @@ export class FlightController {
   })
   async findOne(@Param('id') id: string) {
     const flight = await this.flightService.findOne(id);
-
     return new ApiResponseDto({
       success: true,
       message: 'Flight details retrieved successfully',
@@ -101,7 +108,12 @@ export class FlightController {
     @Body() updateFlightDto: UpdateFlightDto,
   ) {
     const flight = await this.flightService.update(id, updateFlightDto);
-
+    // Notify admin about the update.
+    await this.emailService.sendImportantEmail(
+      'admin@example.com',
+      'Flight Updated',
+      `Flight ${flight.flightNumber} has been updated.`,
+    );
     return new ApiResponseDto({
       success: true,
       message: 'Flight updated successfully',
@@ -118,7 +130,12 @@ export class FlightController {
   })
   async remove(@Param('id') id: string) {
     const flight = await this.flightService.remove(id);
-
+    // Notify admin about the deletion.
+    await this.emailService.sendImportantEmail(
+      'admin@example.com',
+      'Flight Deleted',
+      `Flight ${flight.flightNumber} has been deleted.`,
+    );
     return new ApiResponseDto({
       success: true,
       message: 'Flight deleted successfully',

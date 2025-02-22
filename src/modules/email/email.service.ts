@@ -1,3 +1,4 @@
+// src/common/email/email.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
@@ -68,8 +69,8 @@ export class EmailService implements OnModuleInit {
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Email Verification</h2>
         <p>Click the button below to verify your email address:</p>
-        <a href="${verificationUrl}" 
-           style="background-color: #2196F3; color: white; padding: 14px 25px; 
+        <a href="${verificationUrl}"
+           style="background-color: #2196F3; color: white; padding: 14px 25px;
                   text-align: center; text-decoration: none; display: inline-block;
                   border-radius: 4px;">
            Verify Email
@@ -113,14 +114,14 @@ export class EmailService implements OnModuleInit {
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Password Reset Request</h2>
         <p>Click the button below to reset your password:</p>
-        <a href="${resetUrl}" 
-           style="background-color: #4CAF50; color: white; padding: 14px 25px; 
+        <a href="${resetUrl}"
+           style="background-color: #4CAF50; color: white; padding: 14px 25px;
                   text-align: center; text-decoration: none; display: inline-block;
                   border-radius: 4px;">
            Reset Password
         </a>
         <p style="margin-top: 20px; color: #666;">
-          This link will expire in 1 hour. If you didn't request this, 
+          This link will expire in 1 hour. If you didn't request this,
           please ignore this email.
         </p>
       </div>
@@ -146,5 +147,39 @@ export class EmailService implements OnModuleInit {
       );
       throw new Error('Failed to send password reset email');
     }
+  }
+
+  // NEW: Generic method for important notifications
+  async sendImportantEmail(
+    email: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
+    try {
+      await this.transporter.sendMail({
+        from: `"Important Notification" <${this.config.get('MAIL_FROM')}>`,
+        to: email,
+        subject: subject,
+        html: html,
+      });
+      this.logger.log(
+        `Important email sent to ${email} with subject: ${subject}`,
+      );
+    } catch (error: any) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Failed to send important email to ${email}: ${errorMessage}`,
+        error instanceof Error ? error.stack : '',
+      );
+      throw new Error('Failed to send important email');
+    }
+  }
+}
+
+export class EmailServiceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EmailServiceError';
   }
 }
