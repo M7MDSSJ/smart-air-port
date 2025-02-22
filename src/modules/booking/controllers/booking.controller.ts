@@ -9,6 +9,7 @@ import {
   Req,
   BadRequestException,
   Logger,
+  Get,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
@@ -17,6 +18,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { BookingDocument } from '../schemas/booking.schema';
 import { Request } from 'express';
 import { GetUser } from 'src/common/decorators/user.decorator';
+import { isMongoId } from 'class-validator';
+import { instanceToPlain } from 'class-transformer';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('booking')
@@ -29,39 +32,44 @@ export class BookingController {
   async createBooking(
     @Body() createBookingDto: CreateBookingDto,
     @Req() req: Request,
-  ) {
+  ): Promise<BookingDocument> {
     try {
       this.logger.log('Received createBooking request');
-
-      // Log the request body for debugging
       this.logger.log(`Request Body: ${JSON.stringify(createBookingDto)}`);
 
       if (!createBookingDto.idempotencyKey) {
         throw new BadRequestException('Idempotency key is required');
       }
 
-      // Use the user provided by the JWT strategy
       const user = req.user as UserDocument;
       if (!user) {
         throw new BadRequestException('User not found in request');
       }
-
       this.logger.log(`User ID: ${user._id.toString()}`);
 
       const idempotencyKey = createBookingDto.idempotencyKey;
       this.logger.log(`Idempotency Key: ${idempotencyKey}`);
 
-      // Validate flightId
       if (!createBookingDto.flightId) {
         throw new BadRequestException('Flight ID is required');
       }
 
-      // Validate seats
+      if (!isMongoId(createBookingDto.flightId)) {
+        throw new BadRequestException('Invalid flight ID format');
+      }
+
       if (!createBookingDto.seats || createBookingDto.seats.length === 0) {
         throw new BadRequestException('At least one seat is required');
       }
 
-      // Validate paymentProvider
+      createBookingDto.seats.forEach((seat) => {
+        if (!/^[A-Z]\d+$/.test(seat.seatNumber)) {
+          throw new BadRequestException(
+            `Invalid seat number format: ${seat.seatNumber}`,
+          );
+        }
+      });
+
       if (!createBookingDto.paymentProvider) {
         throw new BadRequestException('Payment provider is required');
       }
@@ -73,7 +81,9 @@ export class BookingController {
       );
 
       this.logger.log(`Booking created successfully: ${booking.id}`);
-      return booking;
+
+      // Return a sanitized object
+      return instanceToPlain(booking.toObject()) as BookingDocument;
     } catch (error: unknown) {
       this.logger.error(
         `Error creating booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -96,14 +106,23 @@ export class BookingController {
     }
   }
 
+  @Get(':id/status')
+  async getBookingStatus(
+    @Param('id') id: string,
+  ): Promise<{ success: boolean; status: string }> {
+    const status: string = await this.bookingService.getStatus(id);
+    return { success: true, status };
+  }
+
   @Post('confirm/:bookingId')
   async confirmBooking(
     @Param('bookingId') bookingId: string,
     @GetUser() user: UserDocument,
   ): Promise<BookingDocument> {
-    return await this.bookingService.confirmBooking(
+    const booking = await this.bookingService.confirmBooking(
       bookingId,
       user._id.toString(),
     );
+    return instanceToPlain(booking.toObject()) as BookingDocument;
   }
 }

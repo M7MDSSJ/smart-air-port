@@ -11,6 +11,7 @@ import { BookingRepository } from './repositories/booking.repository';
 import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.scheduler';
 import { EventBus } from 'src/common/event-bus.service';
 import { AuthModule } from '../auth/auth.module';
+import { PaymentController } from './controllers/payment.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { AuthModule } from '../auth/auth.module';
     FlightModule,
     AuthModule,
   ],
-  controllers: [BookingController],
+  controllers: [BookingController, PaymentController],
   providers: [
     BookingService,
     PaymentService,

@@ -1,5 +1,9 @@
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'expired';
-
+export type BookingStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'cancelled'
+  | 'expired'
+  | 'failed';
 export type PaymentProvider = 'stripe' | 'paypal' | 'mobile_wallet';
 
 export type SeatClass = 'economy' | 'premium_economy' | 'business' | 'first';
