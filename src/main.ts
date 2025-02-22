@@ -10,6 +10,8 @@ import { FastifyRequest } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 
 declare module 'fastify' {
@@ -48,6 +50,23 @@ async function bootstrap() {
       },
     }),
   );
+  const config = new DocumentBuilder()
+    .setTitle('Smart Airport API')
+    .setDescription('API documentation for the Smart Airport application')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('docs', app, document);
 
   registerInstrumentations({
     instrumentations: [new FastifyInstrumentation({})],
