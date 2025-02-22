@@ -9,6 +9,7 @@ import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { FlightModule } from '../modules/flight/flight.module';
 import { BookingModule } from 'src/modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EmailModule } from 'src/modules/email/email.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       inject: [ConfigService],
     }),
     UsersModule,
+    EmailModule,
     FlightModule,
     BookingModule,
     ScheduleModule.forRoot(),

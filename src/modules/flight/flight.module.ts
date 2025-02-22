@@ -9,11 +9,13 @@ import { FLIGHT_REPOSITORY } from './repositories/flight.repository.interface';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import Redlock from 'redlock';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Flight', schema: FlightSchema }]),
     ConfigModule,
+    EmailModule,
   ],
   controllers: [FlightController],
   providers: [
@@ -22,6 +24,7 @@ import Redlock from 'redlock';
       provide: FLIGHT_REPOSITORY,
       useClass: FlightRepository,
     },
+
     {
       provide: 'REDIS_CLIENT',
       useFactory: (configService: ConfigService): Redis => {

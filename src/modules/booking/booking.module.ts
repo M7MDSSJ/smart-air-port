@@ -12,12 +12,13 @@ import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.schedule
 import { EventBus } from 'src/common/event-bus.service';
 import { AuthModule } from '../auth/auth.module';
 import { PaymentController } from './controllers/payment.controller';
-
+import { EmailModule } from '../email/email.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Booking', schema: BookingSchema }]),
     FlightModule,
     AuthModule,
+    EmailModule,
   ],
   controllers: [BookingController, PaymentController],
   providers: [
