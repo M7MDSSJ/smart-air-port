@@ -8,6 +8,7 @@ import {
   Inject,
   Logger,
   OnModuleInit,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   IBookingRepository,
@@ -86,41 +87,60 @@ export class BookingService implements OnModuleInit {
   ): Promise<BookingDocument> {
     const session = await this.connection.startSession();
     session.startTransaction();
+    const flight = await this.flightService.findOne(createBookingDto.flightId);
+    const currentVersion = flight.version; // Current flight version
 
     try {
+      // Check for an existing booking with the same idempotency key.
       const preExisting = await this.bookingRepository.findOne({
         idempotencyKey,
       });
       if (preExisting) {
+        // If the flight IDs differ, reject the request.
+        if (preExisting.flight.toString() !== createBookingDto.flightId) {
+          throw new ConflictException(
+            'Idempotency key has already been used for a different booking.',
+          );
+        }
         await session.commitTransaction();
         return preExisting;
       }
 
-      const flight = await this.flightService.findOne(
+      // Re-fetch the flight for consistency.
+      const flightAfterCheck = await this.flightService.findOne(
         createBookingDto.flightId,
       );
 
-      // Update each seat's price to match the flight's price if needed.
+      // Strict price validation
       for (const seat of createBookingDto.seats) {
-        if (seat.price !== flight.price) {
-          this.logger.warn(
-            `Seat price ${seat.price} does not match flight price ${flight.price}. Updating seat price to match flight price.`,
+        if (seat.price !== flightAfterCheck.price) {
+          throw new BadRequestException(
+            `Seat ${seat.seatNumber} price must match flight price of ${flightAfterCheck.price}`,
           );
-          seat.price = flight.price;
+        }
+      }
+
+      // Optionally update each seat's price to match the flight's price if needed.
+      for (const seat of createBookingDto.seats) {
+        if (seat.price !== flightAfterCheck.price) {
+          this.logger.warn(
+            `Seat price ${seat.price} does not match flight price ${flightAfterCheck.price}. Updating seat price to match flight price.`,
+          );
+          seat.price = flightAfterCheck.price;
         }
       }
 
       const availableSeats =
-        flight.seatsAvailable - createBookingDto.seats.length;
+        flightAfterCheck.seatsAvailable - createBookingDto.seats.length;
       if (availableSeats < 0) {
         throw new ConflictException('Not enough available seats');
       }
 
-      const currentVersion = flight.version;
+      const currentVersionAfterCheck = flightAfterCheck.version;
       await this.flightService.updateSeats({
         flightId: createBookingDto.flightId,
         seatDelta: -createBookingDto.seats.length,
-        expectedVersion: currentVersion,
+        expectedVersion: currentVersionAfterCheck,
       });
 
       const paymentIntent: PaymentIntent =
@@ -176,6 +196,17 @@ export class BookingService implements OnModuleInit {
       return booking;
     } catch (error: unknown) {
       await session.abortTransaction();
+      if (createBookingDto?.seats) {
+        await this.flightService
+          .updateSeats({
+            flightId: createBookingDto.flightId,
+            seatDelta: createBookingDto.seats.length,
+            expectedVersion: currentVersion,
+          })
+          .catch((rollbackError) => {
+            this.logger.error('Seat rollback failed', rollbackError);
+          });
+      }
       if (error instanceof Error) throw error;
       throw new HttpException(
         'Booking creation failed',
@@ -216,12 +247,29 @@ export class BookingService implements OnModuleInit {
         `Booking not found for payment intent: ${paymentIntentId}`,
       );
     }
+
+    // Only update if the booking is pending
+    if (booking.status !== 'pending') {
+      this.logger.warn(
+        `Booking ${booking.id} is not pending (current status: ${booking.status}). Skipping confirmation.`,
+      );
+      return booking;
+    }
+
     const updatedBooking = await this.bookingRepository.update(
       { _id: booking.id },
       { status: 'confirmed' },
     );
     this.logger.log(`Booking confirmed via payment: ${updatedBooking.id}`);
     return updatedBooking;
+  }
+
+  async getStatus(bookingId: string): Promise<string> {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    return booking.status;
   }
 
   async failBooking(
@@ -250,6 +298,45 @@ export class BookingService implements OnModuleInit {
       status: 'pending',
       expiresAt: { $lte: new Date() },
     });
+  }
+
+  async retryPayment(bookingId: string): Promise<BookingDocument> {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    // Allow retry only if booking status is "failed"
+    if (booking.status !== 'failed') {
+      throw new ConflictException(
+        'Payment retry is allowed only for failed bookings',
+      );
+    }
+
+    const flight = await this.flightService.findOne(booking.flight.toString());
+    if (!flight) {
+      throw new NotFoundException('Associated flight not found');
+    }
+
+    const newPaymentIntent = await this.paymentService.createPaymentIntent({
+      amount: booking.totalPrice,
+      currency: 'USD',
+      paymentMethod: booking.paymentProvider,
+      metadata: {
+        userId: booking.user.toString(),
+        flightId: String(flight._id),
+      },
+    });
+
+    const updatedBooking = await this.bookingRepository.update(
+      { _id: booking.id },
+      { paymentIntentId: newPaymentIntent.id, status: 'pending' },
+    );
+
+    this.logger.log(
+      `Payment retried for booking ${booking.id}. New Payment Intent: ${newPaymentIntent.id}`,
+    );
+    return updatedBooking;
   }
 
   // NEW: Cancel a booking (for expired or user-requested cancellation)

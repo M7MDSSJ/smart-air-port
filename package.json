@@ -33,6 +33,7 @@
     "@nestjs/platform-fastify": "^11.0.10",
     "@nestjs/schedule": "^5.0.1",
     "@nestjs/swagger": "^11.0.3",
+    "@nestjs/throttler": "^6.4.0",
     "@opentelemetry/instrumentation-fastify": "^0.44.2",
     "@prisma/client": "^6.3.0",
     "bcrypt": "^5.1.1",
