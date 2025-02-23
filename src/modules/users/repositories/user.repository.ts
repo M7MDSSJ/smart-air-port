@@ -7,14 +7,13 @@ import { IUserRepository } from './user.repository.interface';
 @Injectable()
 export class UserRepository implements IUserRepository {
   constructor(
-    @InjectModel('User') private readonly userModel: Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
   }
 
-  // Added method to fetch the user with the password field included
   async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
     return this.userModel
       .findOne({ email })
@@ -23,7 +22,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findById(userId: string): Promise<UserDocument | null> {
-    return this.userModel.findById(userId);
+    return this.userModel.findById(userId).select('+password').exec();
   }
 
   async create(user: Partial<User>): Promise<UserDocument> {
