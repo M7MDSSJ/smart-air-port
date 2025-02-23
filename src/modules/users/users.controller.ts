@@ -23,7 +23,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Role } from 'src/common/enums/role.enum';
 import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
-import { VerifyEmailDto } from './dto/verify-email.dto'; // Import the DTO
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendEmailVerificationDto } from './dto/resend-email-verification.dto';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -62,15 +65,19 @@ export class UsersController {
     description: 'Verification email sent successfully',
   })
   @Post('resend-verification')
-  async resendVerificationEmail(@Body('email') email: string) {
-    return this.userManagementService.resendVerificationEmail(email);
+  async resendVerificationEmail(
+    @Body() resendEmailDto: ResendEmailVerificationDto,
+  ) {
+    return this.userManagementService.resendVerificationEmail(
+      resendEmailDto.email,
+    );
   }
 
   @ApiOperation({ summary: 'Refresh JWT token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
   @Post('refresh-token')
-  async refreshToken(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshToken(refreshToken);
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
   @ApiOperation({ summary: 'Login user' })
@@ -103,8 +110,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset email sent' })
   @Post('request-password-reset')
-  async requestPasswordReset(@Body('email') email: string) {
-    return this.passwordResetService.requestPasswordReset(email);
+  async requestPasswordReset(
+    @Body() requestPasswordResetDto: RequestResetPasswordDto,
+  ) {
+    return this.passwordResetService.requestPasswordReset(
+      requestPasswordResetDto.email,
+    );
   }
 
   @ApiOperation({ summary: 'Reset password' })

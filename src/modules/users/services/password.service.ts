@@ -11,6 +11,7 @@ import { IUserRepository } from '../repositories/user.repository.interface';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { EmailService } from 'src/modules/email/email.service';
+
 interface JwtPayload {
   email: string;
 }
@@ -27,24 +28,36 @@ export class PasswordResetService {
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
     const { oldPassword, newPassword } = changePasswordDto;
+
+    // Retrieve the user from the database with the password field
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // Log the values to ensure they are correct
+    console.log('Old Password:', oldPassword);
+    console.log('Stored Hashed Password:', user.password);
+
+    // Compare the old password with the stored hashed password
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       throw new BadRequestException('Old password is incorrect');
     }
+
+    // Hash the new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedNewPassword;
     await user.save();
+
     return { message: 'Password changed successfully' };
   }
+
   async requestPasswordReset(email: string): Promise<{ message: string }> {
     const user = await this.userRepository.findByEmail(email);
-    if (!user) return { message: 'if this user exists,an email will be sent' };
+    if (!user) return { message: 'If this user exists, an email will be sent' };
     if (!user.isVerified) {
-      throw new BadRequestException('User musy verify before password reset');
+      throw new BadRequestException('User must verify before password reset');
     }
     const resetToken = this.jwtService.sign(
       { email: user.email },
