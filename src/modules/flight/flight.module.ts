@@ -1,4 +1,3 @@
-// src/modules/flight/flight.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { FlightService } from './flight.service';

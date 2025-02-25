@@ -20,7 +20,6 @@ export interface IFlightRepository {
   updateSeats(params: FlightUpdateSeatsParams): Promise<Flight | null>;
   update(id: string, updateFlightDto: UpdateFlightDto): Promise<Flight>;
   delete(id: string): Promise<Flight>;
-  // Optionally, add custom queries like searchByAirport, etc.
 }
 export interface ApiResponse<T> {
   success: boolean;
