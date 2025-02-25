@@ -29,13 +29,13 @@
 A reusable NestJS template with:
 - 🚀 Fastify adapter for better performance
 - ⚡️ SWC compiler for faster builds
-- 📦 Pre-configured logging with `pino-pretty`
+- Mongoose as ORM dealing with mongoDB
 
 ## Usage
 
 1. Clone this template:
    ```bash
-   https://github.com/Linxier-node/Nestjs-Fastify-SWC-template.git
-    yarn install
-    yarn start:dev
+   https://github.com/Aliexe-code/smart-air-port.git
+    bun install
+    bun run start:dev
 
