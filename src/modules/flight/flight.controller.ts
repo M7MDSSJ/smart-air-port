@@ -18,6 +18,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Flight } from './schemas/flight.schema';
@@ -26,7 +28,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
-import { ApiBody } from '@nestjs/swagger';
+
 @ApiTags('Flights')
 @Controller('flights')
 export class FlightController {
@@ -35,17 +37,20 @@ export class FlightController {
     private readonly emailService: EmailService,
   ) {}
 
-  // Only Admins and Mods can create flights
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(Role.Admin, Role.Mod)
-  @ApiOperation({ summary: 'Create new flight' })
+  @ApiOperation({
+    summary: 'Create new flight',
+    description:
+      'Creates a new flight record. Only users with Admin or Moderator roles are allowed. Provide all necessary flight details in the request body.',
+  })
   @ApiBody({
     type: CreateFlightDto,
     examples: {
       example1: {
-        summary: 'Create flight example',
+        summary: 'Create Flight Example',
         value: {
           flightNumber: 'S12Z',
           airline: 'Air Cairo',
@@ -79,9 +84,30 @@ export class FlightController {
     });
   }
 
-  // Open for all users: search for available flights
   @Get('search/available')
-  @ApiOperation({ summary: 'Search available flights' })
+  @ApiOperation({
+    summary: 'Search available flights',
+    description:
+      'Search for flights with available seats. Optional filters include departure airport, arrival airport, and departure date.',
+  })
+  @ApiQuery({
+    name: 'departureAirport',
+    required: false,
+    description: 'Departure airport code or name',
+    example: 'CAIRO',
+  })
+  @ApiQuery({
+    name: 'arrivalAirport',
+    required: false,
+    description: 'Arrival airport code or name',
+    example: 'LUX',
+  })
+  @ApiQuery({
+    name: 'departureDate',
+    required: false,
+    description: 'Departure date in YYYY-MM-DD format',
+    example: '2025-02-17',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of available flights',
@@ -96,9 +122,12 @@ export class FlightController {
     });
   }
 
-  // Open for all users: get all flights
   @Get()
-  @ApiOperation({ summary: 'Get all flights' })
+  @ApiOperation({
+    summary: 'Get all flights',
+    description:
+      'Retrieves a list of all flights. Query parameters can be used to filter the results.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Flight details',
@@ -113,9 +142,11 @@ export class FlightController {
     });
   }
 
-  // Open for all users: get flight by ID
   @Get(':id')
-  @ApiOperation({ summary: 'Get flight by ID' })
+  @ApiOperation({
+    summary: 'Get flight by ID',
+    description: 'Retrieves flight details for the given flight ID.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Flight details',
@@ -130,11 +161,33 @@ export class FlightController {
     });
   }
 
-  // Only Admins and Mods can update flights
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Mod)
-  @ApiOperation({ summary: 'Update flight' })
+  @ApiOperation({
+    summary: 'Update flight',
+    description:
+      'Updates an existing flight record by its ID. Only Admin and Moderator roles are allowed. The request must include the current version number for optimistic locking.',
+  })
+  @ApiBody({
+    type: UpdateFlightDto,
+    examples: {
+      example1: {
+        summary: 'Update Flight Example',
+        value: {
+          flightNumber: 'S12Z', // Optionally update flight number
+          airline: 'Air Cairo Updated',
+          departureAirport: 'CAIRO',
+          arrivalAirport: 'LUX',
+          departureTime: '2025-02-17T12:00:00Z',
+          arrivalTime: '2025-02-17T14:30:00Z',
+          price: 275,
+          seats: 200,
+          version: 1, // Required for optimistic locking
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Updated flight details',
@@ -158,11 +211,14 @@ export class FlightController {
     });
   }
 
-  // Only Admins and Mods can delete flights
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Mod)
-  @ApiOperation({ summary: 'Delete flight' })
+  @ApiOperation({
+    summary: 'Delete flight',
+    description:
+      'Deletes an existing flight record by its ID. Only Admin and Moderator roles are allowed to perform this operation.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Deleted flight details',
