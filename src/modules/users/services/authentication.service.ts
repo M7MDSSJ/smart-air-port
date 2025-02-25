@@ -31,7 +31,6 @@ export class AuthenticationService {
   async validateUser(
     loginDto: LoginUserDto,
   ): Promise<{ accessToken: string; refreshToken: string; message: string }> {
-    // Use the new repository method to fetch the user with the password
     const user = await this.userRepository.findByEmailWithPassword(
       loginDto.email,
     );
