@@ -45,8 +45,8 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard) // Optional: Protect this endpoint
-  @Roles(Role.Admin, Role.Mod) // Optional: Only allow admins to access this endpoint
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.Mod)
   @Get('all')
   async getAllUsers() {
     return this.userManagementService.getAllUsers();
@@ -257,29 +257,4 @@ export class UsersController {
       currentUser,
     );
   }
-
-  // @ApiOperation({ summary: 'Update user roles by user ID' })
-  // @ApiResponse({ status: 200, description: 'User roles updated successfully' })
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.Admin)
-  // @ApiBody({
-  //   type: UpdateUserRolesDto,
-  //   examples: { example1: { value: { roles: ['admin'] } } },
-  // })
-  // @Patch(':userId/roles')
-  // async updateRolesByParam(
-  //   @Param('userId') userId: string,
-  //   @Body() updateUserRolesDto: UpdateUserRolesDto,
-  //   @GetUser() currentUser: UserDocument,
-  // ) {
-  //   if (!userId) {
-  //     throw new BadRequestException('User ID is required');
-  //   }
-  //   return this.authService.updateRoles(
-  //     userId,
-  //     updateUserRolesDto,
-  //     currentUser,
-  //   );
-  // }
 }

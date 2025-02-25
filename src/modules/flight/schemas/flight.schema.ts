@@ -49,7 +49,7 @@ export const FlightSchema = new Schema<Flight>(
   },
   {
     timestamps: true,
-    versionKey: 'version', // Use 'version' instead of the default '__v'
+    versionKey: 'version',
   },
 );
 

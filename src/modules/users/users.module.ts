@@ -22,7 +22,7 @@ import { EmailModule } from 'src/modules/email/email.module';
     PasswordResetService,
     JwtService,
     JwtAuthGuard,
-    { provide: 'IUserRepository', useClass: UserRepository }, // Provider declaration
+    { provide: 'IUserRepository', useClass: UserRepository },
   ],
   exports: [
     // Add this line to export the repository

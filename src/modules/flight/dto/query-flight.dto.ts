@@ -1,4 +1,3 @@
-// query-flight.dto.ts
 import { IsOptional, IsDateString, IsString } from 'class-validator';
 
 export class QueryFlightDto {

@@ -1,4 +1,3 @@
-// available-flight-query.dto.ts
 import { QueryFlightDto } from './query-flight.dto';
 
 export interface FlightAvailabilityQuery
