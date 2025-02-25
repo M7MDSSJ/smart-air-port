@@ -19,7 +19,13 @@ export class UserManagementService {
     private readonly userRepository: IUserRepository,
     private readonly emailService: EmailService,
   ) {}
-
+  async getAllUsers(): Promise<{ message: string; users: User[] }> {
+    const users = await this.userRepository.findAll();
+    return {
+      message: 'Users retrieved successfully',
+      users: users.map((user) => this.excludeSensitiveFields(user)), // Exclude sensitive fields
+    };
+  }
   async register(
     createUserDto: CreateUserDto,
   ): Promise<{ message: string; user: Partial<User> }> {
