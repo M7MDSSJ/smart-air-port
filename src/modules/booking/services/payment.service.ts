@@ -1,4 +1,3 @@
-// src/modules/booking/services/payment.service.ts
 import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
@@ -30,16 +29,16 @@ export class PaymentService {
   ): Promise<Stripe.PaymentIntent> {
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: params.amount, // Payment amount (in cents)
+        amount: params.amount,
         currency: params.currency,
-        payment_method_types: ['card'], // Only allow card payments
+        payment_method_types: ['card'],
         metadata: params.metadata,
       });
       this.logger.log(`Payment intent created: ${paymentIntent.id}`);
       return paymentIntent;
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
-      this.logger.error(`Payment failed: ${error.message}`);
+      this.logger.error(`Payment intent creation failed: ${error.message}`);
       throw new PaymentProcessingError('Payment processing failed');
     }
   }
@@ -48,27 +47,21 @@ export class PaymentService {
     paymentIntentId: string,
     expectedAmount: number,
   ): Promise<void> {
-    this.logger.log(`Attempting to confirm payment intent: ${paymentIntentId}`);
-
+    this.logger.log(`Confirming payment intent: ${paymentIntentId}`);
     let paymentIntent =
       await this.stripe.paymentIntents.retrieve(paymentIntentId);
-    this.logger.log(`Payment intent status: ${paymentIntent.status}`);
+    this.logger.debug(`Initial Payment intent status: ${paymentIntent.status}`);
 
-    // If the payment intent already succeeded, simply return.
     if (paymentIntent.status === 'succeeded') {
       this.logger.log(`Payment ${paymentIntentId} already succeeded`);
       return;
     }
-
-    // NEW: If the payment intent is canceled, override confirmation manually.
     if (paymentIntent.status === 'canceled') {
       this.logger.warn(
         `Payment intent ${paymentIntentId} is canceled. Overriding confirmation manually.`,
       );
       return;
     }
-
-    // Allow confirmation if the status is either "requires_confirmation" or "requires_payment_method"
     if (
       paymentIntent.status !== 'requires_confirmation' &&
       paymentIntent.status !== 'requires_payment_method'
@@ -80,7 +73,6 @@ export class PaymentService {
         `Payment cannot be confirmed. Current status: ${paymentIntent.status}`,
       );
     }
-
     if (paymentIntent.amount !== expectedAmount) {
       await this.stripe.paymentIntents.cancel(paymentIntentId);
       this.logger.error(
@@ -90,9 +82,7 @@ export class PaymentService {
         `Payment amount mismatch. Expected: ${expectedAmount}, Received: ${paymentIntent.amount}`,
       );
     }
-
     try {
-      // Confirm the PaymentIntent by attaching a payment method
       const confirmedPaymentIntent = await this.stripe.paymentIntents.confirm(
         paymentIntentId,
         {
@@ -102,20 +92,15 @@ export class PaymentService {
       this.logger.log(
         `Payment ${paymentIntentId} confirmed, new status: ${confirmedPaymentIntent.status}`,
       );
-
-      // Re-retrieve the PaymentIntent to check its final status
       paymentIntent =
         await this.stripe.paymentIntents.retrieve(paymentIntentId);
-      this.logger.log(
-        `Payment intent status after confirmation: ${paymentIntent.status}`,
-      );
-
+      this.logger.debug(`Final Payment intent status: ${paymentIntent.status}`);
       if (paymentIntent.status !== 'succeeded') {
         this.logger.warn(
-          `Payment confirmation did not result in success. Current status: ${paymentIntent.status}`,
+          `Payment confirmation not successful. Status: ${paymentIntent.status}`,
         );
         throw new ConflictException(
-          `Payment confirmation not successful. Current status: ${paymentIntent.status}`,
+          `Payment confirmation not successful. Status: ${paymentIntent.status}`,
         );
       }
     } catch (err: unknown) {
@@ -125,37 +110,29 @@ export class PaymentService {
     }
   }
 
-  async handleWebhookEvent(payload: Buffer, signature: string): Promise<void> {
-    if (!this.configService.get('STRIPE_WEBHOOK_SECRET')) {
-      throw new Error('Webhook secret not configured');
-    }
+  handleWebhookEvent(payload: Buffer, signature: string): void {
+    const webhookSecret = this.configService.getOrThrow<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
     try {
-      const webhookSecret = this.configService.getOrThrow<string>(
-        'STRIPE_WEBHOOK_SECRET',
-      );
       const event = this.stripe.webhooks.constructEvent(
         payload,
         signature,
         webhookSecret,
       );
-      // Process event types here...
       switch (event.type) {
         case 'payment_intent.succeeded':
           this.logger.log('Payment succeeded');
-          await Promise.resolve(
-            this.eventBus.publish('payment.succeeded', {
-              paymentIntentId: event.data.object.id,
-            }),
-          );
+          this.eventBus.publish('payment.succeeded', {
+            paymentIntentId: event.data.object.id,
+          });
           break;
         case 'payment_intent.payment_failed':
           this.logger.error('Payment failed');
-          await Promise.resolve(
-            this.eventBus.publish('payment.failed', {
-              paymentIntentId: event.data.object.id,
-              reason: 'Payment failed',
-            }),
-          );
+          this.eventBus.publish('payment.failed', {
+            paymentIntentId: event.data.object.id,
+            reason: 'Payment failed',
+          });
           break;
         default:
           this.logger.warn(`Unhandled event type: ${event.type}`);
@@ -170,6 +147,7 @@ export class PaymentService {
   async processRefund(paymentIntentId: string): Promise<void> {
     try {
       await this.stripe.refunds.create({ payment_intent: paymentIntentId });
+      this.logger.log(`Refund processed for ${paymentIntentId}`);
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
       this.logger.error(`Refund failed: ${error.message}`);

@@ -163,6 +163,7 @@ export class FlightController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({
     summary: 'Update flight',
@@ -213,6 +214,7 @@ export class FlightController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({
     summary: 'Delete flight',

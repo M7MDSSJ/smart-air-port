@@ -1,4 +1,3 @@
-// src/modules/booking/controllers/booking.controller.ts
 import {
   Controller,
   Post,
@@ -30,7 +29,7 @@ export class BookingController {
 
   constructor(
     private readonly bookingService: BookingService,
-    private readonly emailService: EmailService, // Inject EmailService
+    private readonly emailService: EmailService,
   ) {}
 
   @Post()
@@ -40,33 +39,25 @@ export class BookingController {
   ): Promise<BookingDocument> {
     try {
       this.logger.log('Received createBooking request');
-      this.logger.log(`Request Body: ${JSON.stringify(createBookingDto)}`);
+      this.logger.debug(`Request Body: ${JSON.stringify(createBookingDto)}`);
 
       if (!createBookingDto.idempotencyKey) {
         throw new BadRequestException('Idempotency key is required');
       }
-
       const user = req.user as UserDocument;
       if (!user) {
         throw new BadRequestException('User not found in request');
       }
-      this.logger.log(`User ID: ${user._id.toString()}`);
-
-      const idempotencyKey = createBookingDto.idempotencyKey;
-      this.logger.log(`Idempotency Key: ${idempotencyKey}`);
-
+      this.logger.debug(`User ID: ${user._id.toString()}`);
       if (!createBookingDto.flightId) {
         throw new BadRequestException('Flight ID is required');
       }
-
       if (!isMongoId(createBookingDto.flightId)) {
         throw new BadRequestException('Invalid flight ID format');
       }
-
       if (!createBookingDto.seats || createBookingDto.seats.length === 0) {
         throw new BadRequestException('At least one seat is required');
       }
-
       createBookingDto.seats.forEach((seat) => {
         if (!/^[A-Z]\d+$/.test(seat.seatNumber)) {
           throw new BadRequestException(
@@ -74,7 +65,6 @@ export class BookingController {
           );
         }
       });
-
       if (!createBookingDto.paymentProvider) {
         throw new BadRequestException('Payment provider is required');
       }
@@ -82,12 +72,12 @@ export class BookingController {
       const booking = await this.bookingService.createBooking(
         user,
         createBookingDto,
-        idempotencyKey,
+        createBookingDto.idempotencyKey,
       );
 
       this.logger.log(`Booking created successfully: ${booking.id}`);
 
-      // Send an important email notification to the user.
+      // Send email notification to the user.
       const html = `
         <p>Dear ${user.firstName || 'User'},</p>
         <p>Your booking <strong>${booking.id}</strong> has been created and is pending confirmation.</p>
@@ -102,7 +92,9 @@ export class BookingController {
       return instanceToPlain(booking.toObject()) as BookingDocument;
     } catch (error: unknown) {
       this.logger.error(
-        `Error creating booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Error creating booking: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
       );
 
       if (error instanceof BadRequestException) {
@@ -116,7 +108,6 @@ export class BookingController {
           HttpStatus.BAD_REQUEST,
         );
       } else if (error instanceof HttpException) {
-        // Preserve original HttpException status codes (e.g., 409 Conflict)
         throw error;
       }
       throw new HttpException(
@@ -144,7 +135,6 @@ export class BookingController {
       user._id.toString(),
     );
 
-    // Notify the user about the booking confirmation.
     const html = `
       <p>Dear ${user.firstName || 'User'},</p>
       <p>Your booking <strong>${booking.id}</strong> has been confirmed.</p>
