@@ -1,4 +1,3 @@
-// src/common/event-bus.service.ts
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { EventEmitter } from 'events';
 
@@ -14,5 +13,8 @@ export class EventBus implements OnModuleInit {
     this.eventEmitter.on(event, listener);
   }
 
-  onModuleInit() {}
+  onModuleInit() {
+    // Optionally, configure event emitter (max listeners, etc.)
+    this.eventEmitter.setMaxListeners(20);
+  }
 }

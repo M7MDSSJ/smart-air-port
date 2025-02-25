@@ -9,7 +9,7 @@ import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
 import { FlightModule } from '../modules/flight/flight.module';
 import { BookingModule } from 'src/modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { EmailModule } from 'src/modules/email/email.module';
+import { EmailModule } from '../modules/email/email.module';
 
 @Module({
   imports: [
@@ -17,6 +17,7 @@ import { EmailModule } from 'src/modules/email/email.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

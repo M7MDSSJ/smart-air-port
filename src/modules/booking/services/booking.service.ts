@@ -1,4 +1,3 @@
-// src/modules/booking/services/booking.service.ts
 import {
   Injectable,
   ConflictException,
@@ -48,34 +47,26 @@ export class BookingService implements OnModuleInit {
     this.eventBus.subscribe(
       'payment.succeeded',
       (data: { paymentIntentId: string }) => {
-        void (async () => {
-          try {
-            await this.confirmBookingByPayment(data.paymentIntentId);
-          } catch (error) {
-            this.logger.error(
-              `Failed to confirm booking: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            );
-          }
-        })();
+        this.confirmBookingByPayment(data.paymentIntentId).catch((error) => {
+          this.logger.error(
+            `Failed to confirm booking: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        });
       },
     );
 
     this.eventBus.subscribe(
       'payment.failed',
       (data: { paymentIntentId: string; reason: string }) => {
-        void (async () => {
-          try {
-            await this.failBooking(data.paymentIntentId, data.reason);
-          } catch (error) {
-            this.logger.error(
-              `Failed to mark booking as failed: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            );
-          }
-        })();
+        this.failBooking(data.paymentIntentId, data.reason).catch((error) => {
+          this.logger.error(
+            `Failed to mark booking as failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        });
       },
     );
   }
@@ -88,10 +79,10 @@ export class BookingService implements OnModuleInit {
     const session = await this.connection.startSession();
     session.startTransaction();
     const flight = await this.flightService.findOne(createBookingDto.flightId);
-    const currentVersion = flight.version; // Current flight version
+    const currentVersion = flight.version; // Save current version for rollback
 
     try {
-      // Check for an existing booking with the same idempotency key.
+      // Check idempotency
       const preExisting = await this.bookingRepository.findOne({
         idempotencyKey,
       });
@@ -101,36 +92,20 @@ export class BookingService implements OnModuleInit {
         );
       }
 
-      // Re-fetch the flight for consistency.
+      // Re-fetch flight and validate price per seat
       const flightAfterCheck = await this.flightService.findOne(
         createBookingDto.flightId,
       );
 
-      // Strict price validation.
-      for (const seat of createBookingDto.seats) {
+      createBookingDto.seats.forEach((seat) => {
         if (seat.price !== flightAfterCheck.price) {
           throw new BadRequestException(
             `Seat ${seat.seatNumber} price must match flight price of ${flightAfterCheck.price}`,
           );
         }
-      }
+      });
 
-      // Optionally update each seat's price to match the flight's price if needed.
-      for (const seat of createBookingDto.seats) {
-        if (seat.price !== flightAfterCheck.price) {
-          this.logger.warn(
-            `Seat price ${seat.price} does not match flight price ${flightAfterCheck.price}. Updating seat price to match flight price.`,
-          );
-          seat.price = flightAfterCheck.price;
-        }
-      }
-
-      const availableSeats =
-        flightAfterCheck.seatsAvailable - createBookingDto.seats.length;
-      if (availableSeats < 0) {
-        throw new ConflictException('Not enough available seats');
-      }
-
+      // Update flight seats using optimistic locking
       const currentVersionAfterCheck = flightAfterCheck.version;
       await this.flightService.updateSeats({
         flightId: createBookingDto.flightId,
@@ -159,7 +134,7 @@ export class BookingService implements OnModuleInit {
         status: 'pending',
         totalPrice: paymentIntent.amount,
         totalSeats: createBookingDto.seats.length,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes expiry
         paymentIntentId: paymentIntent.id,
         idempotencyKey,
       };
@@ -187,6 +162,7 @@ export class BookingService implements OnModuleInit {
       return booking;
     } catch (error: unknown) {
       await session.abortTransaction();
+      // Attempt seat rollback if needed
       if (createBookingDto?.seats) {
         await this.flightService
           .updateSeats({
@@ -204,7 +180,7 @@ export class BookingService implements OnModuleInit {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     } finally {
-      void session.endSession();
+      await session.endSession();
     }
   }
 
@@ -239,7 +215,6 @@ export class BookingService implements OnModuleInit {
       );
     }
 
-    // Only update if the booking is pending
     if (booking.status !== 'pending') {
       this.logger.warn(
         `Booking ${booking.id} is not pending (current status: ${booking.status}). Skipping confirmation.`,
@@ -283,7 +258,6 @@ export class BookingService implements OnModuleInit {
     return updatedBooking;
   }
 
-  // NEW: Find all expired pending bookings
   async findExpiredPendingBookings(): Promise<BookingDocument[]> {
     return this.bookingRepository.find({
       status: 'pending',
@@ -296,19 +270,15 @@ export class BookingService implements OnModuleInit {
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
-
-    // Allow retry only if booking status is "failed"
     if (booking.status !== 'failed') {
       throw new ConflictException(
         'Payment retry is allowed only for failed bookings',
       );
     }
-
     const flight = await this.flightService.findOne(booking.flight.toString());
     if (!flight) {
       throw new NotFoundException('Associated flight not found');
     }
-
     const newPaymentIntent = await this.paymentService.createPaymentIntent({
       amount: booking.totalPrice,
       currency: 'USD',
@@ -318,19 +288,16 @@ export class BookingService implements OnModuleInit {
         flightId: String(flight._id),
       },
     });
-
     const updatedBooking = await this.bookingRepository.update(
       { _id: booking.id },
       { paymentIntentId: newPaymentIntent.id, status: 'pending' },
     );
-
     this.logger.log(
       `Payment retried for booking ${booking.id}. New Payment Intent: ${newPaymentIntent.id}`,
     );
     return updatedBooking;
   }
 
-  // NEW: Cancel a booking (for expired or user-requested cancellation)
   async cancelBooking(
     bookingId: string,
     userId: string,
@@ -339,7 +306,6 @@ export class BookingService implements OnModuleInit {
     if (!booking || booking.user.toString() !== userId) {
       throw new NotFoundException('Booking not found');
     }
-    // Allow cancellation if confirmed or if pending and expired
     if (
       booking.status === 'confirmed' ||
       (booking.status === 'pending' &&
@@ -355,7 +321,6 @@ export class BookingService implements OnModuleInit {
           this.logger.error(`Refund attempt failed: ${errorMessage}`);
         }
       }
-      // Release seats
       const flight = await this.flightService.findOne(
         booking.flight.toString(),
       );
