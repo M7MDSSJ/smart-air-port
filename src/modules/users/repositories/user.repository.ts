@@ -9,7 +9,9 @@ export class UserRepository implements IUserRepository {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
-
+  async findAll(): Promise<UserDocument[]> {
+    return this.userModel.find().exec();
+  }
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
   }

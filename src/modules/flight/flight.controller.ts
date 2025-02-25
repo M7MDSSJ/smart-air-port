@@ -1,4 +1,3 @@
-// src/modules/flight/flight.controller.ts
 import {
   Controller,
   Get,
@@ -8,26 +7,58 @@ import {
   Query,
   Put,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { FlightService } from './flight.service';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
 import { QueryFlightDto } from './dto/query-flight.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Flight } from './schemas/flight.schema';
 import { EmailService } from '../email/email.service';
-
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../../common/enums/role.enum';
+import { ApiBody } from '@nestjs/swagger';
 @ApiTags('Flights')
 @Controller('flights')
 export class FlightController {
   constructor(
     private readonly flightService: FlightService,
-    private readonly emailService: EmailService, // Inject EmailService
+    private readonly emailService: EmailService,
   ) {}
 
+  // Only Admins and Mods can create flights
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Create new flight' })
+  @ApiBody({
+    type: CreateFlightDto,
+    examples: {
+      example1: {
+        summary: 'Create flight example',
+        value: {
+          flightNumber: 'S12Z',
+          airline: 'Air Cairo',
+          departureAirport: 'CAIRO',
+          arrivalAirport: 'LUX',
+          departureTime: '2025-02-17T12:00:00Z',
+          arrivalTime: '2025-02-17T14:30:00Z',
+          price: 250,
+          seats: 200,
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 201,
     description: 'Flight created successfully',
@@ -35,7 +66,7 @@ export class FlightController {
   })
   async create(@Body() createFlightDto: CreateFlightDto) {
     const flight = await this.flightService.create(createFlightDto);
-    // Send notification to admins about the new flight.
+    // Notify admin about the new flight
     await this.emailService.sendImportantEmail(
       'admin@example.com',
       'New Flight Created',
@@ -48,6 +79,7 @@ export class FlightController {
     });
   }
 
+  // Open for all users: search for available flights
   @Get('search/available')
   @ApiOperation({ summary: 'Search available flights' })
   @ApiResponse({
@@ -64,6 +96,7 @@ export class FlightController {
     });
   }
 
+  // Open for all users: get all flights
   @Get()
   @ApiOperation({ summary: 'Get all flights' })
   @ApiResponse({
@@ -80,6 +113,7 @@ export class FlightController {
     });
   }
 
+  // Open for all users: get flight by ID
   @Get(':id')
   @ApiOperation({ summary: 'Get flight by ID' })
   @ApiResponse({
@@ -96,7 +130,10 @@ export class FlightController {
     });
   }
 
+  // Only Admins and Mods can update flights
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Update flight' })
   @ApiResponse({
     status: 200,
@@ -121,7 +158,10 @@ export class FlightController {
     });
   }
 
+  // Only Admins and Mods can delete flights
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Delete flight' })
   @ApiResponse({
     status: 200,

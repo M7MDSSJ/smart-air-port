@@ -42,7 +42,15 @@ export class UsersController {
     private readonly userManagementService: UserManagementService,
     private readonly passwordResetService: PasswordResetService,
   ) {}
-
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard) // Optional: Protect this endpoint
+  @Roles(Role.Admin, Role.Mod) // Optional: Only allow admins to access this endpoint
+  @Get('all')
+  async getAllUsers() {
+    return this.userManagementService.getAllUsers();
+  }
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiBody({
@@ -52,7 +60,8 @@ export class UsersController {
         value: {
           email: 'user@example.com',
           password: 'Password123',
-          name: 'John Doe',
+          firstName: 'cse',
+          lastName: 'zag',
         },
       },
     },
@@ -196,7 +205,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User logged out successfully' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @ApiBody({ type: String, examples: { example1: { value: 'refresh-token' } } })
+  @ApiBody({
+    type: String,
+    examples: { example1: { value: { refreshToken: 'refresh-token' } } },
+  })
   @Post('logout')
   async logout(
     @GetUser() user: UserDocument,
