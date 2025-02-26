@@ -10,8 +10,8 @@ import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
+import * as fs from 'fs'; // Import file system module
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -49,6 +49,8 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Smart Airport API')
     .setDescription('API documentation for the Smart Airport application')
@@ -59,12 +61,16 @@ async function bootstrap() {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
-      'access-token',
+      'bearer',
     )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
+  // Write the Swagger spec to a JSON file
+  fs.writeFileSync('./swagger-spec.json', JSON.stringify(document, null, 2));
+
+  // Serve Swagger UI at '/docs'
   SwaggerModule.setup('docs', app, document);
 
   registerInstrumentations({
@@ -73,8 +79,7 @@ async function bootstrap() {
 
   await app.register(helmet, { contentSecurityPolicy: false });
 
-  // ===== ENHANCEMENTS =====
-  // 1. Request-Response Timing
+  // Request-Response Timing
   app
     .getHttpAdapter()
     .getInstance()
@@ -98,7 +103,7 @@ async function bootstrap() {
       done();
     });
 
-  // 2. Error Formatting
+  // Error Formatting
   app
     .getHttpAdapter()
     .getInstance()
@@ -115,16 +120,14 @@ async function bootstrap() {
       res.send(error);
     });
 
-  // 3. Startup Banner
+  // Version Logging and Startup Banner
   const fastify = app.getHttpAdapter().getInstance();
-
-  // 4. Version Logging
   fastify.addHook('onListen', () => {
     fastify.log.info(`Version ${process.env.npm_package_version || '0.0.1'}`);
     fastify.log.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 
-  // 5. Graceful Shutdown
+  // Graceful Shutdown
   process.on('SIGINT', () => {
     fastify.log.info('Shutting down gracefully...');
     app
@@ -135,11 +138,13 @@ async function bootstrap() {
         process.exit(1);
       });
   });
+
   await app.register(rateLimit, {
     global: true,
     max: 100,
     timeWindow: '1 minute',
   });
+
   fastify.addHook('onRoute', (routeOptions) => {
     if (routeOptions.url === '/users/login') {
       routeOptions.config = {
@@ -150,6 +155,7 @@ async function bootstrap() {
       };
     }
   });
+
   await app.register(import('@fastify/cors'), { origin: true });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),

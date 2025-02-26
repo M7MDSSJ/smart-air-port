@@ -15,7 +15,7 @@ import {
   ApiHeader,
 } from '@nestjs/swagger';
 import { PaymentResponseDto } from '../dto/payment-response.dto';
-import { RetryPaymentResponseDto } from '../dto/retry-payment.dto'; // Import the new DTO
+import { RetryPaymentResponseDto } from '../dto/retry-payment.dto';
 
 @ApiTags('Payments')
 @Controller('payment')
@@ -38,9 +38,10 @@ export class PaymentController {
     description: 'Stripe signature for verifying the webhook event',
     required: true,
   })
+  // Updated here: use "schema" instead of "type" to define the request body
   @ApiBody({
     description: 'Raw webhook event data from Stripe (typically a JSON buffer)',
-    type: 'object',
+    schema: { type: 'object' },
     examples: {
       example1: {
         summary: 'Payment Intent Succeeded Event',
@@ -155,7 +156,7 @@ export class PaymentController {
   })
   async retryPayment(
     @Param('id') bookingId: string,
-  ): Promise<RetryPaymentResponseDto> { // Update return type
+  ): Promise<RetryPaymentResponseDto> {
     const booking = await this.bookingService.retryPayment(bookingId);
     return {
       success: true,

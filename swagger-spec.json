@@ -1,0 +1,1498 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/users/all": {
+      "get": {
+        "operationId": "UsersController_getAllUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all users",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/register": {
+      "post": {
+        "operationId": "UsersController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "email": "user@example.com",
+                    "password": "Password123",
+                    "firstName": "cse",
+                    "lastName": "zag"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/verify-email": {
+      "post": {
+        "operationId": "UsersController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "verificationToken": "verification-token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          }
+        },
+        "summary": "Verify user email",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/resend-verification": {
+      "post": {
+        "operationId": "UsersController_resendVerificationEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailVerificationDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "email": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification email sent successfully"
+          }
+        },
+        "summary": "Resend verification email",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/refresh-token": {
+      "post": {
+        "operationId": "UsersController_refreshToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "refreshToken": "refresh-token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully"
+          }
+        },
+        "summary": "Refresh JWT token",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/login": {
+      "post": {
+        "operationId": "UsersController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "email": "user@example.com",
+                    "password": "Password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully"
+          }
+        },
+        "summary": "Login user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/change-password": {
+      "put": {
+        "operationId": "UsersController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "oldPassword": "OldPassword123",
+                    "newPassword": "NewPassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change user password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/request-password-reset": {
+      "post": {
+        "operationId": "UsersController_requestPasswordReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestResetPasswordDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "email": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email sent"
+          }
+        },
+        "summary": "Request password reset",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "operationId": "UsersController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "token": "reset-token",
+                    "newPassword": "NewPassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          }
+        },
+        "summary": "Reset password",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "operationId": "UsersController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user profile",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/logout": {
+      "post": {
+        "operationId": "UsersController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "refreshToken": "refresh-token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged out successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Logout user",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/admin-dashboard": {
+      "get": {
+        "operationId": "UsersController_getAdminDashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin-only content"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get admin dashboard",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/flight-management": {
+      "get": {
+        "operationId": "UsersController_manageFlights",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Flight management dashboard"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Manage flights",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/roles": {
+      "patch": {
+        "operationId": "UsersController_updateRoles",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRolesDto"
+              },
+              "examples": {
+                "example1": {
+                  "value": {
+                    "userId": "user-id",
+                    "roles": [
+                      "admin"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User roles updated successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update user roles",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/flights": {
+      "post": {
+        "description": "Creates a new flight record. Only users with Admin or Moderator roles are allowed. Provide all necessary flight details in the request body.",
+        "operationId": "FlightController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFlightDto"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "Create Flight Example",
+                  "value": {
+                    "flightNumber": "S12Z",
+                    "airline": "Air Cairo",
+                    "departureAirport": "CAIRO",
+                    "arrivalAirport": "LUX",
+                    "departureTime": "2025-02-17T12:00:00Z",
+                    "arrivalTime": "2025-02-17T14:30:00Z",
+                    "price": 250,
+                    "seats": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Flight created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create new flight",
+        "tags": [
+          "Flights"
+        ]
+      },
+      "get": {
+        "description": "Retrieves a list of all flights. Query parameters can be used to filter the results.",
+        "operationId": "FlightController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Flight details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all flights",
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/flights/search/available": {
+      "get": {
+        "description": "Search for flights with available seats. Optional filters include departure airport, arrival airport, and departure date.",
+        "operationId": "FlightController_searchAvailableFlights",
+        "parameters": [
+          {
+            "name": "departureDate",
+            "required": false,
+            "in": "query",
+            "description": "Departure date in YYYY-MM-DD format",
+            "schema": {
+              "example": "2025-02-17"
+            }
+          },
+          {
+            "name": "arrivalAirport",
+            "required": false,
+            "in": "query",
+            "description": "Arrival airport code or name",
+            "schema": {
+              "example": "LUX"
+            }
+          },
+          {
+            "name": "departureAirport",
+            "required": false,
+            "in": "query",
+            "description": "Departure airport code or name",
+            "schema": {
+              "example": "CAIRO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available flights",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Search available flights",
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/flights/{id}": {
+      "get": {
+        "description": "Retrieves flight details for the given flight ID.",
+        "operationId": "FlightController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flight details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get flight by ID",
+        "tags": [
+          "Flights"
+        ]
+      },
+      "put": {
+        "description": "Updates an existing flight record by its ID. Only Admin and Moderator roles are allowed. The request must include the current version number for optimistic locking.",
+        "operationId": "FlightController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFlightDto"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "Update Flight Example",
+                  "value": {
+                    "flightNumber": "S12Z",
+                    "airline": "Air Cairo Updated",
+                    "departureAirport": "CAIRO",
+                    "arrivalAirport": "LUX",
+                    "departureTime": "2025-02-17T12:00:00Z",
+                    "arrivalTime": "2025-02-17T14:30:00Z",
+                    "price": 275,
+                    "seats": 200,
+                    "version": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated flight details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update flight",
+        "tags": [
+          "Flights"
+        ]
+      },
+      "delete": {
+        "description": "Deletes an existing flight record by its ID. Only Admin and Moderator roles are allowed to perform this operation.",
+        "operationId": "FlightController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted flight details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete flight",
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/booking": {
+      "post": {
+        "description": "Creates a new booking for the authenticated user. Requires flight details, seat selections, payment provider, and an idempotency key to prevent duplicates. Sends an email notification upon success.",
+        "operationId": "BookingController_createBooking",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "Create Booking Example",
+                  "value": {
+                    "flightId": "67bd1121eb2ea3cd9bb865bf",
+                    "seats": [
+                      {
+                        "seatNumber": "B2",
+                        "class": "economy",
+                        "price": 100
+                      }
+                    ],
+                    "paymentProvider": "stripe",
+                    "idempotencyKey": "d1244128-122b-11ee-be56-024123120002"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Booking created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (e.g., missing idempotency key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Idempotency key is required",
+                  "error": "Validation Failed",
+                  "statusCode": 400
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "message": "Internal error",
+                  "statusCode": 500
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new booking",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/booking/{id}/status": {
+      "get": {
+        "description": "Retrieves the status of a booking by its ID.",
+        "operationId": "BookingController_getBookingStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Booking ID",
+            "schema": {
+              "example": "67be8671461b2609214e658b",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking status retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "status": "pending"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 404,
+                  "message": "Booking not found"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get booking status",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/booking/confirm/{bookingId}": {
+      "post": {
+        "description": "Confirms a booking for the authenticated user by its ID. Sends a confirmation email upon success.",
+        "operationId": "BookingController_confirmBooking",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "required": true,
+            "in": "path",
+            "description": "Booking ID to confirm",
+            "schema": {
+              "example": "67be8671461b2609214e658b",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking confirmed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 404,
+                  "message": "Booking not found"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm a booking",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/payment/webhook": {
+      "post": {
+        "description": "Receives and processes Stripe webhook events. Rate-limited to 10 requests per minute.",
+        "operationId": "PaymentController_handleWebhook",
+        "parameters": [
+          {
+            "name": "stripe-signature",
+            "required": true,
+            "in": "header",
+            "description": "Stripe signature for verifying the webhook event",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Raw webhook event data from Stripe (typically a JSON buffer)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "Payment Intent Succeeded Event",
+                  "value": {
+                    "id": "evt_1NxyzStripeEvent",
+                    "object": "event",
+                    "type": "payment_intent.succeeded",
+                    "data": {
+                      "object": {
+                        "id": "pi_3NxyzStripePaymentIntent",
+                        "amount": 1000
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          },
+          "400": {
+            "description": "Invalid webhook signature or event",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "message": "Invalid Stripe signature"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Handle Stripe webhook events",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/confirm/{paymentIntentId}": {
+      "post": {
+        "description": "Confirms a payment using the payment intent ID and updates the associated booking status.",
+        "operationId": "PaymentController_confirmPayment",
+        "parameters": [
+          {
+            "name": "paymentIntentId",
+            "required": true,
+            "in": "path",
+            "description": "Stripe payment intent ID",
+            "schema": {
+              "example": "pi_3NxyzStripePaymentIntent",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPaymentDto"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "Confirm Payment Example",
+                  "value": {
+                    "expectedAmount": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment confirmed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payment intent or amount mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "message": "Invalid payment intent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 404,
+                  "message": "Booking not found"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm a payment",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/payment/{id}/retry-payment": {
+      "post": {
+        "description": "Retries a payment for a booking that previously failed.",
+        "operationId": "PaymentController_retryPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Booking ID",
+            "schema": {
+              "example": "67be8671461b2609214e658b",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment retry initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryPaymentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Booking not in a retryable state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "message": "Booking cannot be retried"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Booking not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpException"
+                },
+                "example": {
+                  "statusCode": 404,
+                  "message": "Booking not found"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retry a failed payment",
+        "tags": [
+          "Payments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Smart Airport API",
+    "description": "API documentation for the Smart Airport application",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!",
+            "description": "User password"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "cse",
+            "description": "User first name"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "zag",
+            "description": "User last name"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "123-456-7890",
+            "description": "User phone number"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName"
+        ]
+      },
+      "VerifyEmailDto": {
+        "type": "object",
+        "properties": {
+          "verificationToken": {
+            "type": "string",
+            "example": "e1dASL2qpwd2ld!@asca",
+            "description": "Verification token"
+          }
+        },
+        "required": [
+          "verificationToken"
+        ]
+      },
+      "ResendEmailVerificationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user1@example.com",
+            "description": "Email of the user to resend verification"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "example": "your-refresh-token-here",
+            "description": "Refresh token to obtain a new access token"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LoginUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "User email"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!",
+            "description": "User password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "example": "OldPassword123!",
+            "description": "Old password"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewPassword123!",
+            "description": "New password"
+          }
+        },
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ]
+      },
+      "RequestResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user1@example.com",
+            "description": "Email of the user to request password reset"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "reset-token",
+            "description": "Reset token"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "NewPassword123!",
+            "description": "New password"
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ]
+      },
+      "UpdateUserRolesDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateFlightDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApiResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "UpdateFlightDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SeatSelectionDto": {
+        "type": "object",
+        "properties": {
+          "seatNumber": {
+            "type": "string",
+            "example": "B2",
+            "description": "Seat number (e.g., A1, B2)"
+          },
+          "class": {
+            "type": "string",
+            "example": "economy",
+            "enum": [
+              "economy",
+              "premium_economy",
+              "business",
+              "first"
+            ],
+            "description": "Class of the seat"
+          },
+          "price": {
+            "type": "number",
+            "example": 100,
+            "description": "Price of the seat in currency units"
+          }
+        },
+        "required": [
+          "seatNumber",
+          "class",
+          "price"
+        ]
+      },
+      "CreateBookingDto": {
+        "type": "object",
+        "properties": {
+          "seats": {
+            "description": "Array of selected seats",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeatSelectionDto"
+            }
+          },
+          "flightId": {
+            "type": "string",
+            "example": "67bd1121eb2ea3cd9bb865bf",
+            "description": "MongoDB ID of the flight"
+          },
+          "paymentProvider": {
+            "type": "string",
+            "example": "stripe",
+            "enum": [
+              "stripe",
+              "paypal",
+              "mobile_wallet"
+            ],
+            "description": "Payment provider for the booking"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "example": "d1244128-122b-11ee-be56-024123120002",
+            "description": "Unique key to prevent duplicate bookings"
+          }
+        },
+        "required": [
+          "seats",
+          "flightId",
+          "paymentProvider",
+          "idempotencyKey"
+        ]
+      },
+      "SeatResponseDto": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "67be8671461b2609214e658c"
+          },
+          "seatNumber": {
+            "type": "string",
+            "example": "B2"
+          },
+          "class": {
+            "type": "string",
+            "example": "economy"
+          },
+          "price": {
+            "type": "number",
+            "example": 100
+          }
+        },
+        "required": [
+          "_id",
+          "seatNumber",
+          "class",
+          "price"
+        ]
+      },
+      "BookingResponseDto": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "67be8671461b2609214e658b"
+          },
+          "user": {
+            "type": "string",
+            "example": "67be6d62391984265fc51a7f"
+          },
+          "flight": {
+            "type": "string",
+            "example": "67bd1121eb2ea3cd9bb865bf"
+          },
+          "seats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeatResponseDto"
+            }
+          },
+          "totalSeats": {
+            "type": "number",
+            "example": 1
+          },
+          "totalPrice": {
+            "type": "number",
+            "example": 100
+          },
+          "status": {
+            "type": "string",
+            "example": "pending"
+          },
+          "paymentProvider": {
+            "type": "string",
+            "example": "stripe"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "example": "d1244128-122b-11ee-be56-024123120002"
+          },
+          "paymentIntentId": {
+            "type": "string",
+            "example": "pi_3NxyzStripePaymentIntent"
+          },
+          "expiresAt": {
+            "type": "string",
+            "example": "2025-02-26T03:38:37.886Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2025-02-26T03:08:37.898Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2025-02-26T03:08:37.898Z"
+          }
+        },
+        "required": [
+          "_id",
+          "user",
+          "flight",
+          "seats",
+          "totalSeats",
+          "totalPrice",
+          "status",
+          "paymentProvider",
+          "idempotencyKey",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "HttpException": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfirmPaymentDto": {
+        "type": "object",
+        "properties": {
+          "expectedAmount": {
+            "type": "number",
+            "description": "Expected amount in cents for payment confirmation",
+            "example": 25000
+          }
+        },
+        "required": [
+          "expectedAmount"
+        ]
+      },
+      "PaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Booking 67be8671461b2609214e658b confirmed successfully."
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "RetryPaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/BookingResponseDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      }
+    }
+  }
+}
