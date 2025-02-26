@@ -89,7 +89,9 @@ export class BookingController {
         html,
       );
 
-      return instanceToPlain(booking.toObject()) as BookingDocument;
+      // Transform MongoDB document to plain object with string IDs instead of buffer objects
+      const plainBooking = this.transformBookingToResponse(booking);
+      return plainBooking;
     } catch (error: unknown) {
       this.logger.error(
         `Error creating booking: ${
@@ -146,6 +148,26 @@ export class BookingController {
       html,
     );
 
-    return instanceToPlain(booking.toObject()) as BookingDocument;
+    return this.transformBookingToResponse(booking);
+  }
+
+  
+  private transformBookingToResponse(booking: BookingDocument): BookingDocument {
+    // First convert to a plain JavaScript object
+    const plainBooking = booking.toObject ? booking.toObject() : booking;
+    
+    // Create a response object with proper string IDs
+    const response = {
+      ...plainBooking,
+      _id: plainBooking._id.toString(),
+      user: plainBooking.user.toString(),
+      flight: plainBooking.flight.toString(),
+      seats: plainBooking.seats.map(seat => ({
+        ...seat,
+        _id: seat._id.toString()
+      }))
+    };
+
+    return response as BookingDocument;
   }
 }
