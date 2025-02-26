@@ -1,4 +1,3 @@
-// src/modules/booking/schemas/booking.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import {
@@ -64,7 +63,6 @@ export class Booking {
   @Prop({ type: String, enum: ['stripe', 'paypal', 'mobile_wallet'] })
   paymentProvider: PaymentProvider;
 
-  // Add TTL: the document will be removed 24 hours (60*60*24 seconds) after idempotencyKey is set.
   @Prop({ required: true, unique: true, index: true, expires: 60 * 60 * 24 })
   idempotencyKey: string;
 
@@ -77,7 +75,6 @@ export class Booking {
   @Prop()
   expiresAt?: Date;
 
-  // Implement Event Sourcing: store booking events
   @Prop({ type: [BookingEventSchema], default: [] })
   events: BookingEvent[];
 }
@@ -85,8 +82,29 @@ export class Booking {
 export type BookingDocument = Booking & Document;
 export const BookingSchema = SchemaFactory.createForClass(Booking);
 
+// Set up the virtual 'id' field
 BookingSchema.virtual('id').get(function () {
   return this._id.toHexString();
 });
 
-BookingSchema.set('toJSON', { virtuals: true });
+// Customize toJSON to convert all ObjectId fields to strings
+BookingSchema.set('toJSON', {
+  virtuals: true,
+  transform: (doc, ret) => {
+    // Convert top-level ObjectId fields
+    ret.id = ret._id.toHexString();
+    ret.user = ret.user.toHexString();    // Convert user ObjectId
+    ret.flight = ret.flight.toHexString(); // Convert flight ObjectId
+
+    // Convert ObjectId in the seats array
+    ret.seats = ret.seats.map(seat => ({
+      ...seat,
+      _id: seat._id.toHexString(), // Convert seat _id to string
+    }));
+
+    // Optionally remove the original _id field
+    delete ret._id;
+
+    return ret;
+  },
+});

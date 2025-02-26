@@ -10,33 +10,27 @@ export class ExpiredBookingsScheduler {
 
   constructor(private readonly bookingService: BookingService) {}
 
-  @Cron('0 * * * * *')
+  @Cron('*/5 * * * *', { name: 'handleExpiredBookings' })
   async handleExpiredBookings(): Promise<void> {
     try {
       const expired: BookingDocument[] =
         await this.bookingService.findExpiredPendingBookings();
 
       for (const booking of expired) {
-        // Validate booking ID type
         if (!booking.id || !(booking.id instanceof Types.ObjectId)) {
           this.logger.warn(`Invalid booking ID: ${booking.id}`);
           continue;
         }
 
-        // Validate user ID type
-        if (
-          !booking.user ||
-          !(booking.user instanceof Types.ObjectId) ||
-          typeof booking.user.toString !== 'function'
-        ) {
+        if (!booking.user || !(booking.user instanceof Types.ObjectId)) {
           this.logger.warn(
-            `Invalid user ID for booking ${booking.id.toString()}: ${booking.user.toString()}`,
+            `Invalid user ID for booking ${booking.id.toString()}: ${booking.user}`,
           );
           continue;
         }
 
-        const bookingId: string = booking.id.toHexString(); // Convert ObjectId to string
-        const userId: string = booking.user.toHexString(); // Convert ObjectId to string
+        const bookingId: string = booking.id.toHexString();
+        const userId: string = booking.user.toHexString();
 
         try {
           await this.bookingService.cancelBooking(bookingId, userId);
