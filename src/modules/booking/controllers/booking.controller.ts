@@ -19,10 +19,20 @@ import { BookingDocument } from '../schemas/booking.schema';
 import { Request } from 'express';
 import { GetUser } from 'src/common/decorators/user.decorator';
 import { isMongoId } from 'class-validator';
-import { instanceToPlain } from 'class-transformer';
 import { EmailService } from '../../email/email.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
+import { BookingResponseDto } from '../dto/booking-response.dto';
 
+@ApiTags('Bookings')
 @UseGuards(AuthGuard('jwt'))
+@ApiBearerAuth()
 @Controller('booking')
 export class BookingController {
   private readonly logger = new Logger(BookingController.name);
@@ -33,10 +43,56 @@ export class BookingController {
   ) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Create a new booking',
+    description:
+      'Creates a new booking for the authenticated user. Requires flight details, seat selections, payment provider, and an idempotency key to prevent duplicates. Sends an email notification upon success.',
+  })
+  @ApiBody({
+    type: CreateBookingDto,
+    examples: {
+      example1: {
+        summary: 'Create Booking Example',
+        value: {
+          flightId: '67bd1121eb2ea3cd9bb865bf',
+          seats: [
+            { seatNumber: 'B2', class: 'economy', price: 100 },
+          ],
+          paymentProvider: 'stripe',
+          idempotencyKey: 'd1244128-122b-11ee-be56-024123120002',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Booking created successfully',
+    type: BookingResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error (e.g., missing idempotency key)',
+    type: HttpException,
+    example: {
+      success: false,
+      message: 'Idempotency key is required',
+      error: 'Validation Failed',
+      statusCode: 400,
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: HttpException,
+    example: {
+      message: 'Internal error',
+      statusCode: 500,
+    },
+  })
   async createBooking(
     @Body() createBookingDto: CreateBookingDto,
     @Req() req: Request,
-  ): Promise<BookingDocument> {
+  ): Promise<BookingResponseDto> {
     try {
       this.logger.log('Received createBooking request');
       this.logger.debug(`Request Body: ${JSON.stringify(createBookingDto)}`);
@@ -77,7 +133,6 @@ export class BookingController {
 
       this.logger.log(`Booking created successfully: ${booking.id}`);
 
-      // Send email notification to the user.
       const html = `
         <p>Dear ${user.firstName || 'User'},</p>
         <p>Your booking <strong>${booking.id}</strong> has been created and is pending confirmation.</p>
@@ -89,9 +144,7 @@ export class BookingController {
         html,
       );
 
-      // Transform MongoDB document to plain object with string IDs instead of buffer objects
-      const plainBooking = this.transformBookingToResponse(booking);
-      return plainBooking;
+      return this.transformBookingToResponse(booking);
     } catch (error: unknown) {
       this.logger.error(
         `Error creating booking: ${
@@ -120,6 +173,29 @@ export class BookingController {
   }
 
   @Get(':id/status')
+  @ApiOperation({
+    summary: 'Get booking status',
+    description: 'Retrieves the status of a booking by its ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Booking ID',
+    example: '67be8671461b2609214e658b',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking status retrieved successfully',
+    example: {
+      success: true,
+      status: 'pending',
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Booking not found',
+    type: HttpException,
+    example: { statusCode: 404, message: 'Booking not found' },
+  })
   async getBookingStatus(
     @Param('id') id: string,
   ): Promise<{ success: boolean; status: string }> {
@@ -128,10 +204,31 @@ export class BookingController {
   }
 
   @Post('confirm/:bookingId')
+  @ApiOperation({
+    summary: 'Confirm a booking',
+    description:
+      'Confirms a booking for the authenticated user by its ID. Sends a confirmation email upon success.',
+  })
+  @ApiParam({
+    name: 'bookingId',
+    description: 'Booking ID to confirm',
+    example: '67be8671461b2609214e658b',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking confirmed successfully',
+    type: BookingResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Booking not found',
+    type: HttpException,
+    example: { statusCode: 404, message: 'Booking not found' },
+  })
   async confirmBooking(
     @Param('bookingId') bookingId: string,
     @GetUser() user: UserDocument,
-  ): Promise<BookingDocument> {
+  ): Promise<BookingResponseDto> {
     const booking = await this.bookingService.confirmBooking(
       bookingId,
       user._id.toString(),
@@ -151,23 +248,29 @@ export class BookingController {
     return this.transformBookingToResponse(booking);
   }
 
-  
-  private transformBookingToResponse(booking: BookingDocument): BookingDocument {
-    // First convert to a plain JavaScript object
+  private transformBookingToResponse(
+    booking: BookingDocument,
+  ): BookingResponseDto {
     const plainBooking = booking.toObject ? booking.toObject() : booking;
-    
-    // Create a response object with proper string IDs
-    const response = {
-      ...plainBooking,
+    return {
       _id: plainBooking._id.toString(),
       user: plainBooking.user.toString(),
       flight: plainBooking.flight.toString(),
       seats: plainBooking.seats.map(seat => ({
-        ...seat,
-        _id: seat._id.toString()
-      }))
+        _id: seat._id.toString(),
+        seatNumber: seat.seatNumber,
+        class: seat.class,
+        price: seat.price,
+      })),
+      totalSeats: plainBooking.totalSeats,
+      totalPrice: plainBooking.totalPrice,
+      status: plainBooking.status,
+      paymentProvider: plainBooking.paymentProvider,
+      idempotencyKey: plainBooking.idempotencyKey,
+      paymentIntentId: plainBooking.paymentIntentId,
+      expiresAt: plainBooking.expiresAt?.toISOString(),
+      createdAt: plainBooking.createdAt.toISOString(),
+      updatedAt: plainBooking.updatedAt.toISOString(),
     };
-
-    return response as BookingDocument;
   }
 }
