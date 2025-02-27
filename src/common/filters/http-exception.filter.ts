@@ -1,54 +1,27 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-
-@Catch(HttpException)
+// src/common/filters/http-exception.filter.ts
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { FastifyRequest } from 'fastify'; // Adjust if using Express
+import { ErrorResponseDto } from 'src/modules/users/dto/error-response.dto';
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest<FastifyRequest>();
+    const status = exception instanceof HttpException ? exception.getStatus() : 500;
 
-    const status = exception.getStatus
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const exceptionResponse = exception.getResponse();
-
-    let message = 'An error occurred';
-    let errorType = exception.name;
-
-    if (typeof exceptionResponse === 'string') {
-      message = exceptionResponse;
-    } else if (
-      typeof exceptionResponse === 'object' &&
-      exceptionResponse !== null
-    ) {
-      message =
-        'message' in exceptionResponse &&
-        typeof exceptionResponse.message === 'string'
-          ? exceptionResponse.message
-          : message;
-
-      errorType =
-        'error' in exceptionResponse &&
-        typeof exceptionResponse.error === 'string'
-          ? exceptionResponse.error
-          : errorType;
-    }
-
-    response.status(status).send({
+    const errorResponse: ErrorResponseDto = {
       success: false,
-      message,
-      error: errorType,
+      message: exception.message || 'An error occurred',
+      error: exception.name || 'Internal Server Error',
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+      path: request.url, // Dynamically sets the path to the request URL
+      errors: exception instanceof HttpException && exception.getResponse()['errors']
+        ? exception.getResponse()['errors']
+        : undefined,
+    };
+
+    response.status(status).send(errorResponse);
   }
 }

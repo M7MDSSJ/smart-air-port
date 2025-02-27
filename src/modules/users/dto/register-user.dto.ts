@@ -3,52 +3,33 @@ import {
   IsEmail,
   IsString,
   MinLength,
-  IsOptional,
   IsStrongPassword,
   IsNotEmpty,
-  IsArray,
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'user@example.com', description: 'User email' })
-  @IsEmail()
-  @IsString()
-  @IsNotEmpty()
+  @IsEmail({}, { message: 'Invalid email format' })
+  @IsNotEmpty({ message: 'Email is required' })
   email: string;
 
-  @ApiProperty({ example: 'Password123!', description: 'User password' })
-  @IsString()
-  @MinLength(8)
-  @IsStrongPassword()
+  @IsStrongPassword({
+    minSymbols: 1,
+    minNumbers: 1,
+    minLowercase: 1,
+    minUppercase: 1,
+  }, {
+    message: 'Password must contain: 1 uppercase, 1 lowercase, 1 number, 1 symbol'
+  })
+  @MinLength(10, { message: 'Password must be at least 10 characters' })
   password: string;
 
-  @ApiProperty({ example: 'cse', description: 'User first name' })
   @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
+  @IsNotEmpty({ message: 'First name is required' })
+  @MinLength(3, { message: 'First name must be at least 3 characters' })
   firstName: string;
 
-  @ApiProperty({ example: 'zag', description: 'User last name' })
   @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
+  @IsNotEmpty({ message: 'Last name is required' })
+  @MinLength(3, { message: 'Last name must be at least 3 characters' })
   lastName: string;
-
-  @ApiProperty({
-    example: '123-456-7890',
-    description: 'User phone number',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  roles?: string[];
-
-  @IsOptional()
-  @IsString()
-  profilePicture?: string;
 }
