@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { IUserRepository } from '../repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/register-user.dto';
@@ -10,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../email/email.service';
 import { Inject } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { UserResponseDto, RegisterResponseDto } from '../dto/register-response.dto'; // Updated import
 
 @Injectable()
 export class UserManagementService {
@@ -18,29 +20,30 @@ export class UserManagementService {
     private readonly userRepository: IUserRepository,
     private readonly emailService: EmailService,
   ) {}
-  async getAllUsers(): Promise<{ message: string; users: User[] }> {
+
+  async getAllUsers(): Promise<{ message: string; users: UserResponseDto[] }> {
     const users = await this.userRepository.findAll();
     return {
       message: 'Users retrieved successfully',
-      users: users.map((user) => this.excludeSensitiveFields(user)), // Exclude sensitive fields
+      users: users.map((user) => this.excludeSensitiveFields(user)), // Now correctly typed
     };
   }
-  async register(
-    createUserDto: CreateUserDto,
-  ): Promise<{ message: string; user: Partial<User> }> {
-    // Prevent manual role assignment
+
+  async register(createUserDto: CreateUserDto): Promise<RegisterResponseDto> {
     if ('roles' in createUserDto) {
       throw new BadRequestException('Role assignment is not allowed');
     }
-
-    // Check if this is the first user to assign admin role
+  
+    const existingUser = await this.userRepository.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+  
     const userCount = await this.userRepository.countByRole('admin');
     const assignedRoles = userCount === 0 ? ['admin'] : ['user'];
-
-    // Hash the password
+  
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    // Create the user
+  
     const newUser: Partial<User> = {
       ...createUserDto,
       roles: assignedRoles,
@@ -49,39 +52,41 @@ export class UserManagementService {
       verificationToken: this.generateToken(),
       verificationTokenExpiry: new Date(Date.now() + 3600000),
     };
-
+  
     const savedUser = await this.userRepository.create(newUser);
-
+  
     try {
       await this.emailService.sendVerificationEmail(
         savedUser.email,
         savedUser.verificationToken as string,
       );
     } catch (error) {
-      console.error(
-        `Failed to send verification email to ${savedUser.email}:`,
-        error,
-      );
+      console.error(`Failed to send verification email to ${savedUser.email}:`, error);
     }
-
+  
+    const userResponse: UserResponseDto = this.excludeSensitiveFields(savedUser);
     return {
-      message:
-        userCount === 0
-          ? 'First admin user created successfully'
-          : 'User registered successfully',
-      user: this.excludeSensitiveFields(savedUser),
+      success: true,
+      data: {
+        message: userCount === 0 ? 'First admin user created successfully' : 'User registered successfully',
+        user: userResponse,
+      },
     };
   }
+  
+  private excludeSensitiveFields(user: User): UserResponseDto {
+    const plainUser = (user as UserDocument).toObject();
+    const { password, verificationToken, verificationTokenExpiry, refreshToken, resetToken, ...safeUser } = plainUser;
+    return safeUser as UserResponseDto;
+  }
+
   async verifyEmail(token: string): Promise<{ message: string }> {
-    // 1. Find user with valid token and expiry
     const user = await this.userRepository.findByToken(token);
 
-    // 2. Validate all required properties exist
     if (!user?.verificationToken || !user.verificationTokenExpiry) {
       throw new BadRequestException('Invalid verification token');
     }
 
-    // 3. Type-safe date comparison
     const expirationDate = new Date(user.verificationTokenExpiry);
     const currentDate = new Date();
 
@@ -89,12 +94,10 @@ export class UserManagementService {
       throw new BadRequestException('Verification token has expired');
     }
 
-    // 4. Check verification status
     if (user.isVerified) {
       throw new BadRequestException('User is already verified');
     }
 
-    // 5. Update user
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
@@ -102,42 +105,37 @@ export class UserManagementService {
 
     return { message: 'Email verified successfully' };
   }
+
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
-    // Find the user by email
     const user = await this.userRepository.findByEmail(email);
-    if (!user)
+    if (!user) {
       return {
         message: 'If this user exists, a verification email will be sent',
       };
+    }
     if (user.isVerified) {
       throw new BadRequestException('User is already verified');
     }
 
-    // Generate a new verification token and expiry
     user.verificationToken = this.generateToken();
-    user.verificationTokenExpiry = new Date(Date.now() + 3600000); // 1 hour validity
+    user.verificationTokenExpiry = new Date(Date.now() + 3600000);
 
-    // Save the updated user
     await user.save();
 
-    // Attempt to send the verification email
     try {
       await this.emailService.sendVerificationEmail(
         user.email,
         user.verificationToken,
       );
     } catch (error) {
-      console.error(
-        `Failed to resend verification email to ${user.email}:`,
-        error,
-      );
+      console.error(`Failed to resend verification email to ${user.email}:`, error);
       throw new BadRequestException('Failed to send verification email');
     }
 
     return { message: 'Verification email sent successfully' };
   }
 
-  async getProfile(userId: string): Promise<{ message: string; user: User }> {
+  async getProfile(userId: string): Promise<{ message: string; user: UserResponseDto }> {
     try {
       const user = await this.userRepository.findById(userId);
 
@@ -153,13 +151,12 @@ export class UserManagementService {
       throw new BadRequestException('Failed to retrieve user profile');
     }
   }
+
   async getById(userId: string): Promise<UserDocument | null> {
     return this.userRepository.findById(userId);
   }
-  async logout(
-    userId: string,
-    providedRefreshToken: string,
-  ): Promise<{ message: string }> {
+
+  async logout(userId: string, providedRefreshToken: string): Promise<{ message: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new BadRequestException('User not found');
@@ -175,14 +172,9 @@ export class UserManagementService {
     return randomBytes(32).toString('hex');
   }
 
-  private excludeSensitiveFields(user: User): User {
-    const userObj: Partial<User> = (
-      user as UserDocument
-    ).toObject() as Partial<User>;
-    delete userObj.password;
-    delete userObj.refreshToken;
-    delete userObj.resetToken;
-    delete userObj.verificationToken;
-    return userObj as User;
+ 
+
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userRepository.findByEmail(email);
   }
 }

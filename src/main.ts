@@ -4,15 +4,17 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app/app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe,BadRequestException } from '@nestjs/common';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { FastifyRequest } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import helmet from '@fastify/helmet';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
-import * as fs from 'fs'; // Import file system module
 
+
+import * as fs from 'fs'; // Import file system module
 declare module 'fastify' {
   interface FastifyRequest {
     startTime?: number;
@@ -88,6 +90,22 @@ async function bootstrap() {
       done();
     });
 
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    exceptionFactory: (errors) => {
+      const errorResponse: Record<string, string> = {};
+      errors.forEach((error) => {
+        const constraints = error.constraints || {};
+        errorResponse[error.property] = Object.values(constraints).join(', ');
+      });
+      return new BadRequestException({ errors: errorResponse });
+    },
+  }),
+);
+    
   app
     .getHttpAdapter()
     .getInstance()
@@ -102,7 +120,7 @@ async function bootstrap() {
       );
       done();
     });
-
+    app.useGlobalFilters(new HttpExceptionFilter());
   // Error Formatting
   app
     .getHttpAdapter()
@@ -157,9 +175,7 @@ async function bootstrap() {
   });
 
   await app.register(import('@fastify/cors'), { origin: true });
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
-  );
+  
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
