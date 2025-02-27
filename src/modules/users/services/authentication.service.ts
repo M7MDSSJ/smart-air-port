@@ -16,7 +16,10 @@ import { Types } from 'mongoose';
 import { Role } from 'src/common/enums/role.enum';
 import { UpdateUserRolesDto } from '../dto/update-user-roles.dto';
 import { Logger } from '@nestjs/common';
-
+import { RefreshTokenResponseDto } from '../dto/refreshToken-response.dto';
+import { LoginResponseDto } from '../dto/login-response.dto';
+import { UpdateRolesResponseDto } from '../dto/updateRoles-response.dto';
+import { UserResponseDto } from '../dto/register-response.dto';
 @Injectable()
 export class AuthenticationService {
   private readonly logger = new Logger(AuthenticationService.name);
@@ -28,12 +31,8 @@ export class AuthenticationService {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  async validateUser(
-    loginDto: LoginUserDto,
-  ): Promise<{ accessToken: string; refreshToken: string; message: string }> {
-    const user = await this.userRepository.findByEmailWithPassword(
-      loginDto.email,
-    );
+  async validateUser(loginDto: LoginUserDto): Promise<LoginResponseDto> {
+    const user = await this.userRepository.findByEmailWithPassword(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -46,7 +45,6 @@ export class AuthenticationService {
       throw new UnauthorizedException('Email not verified');
     }
 
-    // Generate Tokens
     const accessToken = this.jwtService.sign(
       { sub: user._id, email: user.email, roles: user.roles },
       { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
@@ -57,15 +55,15 @@ export class AuthenticationService {
       { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
     );
 
-    await this.userRepository.updateRefreshToken(
-      user._id.toString(),
-      refreshToken,
-    );
+    await this.userRepository.updateRefreshToken(user._id.toString(), refreshToken);
 
     return {
-      message: 'User logged in successfully',
-      accessToken,
-      refreshToken,
+      success: true,
+      data: {
+        message: 'User logged in successfully',
+        accessToken,
+        refreshToken,
+      },
     };
   }
 
@@ -92,30 +90,28 @@ export class AuthenticationService {
     );
     return { accessToken, refreshToken };
   }
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
     try {
-      // Verify the provided refresh token and extract payload
-      const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
+      // Adjust payload type to match your token structure
+      const payload = this.jwtService.verify<{ userId: string; email: string }>(refreshToken, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
-
-      // Ensure the user exists and that the provided token matches what's stored
-      const user = await this.userRepository.findById(payload.sub);
+  
+      const user = await this.userRepository.findById(payload.userId); // Use userId instead of sub
       if (!user || user.refreshToken !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException('Invalid or expired refresh token');
       }
-
-      // Invalidate the old refresh token
-      await this.userRepository.updateRefreshToken(payload.sub, null);
-
-      // Generate new tokens (this will also update the refresh token in the repository)
-      const { accessToken, refreshToken: newToken } =
-        await this.generateTokens(user);
-      return { accessToken, refreshToken: newToken };
+  
+      await this.userRepository.updateRefreshToken(payload.userId, null);
+  
+      const { accessToken, refreshToken: newToken } = await this.generateTokens(user);
+      return {
+        success: true,
+        accessToken,
+        refreshToken: newToken,
+      };
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 
@@ -123,7 +119,7 @@ export class AuthenticationService {
     targetUserId: string,
     updateUserRolesDto: UpdateUserRolesDto,
     currentUser: UserDocument,
-  ): Promise<{ message: string; user: UserDocument }> {
+  ): Promise<UpdateRolesResponseDto> {
     if (updateUserRolesDto.roles.length === 0) {
       throw new BadRequestException('User must have at least one role');
     }
@@ -134,26 +130,22 @@ export class AuthenticationService {
     ) {
       throw new BadRequestException('Invalid role provided');
     }
-    // Ensure only admins can update roles
     if (!currentUser.roles.includes(Role.Admin)) {
-      throw new ForbiddenException('Only admins can update roles');
+      throw new ForbiddenException('Insufficient permissions');
     }
-
-    // Prevent admins from modifying their own roles
     if (currentUser._id.toString() === targetUserId) {
       throw new BadRequestException('Admins cannot modify their own roles');
     }
+
     this.logger.log(
       `Admin ${currentUser.email} updating roles for user ${targetUserId}`,
     );
 
-    // Fetch user to update
     const user = await this.userRepository.findById(targetUserId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Update roles
     user.roles = updateUserRolesDto.roles;
     await user.save();
     this.logger.log(
@@ -161,8 +153,23 @@ export class AuthenticationService {
     );
 
     return {
+      success: true,
       message: 'User roles updated successfully',
-      user,
+      user: this.excludeSensitiveFields(user), // Filter sensitive fields
     };
+  }
+  private excludeSensitiveFields(user: UserDocument): UserResponseDto {
+    const plainUser = user.toObject();
+    const { 
+      password, 
+      verificationToken, 
+      verificationTokenExpiry, 
+      refreshToken, 
+      resetToken, 
+      resetTokenExpiry, 
+      __v, 
+      ...safeUser 
+    } = plainUser;
+    return safeUser as UserResponseDto;
   }
 }

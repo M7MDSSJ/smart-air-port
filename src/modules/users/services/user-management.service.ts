@@ -3,6 +3,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   ConflictException,
+  NotFoundException
 } from '@nestjs/common';
 import { IUserRepository } from '../repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/register-user.dto';
@@ -11,8 +12,10 @@ import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../email/email.service';
 import { Inject } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { UserResponseDto, RegisterResponseDto } from '../dto/register-response.dto'; // Updated import
-
+import { UserResponseDto, RegisterResponseDto } from '../dto/register-response.dto';
+import { VerifyEmailResponseDto } from '../dto/verifyEmail-response.dto';
+import { ResendVerificationResponseDto } from '../dto/resendVerificationResponse.dto';
+import { LogoutResponseDto } from '../dto/logout-response.dto';
 @Injectable()
 export class UserManagementService {
   constructor(
@@ -80,38 +83,39 @@ export class UserManagementService {
     return safeUser as UserResponseDto;
   }
 
-  async verifyEmail(token: string): Promise<{ message: string }> {
+  async verifyEmail(token: string): Promise<VerifyEmailResponseDto> {
     const user = await this.userRepository.findByToken(token);
-
+  
     if (!user?.verificationToken || !user.verificationTokenExpiry) {
       throw new BadRequestException('Invalid verification token');
     }
-
+  
     const expirationDate = new Date(user.verificationTokenExpiry);
     const currentDate = new Date();
-
+  
     if (expirationDate < currentDate) {
       throw new BadRequestException('Verification token has expired');
     }
-
+  
     if (user.isVerified) {
       throw new BadRequestException('User is already verified');
     }
-
+  
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
     await user.save();
-
-    return { message: 'Email verified successfully' };
+  
+    return {
+      success: true,
+      message: 'Email verified successfully',
+    };
   }
 
-  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+  async resendVerificationEmail(email: string): Promise<ResendVerificationResponseDto> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      return {
-        message: 'If this user exists, a verification email will be sent',
-      };
+      throw new NotFoundException('Email not found'); // Changed to match 404
     }
     if (user.isVerified) {
       throw new BadRequestException('User is already verified');
@@ -132,40 +136,37 @@ export class UserManagementService {
       throw new BadRequestException('Failed to send verification email');
     }
 
-    return { message: 'Verification email sent successfully' };
+    return {
+      success: true,
+      message: 'Verification email sent successfully',
+    };
   }
 
-  async getProfile(userId: string): Promise<{ message: string; user: UserResponseDto }> {
-    try {
-      const user = await this.userRepository.findById(userId);
-
-      if (!user) {
-        throw new BadRequestException('User not found');
-      }
-
-      return {
-        message: 'User profile retrieved successfully',
-        user: this.excludeSensitiveFields(user),
-      };
-    } catch {
-      throw new BadRequestException('Failed to retrieve user profile');
+  async getProfile(userId: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+    return this.excludeSensitiveFields(user);
   }
 
   async getById(userId: string): Promise<UserDocument | null> {
     return this.userRepository.findById(userId);
   }
 
-  async logout(userId: string, providedRefreshToken: string): Promise<{ message: string }> {
+  async logout(userId: string, providedRefreshToken: string): Promise<LogoutResponseDto> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new NotFoundException('User not found'); // Optionally adjust to 401
     }
     if (user.refreshToken !== providedRefreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
     }
     await this.userRepository.updateRefreshToken(userId, null);
-    return { message: 'Logged out successfully' };
+    return {
+      success: true,
+      message: 'User logged out successfully',
+    };
   }
 
   private generateToken(): string {
@@ -177,4 +178,5 @@ export class UserManagementService {
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userRepository.findByEmail(email);
   }
+  
 }
