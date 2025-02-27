@@ -3,13 +3,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomLogger } from '../core/logger/logger.service';
 import { UsersModule } from '../modules/users/users.module';
-import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
-import { TransformInterceptor } from 'src/common/interceptors/transform.interceptor';
-import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
+import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import { FlightModule } from '../modules/flight/flight.module';
-import { BookingModule } from 'src/modules/booking/booking.module';
+import { BookingModule } from '../modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { VerifiedUserGuard } from '../common/guards/verifiedUser.guard';
 
 @Module({
   imports: [
@@ -17,13 +20,20 @@ import { EmailModule } from '../modules/email/email.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGO_URI', 'mongodb://localhost:27017/test1'),
-        retryAttempts: 2, // Basic connection retry
+        retryAttempts: 2,
         serverSelectionTimeoutMS: 5000,
+      }),
+      inject: [ConfigService],
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '15m' },
       }),
       inject: [ConfigService],
     }),
@@ -46,6 +56,14 @@ import { EmailModule } from '../modules/email/email.module';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: VerifiedUserGuard,
     },
   ],
 })

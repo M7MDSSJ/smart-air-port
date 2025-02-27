@@ -33,30 +33,33 @@ export class AuthenticationService {
 
   async validateUser(loginDto: LoginUserDto): Promise<LoginResponseDto> {
     const user = await this.userRepository.findByEmailWithPassword(loginDto.email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const isValid = await bcrypt.compare(loginDto.password, user.password);
-    if (!isValid) {
+    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
     if (!user.isVerified) {
       throw new UnauthorizedException('Email not verified');
     }
-
-    const accessToken = this.jwtService.sign(
-      { sub: user._id, email: user.email, roles: user.roles },
-      { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
-    );
-
-    const refreshToken = this.jwtService.sign(
-      { userId: user._id, email: user.email },
-      { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
-    );
-
+  
+    const accessToken = this.jwtService.sign({
+      sub: user._id.toString(),
+      email: user.email,
+      roles: user.roles, // Ensure roles are included
+    }, {
+      secret: this.config.get('JWT_SECRET'),
+      expiresIn: '15m',
+    });
+  
+    const refreshToken = this.jwtService.sign({
+      userId: user._id.toString(),
+      email: user.email,
+      roles: user.roles, // Include roles here too
+    }, {
+      secret: this.config.get('JWT_REFRESH_SECRET'),
+      expiresIn: '7d',
+    });
+  
     await this.userRepository.updateRefreshToken(user._id.toString(), refreshToken);
-
+  
     return {
       success: true,
       data: {

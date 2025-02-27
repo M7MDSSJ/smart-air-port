@@ -1,43 +1,54 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { IUserRepository } from 'src/modules/users/repositories/user.repository.interface';
+import { IUserRepository } from '../../modules/users/repositories/user.repository.interface';
+import { ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
+export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private readonly jwtService: JwtService,
-    @Inject('IUserRepository')
-    private readonly userRepository: IUserRepository,
-  ) {}
+    @Inject('IUserRepository') private readonly userRepository: IUserRepository,
+    private readonly reflector: Reflector,
+    private readonly configService: ConfigService, // Add ConfigService
+  ) {
+    super();
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('No Bearer token provided');
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true; // Skip for public routes
     }
 
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException('No Bearer token provided');
+    }
     try {
-      const token = authHeader.split(' ')[1]; // Extract token from header
-      const decoded = this.jwtService.verify<{ sub: string }>(token, {
-        // Verify the token
-        secret: process.env.JWT_SECRET, // Secret key for verification
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_SECRET'), // Explicitly use JWT_SECRET
       });
-
-      // Fetch the full user document from the database
-      const user = await this.userRepository.findById(decoded.sub);
+      const user = await this.userRepository.findById(payload.sub);
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
-
-      // Attach the complete user document to the request
       request.user = user;
-      return !!request.user;
-    } catch {
+      return true;
+    } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  private extractTokenFromHeader(request: any): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }

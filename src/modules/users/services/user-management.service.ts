@@ -16,6 +16,7 @@ import { UserResponseDto, RegisterResponseDto } from '../dto/register-response.d
 import { VerifyEmailResponseDto } from '../dto/verifyEmail-response.dto';
 import { ResendVerificationResponseDto } from '../dto/resendVerificationResponse.dto';
 import { LogoutResponseDto } from '../dto/logout-response.dto';
+import { ProfileResponseDto } from '../dto/profile-response.dto';
 @Injectable()
 export class UserManagementService {
   constructor(
@@ -79,7 +80,17 @@ export class UserManagementService {
   
   private excludeSensitiveFields(user: User): UserResponseDto {
     const plainUser = (user as UserDocument).toObject();
-    const { password, verificationToken, verificationTokenExpiry, refreshToken, resetToken, ...safeUser } = plainUser;
+    const { 
+      password, 
+      verificationToken, 
+      verificationTokenExpiry, 
+      refreshToken, 
+      resetToken, 
+      resetTokenExpiry, 
+      __v, 
+      _id, // Exclude _id if not wanted
+      ...safeUser 
+    } = plainUser;
     return safeUser as UserResponseDto;
   }
 
@@ -142,12 +153,18 @@ export class UserManagementService {
     };
   }
 
-  async getProfile(userId: string): Promise<UserResponseDto> {
+  async getProfile(userId: string): Promise<ProfileResponseDto> { // Changed to ProfileResponseDto
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return this.excludeSensitiveFields(user);
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Verify your account please'); // Changed to 401
+    }
+    return {
+      message: 'User profile retrieved successfully',
+      user: this.excludeSensitiveFields(user),
+    };
   }
 
   async getById(userId: string): Promise<UserDocument | null> {
