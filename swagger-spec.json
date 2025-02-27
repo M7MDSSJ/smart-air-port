@@ -19,6 +19,40 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - Invalid credentials or unverified account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "unauthorizedCredentials": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid user credentials",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/all"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/all"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden - Only admins and moderators can access this resource",
             "content": {
@@ -250,7 +284,7 @@
             }
           },
           "400": {
-            "description": "Bad request errors",
+            "description": "Bad request - User already verified or email sending failed",
             "content": {
               "application/json": {
                 "schema": {
@@ -346,15 +380,37 @@
             }
           },
           "401": {
-            "description": "Invalid or expired refresh token",
+            "description": "Unauthorized - Invalid credentials, unverified account, or invalid/expired refresh token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
-                    "summary": "Invalid token",
+                  "unauthorizedCredentials": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid user credentials",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/refresh-token"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/refresh-token"
+                    }
+                  },
+                  "invalidToken": {
+                    "summary": "Invalid or expired refresh token",
                     "value": {
                       "success": false,
                       "message": "Invalid or expired refresh token",
@@ -369,6 +425,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Refresh JWT token",
         "tags": [
           "users"
@@ -409,14 +470,14 @@
             }
           },
           "401": {
-            "description": "Invalid credentials or email not verified",
+            "description": "Unauthorized - Invalid credentials or email not verified",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "invalidCredentials": {
                     "summary": "Invalid credentials",
                     "value": {
                       "success": false,
@@ -483,29 +544,40 @@
             }
           },
           "401": {
-            "description": "Invalid old password or user not authenticated",
+            "description": "Unauthorized - Invalid credentials, unverified account, or invalid old password",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "invalidOldPassword": {
-                    "summary": "Invalid old password",
+                  "unauthorizedCredentials": {
+                    "summary": "Invalid credentials",
                     "value": {
                       "success": false,
-                      "message": "Invalid old password",
+                      "message": "Invalid user credentials",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/change-password"
                     }
                   },
-                  "userNotFound": {
-                    "summary": "User not authenticated",
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
                     "value": {
                       "success": false,
-                      "message": "User not found",
+                      "message": "Verify your account please",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/change-password"
+                    }
+                  },
+                  "invalidOldPassword": {
+                    "summary": "Invalid old password",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid old password",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -529,7 +601,7 @@
                     "value": {
                       "success": false,
                       "message": "User not found",
-                      "error": "NotFound",
+                      "error": "Not Found",
                       "statusCode": 404,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/change-password"
@@ -726,20 +798,54 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid credentials",
+            "description": "Unauthorized - Invalid credentials or unverified account",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "unauthorizedCredentials": {
                     "summary": "Invalid credentials",
                     "value": {
                       "success": false,
                       "message": "Invalid user credentials",
                       "error": "Unauthorized",
                       "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/profile"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/profile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "notFound": {
+                    "summary": "User not found",
+                    "value": {
+                      "success": false,
+                      "message": "User not found",
+                      "error": "Not Found",
+                      "statusCode": 404,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/profile"
                     }
@@ -793,29 +899,40 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid refresh token or credentials",
+            "description": "Unauthorized - Invalid credentials, unverified account, or invalid refresh token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorizedToken": {
-                    "summary": "Invalid refresh token",
+                  "unauthorizedCredentials": {
+                    "summary": "Invalid credentials",
                     "value": {
                       "success": false,
-                      "message": "Invalid refresh token",
+                      "message": "Invalid user credentials",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/logout"
                     }
                   },
-                  "unauthorizedCredentials": {
-                    "summary": "Invalid credentials",
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
                     "value": {
                       "success": false,
-                      "message": "Invalid user credentials",
+                      "message": "Verify your account please",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/logout"
+                    }
+                  },
+                  "invalidToken": {
+                    "summary": "Invalid refresh token",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid refresh token",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -854,18 +971,29 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid credentials",
+            "description": "Unauthorized - Invalid credentials or unverified account",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "unauthorizedCredentials": {
                     "summary": "Invalid credentials",
                     "value": {
                       "success": false,
                       "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/admin-dashboard"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -927,18 +1055,29 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid credentials",
+            "description": "Unauthorized - Invalid credentials or unverified account",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "unauthorizedCredentials": {
                     "summary": "Invalid credentials",
                     "value": {
                       "success": false,
                       "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/flight-management"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -1065,18 +1204,29 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid credentials",
+            "description": "Unauthorized - Invalid credentials or unverified account",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "unauthorizedCredentials": {
                     "summary": "Invalid credentials",
                     "value": {
                       "success": false,
                       "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  },
+                  "unverifiedAccount": {
+                    "summary": "Unverified account",
+                    "value": {
+                      "success": false,
+                      "message": "Verify your account please",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -1102,29 +1252,6 @@
                       "message": "Insufficient permissions",
                       "error": "Forbidden",
                       "statusCode": 403,
-                      "timestamp": "2025-02-27T09:05:47.193Z",
-                      "path": "/users/roles"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                },
-                "examples": {
-                  "notFound": {
-                    "summary": "User not found",
-                    "value": {
-                      "success": false,
-                      "message": "User not found",
-                      "error": "Not Found",
-                      "statusCode": 404,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/roles"
                     }

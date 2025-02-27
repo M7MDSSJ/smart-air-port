@@ -4,7 +4,7 @@ import { AppModule } from '../src/app/app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../src/modules/users/dto/error-response.dto'; // Add this import
+import { ErrorResponseDto } from '../src/modules/users/dto/error-response.dto';
 import * as fs from 'fs';
 
 async function bootstrap() {
