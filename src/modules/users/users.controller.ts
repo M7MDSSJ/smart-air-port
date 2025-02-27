@@ -47,6 +47,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Role } from 'src/common/enums/role.enum';
 import { ErrorResponseDto } from './dto/error-response.dto';
+import { ProfileResponseDto } from './dto/profile-response.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -231,7 +232,40 @@ async register(@Body() createUserDto: CreateUserDto) {
               error: 'Not Found',
               statusCode: 404,
               timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/resend-verification', // Specific to this endpoint
+              path: '/users/resend-verification',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request errors',
+    content: {
+      'application/json': {
+        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+        examples: {
+          alreadyVerified: {
+            summary: 'User already verified',
+            value: {
+              success: false,
+              message: 'User is already verified',
+              error: 'Bad Request',
+              statusCode: 400,
+              timestamp: '2025-02-27T09:05:47.193Z',
+              path: '/users/resend-verification',
+            },
+          },
+          emailFailure: {
+            summary: 'Email sending failed',
+            value: {
+              success: false,
+              message: 'Failed to send verification email',
+              error: 'Bad Request',
+              statusCode: 400,
+              timestamp: '2025-02-27T09:05:47.193Z',
+              path: '/users/resend-verification',
             },
           },
         },
@@ -246,7 +280,6 @@ async register(@Body() createUserDto: CreateUserDto) {
   async resendVerificationEmail(@Body() resendEmailDto: ResendEmailVerificationDto) {
     return this.userManagementService.resendVerificationEmail(resendEmailDto.email);
   }
-
   @ApiOperation({ summary: 'Refresh JWT token' })
   @ApiResponse({
     status: 200,
@@ -268,7 +301,7 @@ async register(@Body() createUserDto: CreateUserDto) {
               error: 'Unauthorized',
               statusCode: 401,
               timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/refresh-token', // Specific to this endpoint
+              path: '/users/refresh-token',
             },
           },
         },
@@ -285,129 +318,206 @@ async register(@Body() createUserDto: CreateUserDto) {
   }
 
   @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({
-    status: 200,
-    description: 'User logged in successfully',
-    type: LoginResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid credentials',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          unauthorized: {
-            summary: 'Invalid credentials',
-            value: {
-              success: false,
-              message: 'Invalid credentials',
-              error: 'Unauthorized',
-              statusCode: 401,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/login', // Specific to this endpoint
-            },
+@ApiResponse({
+  status: 200,
+  description: 'User logged in successfully',
+  type: LoginResponseDto,
+})
+@ApiResponse({
+  status: 401,
+  description: 'Invalid credentials or email not verified',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorized: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Invalid credentials',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/login',
+          },
+        },
+        emailNotVerified: {
+          summary: 'Email not verified',
+          value: {
+            success: false,
+            message: 'Email not verified',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/login',
           },
         },
       },
     },
-  })
-  @ApiBody({
-    type: LoginUserDto,
-    examples: {
-      example1: { value: { email: 'user@example.com', password: 'Password123' } },
-    },
-  })
-  @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    return this.authService.validateUser(loginUserDto);
-  }
+  },
+})
+@ApiBody({
+  type: LoginUserDto,
+  examples: {
+    example1: { value: { email: 'user@example.com', password: 'Password123' } },
+  },
+})
+@Post('login')
+async login(@Body() loginUserDto: LoginUserDto) {
+  return this.authService.validateUser(loginUserDto);
+}
 
-  @ApiOperation({ summary: 'Change user password' })
-  @ApiResponse({
-    status: 200,
-    description: 'Password changed successfully',
-    type: ChangePasswordResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid old password',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          unauthorized: {
-            summary: 'Invalid old password',
-            value: {
-              success: false,
-              message: 'Invalid old password',
-              error: 'Unauthorized',
-              statusCode: 401,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/change-password', // Specific to this endpoint
-            },
+@ApiOperation({ summary: 'Change user password' })
+@ApiResponse({
+  status: 200,
+  description: 'Password changed successfully',
+  type: ChangePasswordResponseDto,
+})
+@ApiResponse({
+  status: 401,
+  description: 'Invalid old password or user not authenticated',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        invalidOldPassword: {
+          summary: 'Invalid old password',
+          value: {
+            success: false,
+            message: 'Invalid old password',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/change-password',
+          },
+        },
+        userNotFound: {
+          summary: 'User not authenticated',
+          value: {
+            success: false,
+            message: 'User not found',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/change-password',
           },
         },
       },
     },
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @ApiBody({
-    type: ChangePasswordDto,
-    examples: {
-      example1: {
-        value: { oldPassword: 'OldPassword123', newPassword: 'NewPassword123' },
+  },
+})
+@ApiResponse({
+  status: 404,
+  description: 'User not found',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        notFound: {
+          summary: 'User not found',
+          value: {
+            success: false,
+            message: 'User not found',
+            error: 'NotFound',
+            statusCode: 404,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/change-password',
+          },
+        },
       },
     },
-  })
-  @Put('change-password')
-  async changePassword(
-    @GetUser() user: UserDocument,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-    return this.passwordResetService.changePassword(user._id.toString(), changePasswordDto);
+  },
+})
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@ApiBody({
+  type: ChangePasswordDto,
+  examples: {
+    example1: {
+      value: { oldPassword: 'OldPassword123', newPassword: 'NewPassword123' },
+    },
+  },
+})
+@Put('change-password')
+async changePassword(
+  @GetUser() user: UserDocument,
+  @Body() changePasswordDto: ChangePasswordDto,
+) {
+  if (!user) {
+    throw new UnauthorizedException('User not found');
   }
+  return this.passwordResetService.changePassword(user._id.toString(), changePasswordDto);
+}
 
-  @ApiOperation({ summary: 'Request password reset' })
-  @ApiResponse({
-    status: 200,
-    description: 'Password reset email sent',
-    type: RequestResetPasswordResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Email not found',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          notFound: {
-            summary: 'Email not found',
-            value: {
-              success: false,
-              message: 'Email not found',
-              error: 'Not Found',
-              statusCode: 404,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/request-password-reset', // Specific to this endpoint
-            },
+@ApiOperation({ summary: 'Request password reset' })
+@ApiResponse({
+  status: 200,
+  description: 'Password reset email sent',
+  type: RequestResetPasswordResponseDto,
+})
+@ApiResponse({
+  status: 404,
+  description: 'Email not found',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        notFound: {
+          summary: 'Email not found',
+          value: {
+            success: false,
+            message: 'Email not found',
+            error: 'Not Found',
+            statusCode: 404,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/request-password-reset',
           },
         },
       },
     },
-  })
-  @ApiBody({
-    type: RequestResetPasswordDto,
-    examples: { example1: { value: { email: 'user@example.com' } } },
-  })
-  @Post('request-password-reset')
-  async requestPasswordReset(@Body() requestPasswordResetDto: RequestResetPasswordDto) {
-    return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
-  }
+  },
+})
+@ApiResponse({
+  status: 400,
+  description: 'User not verified or email send failure',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        notVerified: {
+          summary: 'User not verified',
+          value: {
+            success: false,
+            message: 'User must verify before password reset',
+            error: 'Bad Request',
+            statusCode: 400,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/request-password-reset',
+          },
+        },
+        emailFailure: {
+          summary: 'Email send failure',
+          value: {
+            success: false,
+            message: 'Failed to send password reset email',
+            error: 'Bad Request',
+            statusCode: 400,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/request-password-reset',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiBody({
+  type: RequestResetPasswordDto,
+  examples: { example1: { value: { email: 'user@example.com' } } },
+})
+@Post('request-password-reset')
+async requestPasswordReset(@Body() requestPasswordResetDto: RequestResetPasswordDto) {
+  return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
+}
 
   @ApiOperation({ summary: 'Reset password' })
   @ApiResponse({
@@ -449,153 +559,211 @@ async register(@Body() createUserDto: CreateUserDto) {
   }
 
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({
-    status: 200,
-    description: 'User profile retrieved successfully',
-    type: UserResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid credentials',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          unauthorized: {
-            summary: 'Invalid credentials',
-            value: {
-              success: false,
-              message: 'Invalid user credentials',
-              error: 'Unauthorized',
-              statusCode: 401,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/profile', // Specific to this endpoint
-            },
+@ApiResponse({
+  status: 200,
+  description: 'User profile retrieved successfully',
+  type: ProfileResponseDto,
+})
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - Invalid credentials',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorized: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Invalid user credentials',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/profile',
           },
         },
       },
     },
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  async getProfile(@GetUser() user: UserDocument) {
-    if (!user || !user._id) {
-      throw new UnauthorizedException('Invalid user credentials');
-    }
-    return this.userManagementService.getProfile(user._id.toString());
+  },
+})
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Get('profile')
+async getProfile(@GetUser() user: UserDocument) {
+  if (!user || !user._id) {
+    throw new UnauthorizedException('Invalid user credentials');
   }
+  return this.userManagementService.getProfile(user._id.toString());
+}
+@ApiOperation({ summary: 'Logout user' })
+@ApiResponse({
+  status: 200,
+  description: 'User logged out successfully',
+  type: LogoutResponseDto,
+})
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - Invalid refresh token or credentials',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorizedToken: {
+          summary: 'Invalid refresh token',
+          value: {
+            success: false,
+            message: 'Invalid refresh token',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/logout',
+          },
+        },
+        unauthorizedCredentials: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Invalid user credentials',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/logout',
+          },
+        },
+      },
+    },
+  },
+})
 
-  @ApiOperation({ summary: 'Logout user' })
-  @ApiResponse({
-    status: 200,
-    description: 'User logged out successfully',
-    type: LogoutResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid refresh token',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          unauthorized: {
-            summary: 'Invalid token',
-            value: {
-              success: false,
-              message: 'Invalid refresh token',
-              error: 'Unauthorized',
-              statusCode: 401,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/logout', // Specific to this endpoint
-            },
-          },
-        },
-      },
-    },
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @ApiBody({
-    type: RefreshTokenDto,
-    examples: { example1: { value: { refreshToken: 'refresh-token' } } },
-  })
-  @Post('logout')
-  async logout(@GetUser() user: UserDocument, @Body('refreshToken') refreshToken: string) {
-    return this.userManagementService.logout(user._id.toString(), refreshToken);
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@ApiBody({
+  type: RefreshTokenDto,
+  examples: { example1: { value: { refreshToken: 'refresh-token' } } },
+})
+@Post('logout')
+async logout(@GetUser() user: UserDocument, @Body('refreshToken') refreshToken: string) {
+  if (!user || !user._id) {
+    throw new UnauthorizedException('Invalid user credentials');
   }
+  return this.userManagementService.logout(user._id.toString(), refreshToken);
+}
 
-  @ApiOperation({ summary: 'Get admin dashboard' })
-  @ApiResponse({
-    status: 200,
-    description: 'Admin-only content',
-    type: DashboardResponseDto,
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Insufficient permissions',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          forbidden: {
-            summary: 'Insufficient permissions',
-            value: {
-              success: false,
-              message: 'Insufficient permissions',
-              error: 'Forbidden',
-              statusCode: 403,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/admin-dashboard', // Specific to this endpoint
-            },
+@ApiOperation({ summary: 'Get admin dashboard' })
+@ApiResponse({
+  status: 200,
+  description: 'Admin-only content',
+  type: DashboardResponseDto,
+})
+@ApiResponse({
+  status: 403,
+  description: 'Forbidden - Insufficient permissions',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        forbidden: {
+          summary: 'Insufficient permissions',
+          value: {
+            success: false,
+            message: 'Insufficient permissions',
+            error: 'Forbidden',
+            statusCode: 403,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/admin-dashboard',
           },
         },
       },
     },
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.Mod)
-  @Get('admin-dashboard')
-  getAdminDashboard() {
-    return { message: 'Admin-only content' };
-  }
+  },
+})
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - Invalid credentials',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorized: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Unauthorized',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/admin-dashboard',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.Mod)
+@Get('admin-dashboard')
+getAdminDashboard() {
+  return { message: 'Admin-only content' };
+}
 
-  @ApiOperation({ summary: 'Manage flights' })
-  @ApiResponse({
-    status: 200,
-    description: 'Flight management dashboard',
-    type: FlightManagementResponseDto,
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Insufficient permissions',
-    content: {
-      'application/json': {
-        schema: { $ref: '#/components/schemas/ErrorResponseDto' },
-        examples: {
-          forbidden: {
-            summary: 'Insufficient permissions',
-            value: {
-              success: false,
-              message: 'Insufficient permissions',
-              error: 'Forbidden',
-              statusCode: 403,
-              timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/flight-management', // Specific to this endpoint
-            },
+@ApiOperation({ summary: 'Manage flights' })
+@ApiResponse({
+  status: 200,
+  description: 'Flight management dashboard',
+  type: FlightManagementResponseDto,
+})
+@ApiResponse({
+  status: 403,
+  description: 'Forbidden - Insufficient permissions',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        forbidden: {
+          summary: 'Insufficient permissions',
+          value: {
+            success: false,
+            message: 'Insufficient permissions',
+            error: 'Forbidden',
+            statusCode: 403,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/flight-management',
           },
         },
       },
     },
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.Mod)
-  @Get('flight-management')
-  manageFlights() {
-    return { message: 'Flight management dashboard' };
-  }
+  },
+})
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - Invalid credentials',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorized: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Unauthorized',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/flight-management',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.Mod)
+@Get('flight-management')
+manageFlights() {
+  return { message: 'Flight management dashboard' };
+}
 
   @ApiOperation({ summary: 'Update user roles' })
   @ApiResponse({
@@ -618,25 +786,144 @@ async register(@Body() createUserDto: CreateUserDto) {
               error: 'Forbidden',
               statusCode: 403,
               timestamp: '2025-02-27T09:05:47.193Z',
-              path: '/users/roles', // Specific to this endpoint
+              path: '/users/roles',
             },
           },
         },
       },
     },
   })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin)
-  @ApiBody({
-    type: UpdateUserRolesDto,
-    examples: { example1: { value: { userId: 'user-id', roles: ['admin'] } } },
-  })
-  @Patch('roles')
-  async updateRoles(
-    @Body() updateUserRolesDto: UpdateUserRolesDto,
-    @GetUser() currentUser: UserDocument,
-  ) {
-    return this.authService.updateRoles(updateUserRolesDto.userId, updateUserRolesDto, currentUser);
+  @ApiOperation({ summary: 'Update user roles' })
+@ApiResponse({
+  status: 200,
+  description: 'User roles updated successfully',
+  type: UpdateRolesResponseDto,
+})
+@ApiResponse({
+  status: 403,
+  description: 'Forbidden - Insufficient permissions',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        forbidden: {
+          summary: 'Insufficient permissions',
+          value: {
+            success: false,
+            message: 'Insufficient permissions',
+            error: 'Forbidden',
+            statusCode: 403,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - Invalid credentials',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        unauthorized: {
+          summary: 'Invalid credentials',
+          value: {
+            success: false,
+            message: 'Unauthorized',
+            error: 'Unauthorized',
+            statusCode: 401,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiResponse({
+  status: 400,
+  description: 'Bad request - Invalid roles or self-modification',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        noRoles: {
+          summary: 'No roles provided',
+          value: {
+            success: false,
+            message: 'User must have at least one role',
+            error: 'Bad Request',
+            statusCode: 400,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+        invalidRole: {
+          summary: 'Invalid role',
+          value: {
+            success: false,
+            message: 'Invalid role provided',
+            error: 'Bad Request',
+            statusCode: 400,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+        selfModification: {
+          summary: 'Self-modification attempt',
+          value: {
+            success: false,
+            message: 'Admins cannot modify their own roles',
+            error: 'Bad Request',
+            statusCode: 400,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiResponse({
+  status: 404,
+  description: 'User not found',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponseDto' },
+      examples: {
+        notFound: {
+          summary: 'User not found',
+          value: {
+            success: false,
+            message: 'User not found',
+            error: 'Not Found',
+            statusCode: 404,
+            timestamp: '2025-02-27T09:05:47.193Z',
+            path: '/users/roles',
+          },
+        },
+      },
+    },
+  },
+})
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.Admin)
+@ApiBody({
+  type: UpdateUserRolesDto,
+  examples: { example1: { value: { userId: 'user-id', roles: ['admin'] } } },
+})
+@Patch('roles')
+async updateRoles(
+  @Body() updateUserRolesDto: UpdateUserRolesDto,
+  @GetUser() currentUser: UserDocument,
+) {
+  if (!currentUser || !currentUser._id) {
+    throw new UnauthorizedException('Unauthorized');
   }
+  return this.authService.updateRoles(updateUserRolesDto.userId, updateUserRolesDto, currentUser);
+}
 }

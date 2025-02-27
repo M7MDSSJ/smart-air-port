@@ -249,6 +249,40 @@
               }
             }
           },
+          "400": {
+            "description": "Bad request errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "alreadyVerified": {
+                    "summary": "User already verified",
+                    "value": {
+                      "success": false,
+                      "message": "User is already verified",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/resend-verification"
+                    }
+                  },
+                  "emailFailure": {
+                    "summary": "Email sending failed",
+                    "value": {
+                      "success": false,
+                      "message": "Failed to send verification email",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/resend-verification"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "404": {
             "description": "Email not found",
             "content": {
@@ -375,7 +409,7 @@
             }
           },
           "401": {
-            "description": "Invalid credentials",
+            "description": "Invalid credentials or email not verified",
             "content": {
               "application/json": {
                 "schema": {
@@ -387,6 +421,17 @@
                     "value": {
                       "success": false,
                       "message": "Invalid credentials",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/login"
+                    }
+                  },
+                  "emailNotVerified": {
+                    "summary": "Email not verified",
+                    "value": {
+                      "success": false,
+                      "message": "Email not verified",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -438,20 +483,54 @@
             }
           },
           "401": {
-            "description": "Invalid old password",
+            "description": "Invalid old password or user not authenticated",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "invalidOldPassword": {
                     "summary": "Invalid old password",
                     "value": {
                       "success": false,
                       "message": "Invalid old password",
                       "error": "Unauthorized",
                       "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/change-password"
+                    }
+                  },
+                  "userNotFound": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "success": false,
+                      "message": "User not found",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/change-password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "notFound": {
+                    "summary": "User not found",
+                    "value": {
+                      "success": false,
+                      "message": "User not found",
+                      "error": "NotFound",
+                      "statusCode": 404,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/change-password"
                     }
@@ -500,6 +579,40 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RequestResetPasswordResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User not verified or email send failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "notVerified": {
+                    "summary": "User not verified",
+                    "value": {
+                      "success": false,
+                      "message": "User must verify before password reset",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/request-password-reset"
+                    }
+                  },
+                  "emailFailure": {
+                    "summary": "Email send failure",
+                    "value": {
+                      "success": false,
+                      "message": "Failed to send password reset email",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/request-password-reset"
+                    }
+                  }
                 }
               }
             }
@@ -607,7 +720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponseDto"
+                  "$ref": "#/components/schemas/ProfileResponseDto"
                 }
               }
             }
@@ -680,18 +793,29 @@
             }
           },
           "401": {
-            "description": "Unauthorized - Invalid refresh token",
+            "description": "Unauthorized - Invalid refresh token or credentials",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponseDto"
                 },
                 "examples": {
-                  "unauthorized": {
-                    "summary": "Invalid token",
+                  "unauthorizedToken": {
+                    "summary": "Invalid refresh token",
                     "value": {
                       "success": false,
                       "message": "Invalid refresh token",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/logout"
+                    }
+                  },
+                  "unauthorizedCredentials": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid user credentials",
                       "error": "Unauthorized",
                       "statusCode": 401,
                       "timestamp": "2025-02-27T09:05:47.193Z",
@@ -725,6 +849,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DashboardResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/admin-dashboard"
+                    }
+                  }
                 }
               }
             }
@@ -775,6 +922,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FlightManagementResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/flight-management"
+                    }
+                  }
                 }
               }
             }
@@ -849,6 +1019,74 @@
               }
             }
           },
+          "400": {
+            "description": "Bad request - Invalid roles or self-modification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "noRoles": {
+                    "summary": "No roles provided",
+                    "value": {
+                      "success": false,
+                      "message": "User must have at least one role",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  },
+                  "invalidRole": {
+                    "summary": "Invalid role",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid role provided",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  },
+                  "selfModification": {
+                    "summary": "Self-modification attempt",
+                    "value": {
+                      "success": false,
+                      "message": "Admins cannot modify their own roles",
+                      "error": "Bad Request",
+                      "statusCode": 400,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Invalid credentials",
+                    "value": {
+                      "success": false,
+                      "message": "Unauthorized",
+                      "error": "Unauthorized",
+                      "statusCode": 401,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden - Insufficient permissions",
             "content": {
@@ -864,6 +1102,29 @@
                       "message": "Insufficient permissions",
                       "error": "Forbidden",
                       "statusCode": 403,
+                      "timestamp": "2025-02-27T09:05:47.193Z",
+                      "path": "/users/roles"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                },
+                "examples": {
+                  "notFound": {
+                    "summary": "User not found",
+                    "value": {
+                      "success": false,
+                      "message": "User not found",
+                      "error": "Not Found",
+                      "statusCode": 404,
                       "timestamp": "2025-02-27T09:05:47.193Z",
                       "path": "/users/roles"
                     }
@@ -1696,6 +1957,10 @@
       "RefreshTokenResponseDto": {
         "type": "object",
         "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
           "accessToken": {
             "type": "string",
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1706,6 +1971,7 @@
           }
         },
         "required": [
+          "success",
           "accessToken",
           "refreshToken"
         ]
@@ -1732,22 +1998,31 @@
       "LoginResponseDto": {
         "type": "object",
         "properties": {
-          "accessToken": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          "success": {
+            "type": "boolean",
+            "example": true
           },
-          "refreshToken": {
-            "type": "string",
-            "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
-          },
-          "user": {
-            "$ref": "#/components/schemas/UserResponseDto"
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "User logged in successfully"
+              },
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
+              }
+            }
           }
         },
         "required": [
-          "accessToken",
-          "refreshToken",
-          "user"
+          "success",
+          "data"
         ]
       },
       "ChangePasswordDto": {
@@ -1850,6 +2125,22 @@
         "required": [
           "success",
           "message"
+        ]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User profile retrieved successfully"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponseDto"
+          }
+        },
+        "required": [
+          "message",
+          "user"
         ]
       },
       "LogoutResponseDto": {

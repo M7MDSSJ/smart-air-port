@@ -4,7 +4,11 @@ admin
   "password": "@ASDLQW12awd"
 }
 
-
+mod
+{
+   "email": "mod1@gmail.com",
+  "password": "Mod1@mod123"
+}
 
 
 improvements
