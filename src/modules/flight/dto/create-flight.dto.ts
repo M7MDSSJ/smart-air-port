@@ -18,21 +18,21 @@ import {
 import { FlightNumberValidator } from './flight-number.validator';
 
 export class CreateFlightDto {
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({message:'FlightNumber can`t be empty'})
+  @IsString({message:'flightNumber must be string'})
   @Validate(FlightNumberValidator)
   flightNumber: string;
   
-  @IsString()
-  @IsNotEmpty()
+  @IsString({message:'airLine must be string'})
+  @IsNotEmpty({message:'airLine can`t be empty'})
   airline: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({message:'departureAirport must be string'})
+  @IsNotEmpty({message:'departureAirport can`t be empty'})
   departureAirport: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({message:' arrivalAirport must be string'})
+  @IsNotEmpty({message:' arrivalAirport can`t be empty'})
   arrivalAirport: string;
 
   @IsDateString({ strict: true })
@@ -43,17 +43,17 @@ export class CreateFlightDto {
   @IsAfter('departureTime')
   arrivalTime: string;
 
-  @IsString()
+  @IsString({message:' aircraft must be string'})
   @IsOptional()
   aircraft?: string;
 
   @IsNumber()
-  @IsPositive()
+  @IsPositive({message:'Price must be positive'})
   @Min(0)
   price: number;
 
   @IsNumber()
-  @IsPositive()
+  @IsPositive({message:'seats must be positive'})
   @Min(1)
   seats: number;
 
@@ -64,13 +64,13 @@ export class CreateFlightDto {
   stops: StopDto[];
 }
 class StopDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsString({message:'airPort must be string'})
+  @IsNotEmpty({message:'airPort can`t be empty'})
   airport: string;
 
-  @IsDateString()
+  @IsDateString({ strict: true })
   arrivalTime: string;
 
-  @IsDateString()
+  @IsDateString({ strict: true })
   departureTime: string;
 }

@@ -13,6 +13,7 @@ import { QueryFlightDto } from '../dto/query-flight.dto';
 import { FlightAvailabilityQuery } from '../dto/available-flight-query.dto';
 import { FlightQueryFilter } from '../dto/query-flight.dto';
 import { FlightUpdateSeatsParams } from '../dto/flight-update-seats.dto';
+
 @Injectable()
 export class FlightRepository implements IFlightRepository {
   constructor(
@@ -28,38 +29,32 @@ export class FlightRepository implements IFlightRepository {
     return this.flightModel.find().exec();
   }
 
-  async searchFlights(query: QueryFlightDto): Promise<Flight[]> {
+  async searchFlights(query: QueryFlightDto & { skip?: number; limit?: number }): Promise<Flight[]> {
     const filter: FlightQueryFilter = {};
-    if (query.departureAirport) {
-      filter.departureAirport = query.departureAirport;
-    }
-    if (query.arrivalAirport) {
-      filter.arrivalAirport = query.arrivalAirport;
-    }
+    if (query.departureAirport) filter.departureAirport = query.departureAirport;
+    if (query.arrivalAirport) filter.arrivalAirport = query.arrivalAirport;
     if (query.departureDate) {
       const date = new Date(query.departureDate);
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
-      filter.departureTime = {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      };
+      filter.departureTime = { $gte: startOfDay, $lte: endOfDay };
     }
-    return this.flightModel.find(filter).exec();
+    const { skip = 0, limit = 10 } = query;
+    return this.flightModel.find(filter).skip(skip).limit(limit).exec();
   }
 
   async searchAvailableFlights(
     query: FlightAvailabilityQuery,
   ): Promise<Flight[]> {
-    // The query now must include a seatsAvailable filter.
     return this.flightModel.find(query).exec();
   }
 
   async findById(id: string): Promise<Flight | null> {
     return this.flightModel.findById(id).exec();
   }
+
   async findOneAndUpdate(
     filter: { _id: string; version: number },
     update: UpdateFlightDto,
@@ -70,18 +65,18 @@ export class FlightRepository implements IFlightRepository {
   async findByFlightNumber(flightNumber: string): Promise<Flight | null> {
     return this.flightModel.findOne({ flightNumber }).exec();
   }
+
   async updateSeats(params: FlightUpdateSeatsParams): Promise<Flight | null> {
-    // The query checks both flightId and the expected version.
     const updatedFlight = await this.flightModel.findOneAndUpdate(
       {
         _id: params.flightId,
-        version: params.expectedVersion, // optimistic locking check
+        version: params.expectedVersion, // Now valid with updated interface
       },
       {
         $inc: { seatsAvailable: params.seatDelta, version: 1 },
       },
       {
-        new: true, // return the updated document
+        new: true,
       },
     );
 
@@ -108,7 +103,6 @@ export class FlightRepository implements IFlightRepository {
     if (!updatedFlight) {
       throw new NotFoundException('Flight not found after update');
     }
-
     return updatedFlight;
   }
 
@@ -118,5 +112,27 @@ export class FlightRepository implements IFlightRepository {
       throw new NotFoundException(`Flight with id ${id} not found`);
     }
     return flight;
+  }
+
+  async countFlights(query: QueryFlightDto): Promise<number> {
+    const filter: FlightQueryFilter = {};
+    if (query.departureAirport) {
+      filter.departureAirport = query.departureAirport;
+    }
+    if (query.arrivalAirport) {
+      filter.arrivalAirport = query.arrivalAirport;
+    }
+    if (query.departureDate) {
+      const date = new Date(query.departureDate);
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.departureTime = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+    return this.flightModel.countDocuments(filter).exec();
   }
 }
