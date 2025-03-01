@@ -13,9 +13,36 @@ import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { VerifiedUserGuard } from '../common/guards/verifiedUser.guard';
-
+import { ThrottlerModule } from '@nestjs/throttler';
+import { I18nModule } from 'nestjs-i18n';
+import * as path from 'path';
+import { APP_PIPE } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
+    CacheModule.register({
+      store: redisStore,
+      host: 'localhost',
+      port: 6379,
+      ttl: 60,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, ''), // Points to /src/i18n/
+        watch: true,
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -45,6 +72,15 @@ import { VerifiedUserGuard } from '../common/guards/verifiedUser.guard';
   ],
   controllers: [],
   providers: [
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        transform: true,        // Transform DTO properties to correct types
+        whitelist: true,        // Strip unknown properties
+        forbidNonWhitelisted: true,
+        stopAtFirstError: true, // Stop after first validation error
+      }),
+    },
     {
       provide: CustomLogger,
       useValue: new CustomLogger('AppModule'),

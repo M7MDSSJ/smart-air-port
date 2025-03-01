@@ -1325,12 +1325,29 @@
         ]
       },
       "get": {
-        "description": "Retrieves a list of all flights. Query parameters can be used to filter the results.",
+        "description": "Retrieves a paginated list of flights with optional filters.",
         "operationId": "FlightController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Flight details",
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -2354,6 +2371,9 @@
           },
           "error": {
             "type": "string"
+          },
+          "meta": {
+            "type": "object"
           }
         },
         "required": [

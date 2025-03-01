@@ -158,7 +158,7 @@ export class AuthenticationService {
     return {
       success: true,
       message: 'User roles updated successfully',
-      user: this.excludeSensitiveFields(user), // Filter sensitive fields
+      user: this.excludeSensitiveFields(user),
     };
   }
   private excludeSensitiveFields(user: UserDocument): UserResponseDto {
