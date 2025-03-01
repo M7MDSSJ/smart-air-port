@@ -15,12 +15,14 @@ import {
   IsAfter,
   IsBefore,
 } from 'src/common/decorators/date-validation.decorator';
+import { FlightNumberValidator } from './flight-number.validator';
 
 export class CreateFlightDto {
   @IsNotEmpty()
   @IsString()
+  @Validate(FlightNumberValidator)
   flightNumber: string;
-
+  
   @IsString()
   @IsNotEmpty()
   airline: string;

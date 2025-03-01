@@ -6,9 +6,17 @@ import {
   IsNumber,
   IsPositive,
   Min,
+  IsString,
+  Validate
 } from 'class-validator';
-
+import { FlightNumberValidator } from './flight-number.validator';
 export class UpdateFlightDto {
+  
+  @IsString()
+  @Validate(FlightNumberValidator)
+  flightNumber: string;
+
+
   @IsOptional()
   @IsIn(['Scheduled', 'Delayed', 'Cancelled', 'Departed', 'Arrived'])
   status?: string;
@@ -21,9 +29,11 @@ export class UpdateFlightDto {
   @IsPositive()
   @Min(0)
   price: number;
+  
   @IsOptional()
   departureTime?: Date;
 
   @IsOptional()
   arrivalTime?: Date;
+  
 }

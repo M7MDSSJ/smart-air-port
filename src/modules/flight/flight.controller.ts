@@ -28,7 +28,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
-
+import { Throttle } from '@nestjs/throttler';
 @ApiTags('Flights')
 @Controller('flights')
 export class FlightController {
@@ -85,6 +85,7 @@ export class FlightController {
   }
 
   @Get('search/available')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({
     summary: 'Search available flights',
     description:
@@ -125,20 +126,22 @@ export class FlightController {
   @Get()
   @ApiOperation({
     summary: 'Get all flights',
-    description:
-      'Retrieves a list of all flights. Query parameters can be used to filter the results.',
+    description: 'Retrieves a paginated list of flights with optional filters.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Flight details',
-    type: ApiResponseDto<Flight>,
-  })
-  async findAll(@Query() query: QueryFlightDto) {
-    const flights = await this.flightService.findAll(query);
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
+  @ApiResponse({ status: 200, type: ApiResponseDto<Flight> })
+  async findAll(
+    @Query() query: QueryFlightDto,
+    @Query('page', { transform: Number }) page = 1,
+    @Query('limit', { transform: Number }) limit = 10,
+  ) {
+    const { flights, total, page: currentPage, limit: currentLimit } = await this.flightService.findAll(query, page, limit);
     return new ApiResponseDto({
       success: true,
       message: `Found ${flights.length} flights`,
       data: flights,
+      meta: { total, page: currentPage, limit: currentLimit },
     });
   }
 
