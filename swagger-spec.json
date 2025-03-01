@@ -1274,9 +1274,18 @@
     },
     "/flights": {
       "post": {
-        "description": "Creates a new flight record. Only users with Admin or Moderator roles are allowed. Provide all necessary flight details in the request body.",
+        "description": "Creates a new flight record. Only Admin or Moderator roles are allowed.",
         "operationId": "FlightController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1325,7 +1334,7 @@
         ]
       },
       "get": {
-        "description": "Retrieves a paginated list of flights with optional filters.",
+        "description": "Retrieves a paginated list of flights.",
         "operationId": "FlightController_findAll",
         "parameters": [
           {
@@ -1365,14 +1374,13 @@
     },
     "/flights/search/available": {
       "get": {
-        "description": "Search for flights with available seats. Optional filters include departure airport, arrival airport, and departure date.",
+        "description": "Search for flights with available seats using optional filters.",
         "operationId": "FlightController_searchAvailableFlights",
         "parameters": [
           {
             "name": "departureDate",
             "required": false,
             "in": "query",
-            "description": "Departure date in YYYY-MM-DD format",
             "schema": {
               "example": "2025-02-17"
             }
@@ -1381,7 +1389,6 @@
             "name": "arrivalAirport",
             "required": false,
             "in": "query",
-            "description": "Arrival airport code or name",
             "schema": {
               "example": "LUX"
             }
@@ -1390,7 +1397,6 @@
             "name": "departureAirport",
             "required": false,
             "in": "query",
-            "description": "Departure airport code or name",
             "schema": {
               "example": "CAIRO"
             }
@@ -1416,7 +1422,7 @@
     },
     "/flights/{id}": {
       "get": {
-        "description": "Retrieves flight details for the given flight ID.",
+        "description": "Retrieves flight details by ID.",
         "operationId": "FlightController_findOne",
         "parameters": [
           {
@@ -1446,7 +1452,7 @@
         ]
       },
       "put": {
-        "description": "Updates an existing flight record by its ID. Only Admin and Moderator roles are allowed. The request must include the current version number for optimistic locking.",
+        "description": "Updates an existing flight record by ID with optimistic locking.",
         "operationId": "FlightController_update",
         "parameters": [
           {
@@ -1464,22 +1470,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateFlightDto"
-              },
-              "examples": {
-                "example1": {
-                  "summary": "Update Flight Example",
-                  "value": {
-                    "flightNumber": "S12Z",
-                    "airline": "Air Cairo Updated",
-                    "departureAirport": "CAIRO",
-                    "arrivalAirport": "LUX",
-                    "departureTime": "2025-02-17T12:00:00Z",
-                    "arrivalTime": "2025-02-17T14:30:00Z",
-                    "price": 275,
-                    "seats": 200,
-                    "version": 1
-                  }
-                }
               }
             }
           }
@@ -1507,7 +1497,7 @@
         ]
       },
       "delete": {
-        "description": "Deletes an existing flight record by its ID. Only Admin and Moderator roles are allowed to perform this operation.",
+        "description": "Deletes a flight record by ID.",
         "operationId": "FlightController_remove",
         "parameters": [
           {

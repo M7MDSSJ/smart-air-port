@@ -1,6 +1,5 @@
-// src/common/filters/http-exception.filter.ts
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
-import { FastifyRequest } from 'fastify'; // Adjust if using Express
+import { FastifyRequest } from 'fastify';
 import { ErrorResponseDto } from 'src/modules/users/dto/error-response.dto';
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
