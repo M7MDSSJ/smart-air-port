@@ -2,19 +2,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserResponseDto {
-  @ApiProperty({ example: 'cse' })
+  @ApiProperty({ example: 'Ahmed' })
   firstName: string;
 
-  @ApiProperty({ example: 'zag' })
+  @ApiProperty({ example: 'MMM' })
   lastName: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'cse.zag1@example.com' })
   email: string;
 
-  @ApiProperty({ example: ['user'] })
-  roles: string[];
+  @ApiProperty({ example: 'KSA' })
+  country?: string;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ example: '01265564651' })
+  phoneNumber?: string;
+
+  @ApiProperty({ example: true })
   isVerified: boolean;
 }
 

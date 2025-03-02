@@ -81,17 +81,22 @@ export class UserManagementService {
   private excludeSensitiveFields(user: User): UserResponseDto {
     const plainUser = (user as UserDocument).toObject();
     const { 
-      password, 
-      verificationToken, 
-      verificationTokenExpiry, 
-      refreshToken, 
-      resetToken, 
-      resetTokenExpiry, 
-      __v, 
-      _id, // Exclude _id if not wanted
-      ...safeUser 
+      firstName, 
+      lastName, 
+      email, 
+      country, 
+      phoneNumber, 
+      isVerified 
     } = plainUser;
-    return safeUser as UserResponseDto;
+  
+    return { 
+      firstName, 
+      lastName, 
+      email, 
+      country, 
+      phoneNumber, 
+      isVerified 
+    };
   }
 
   async verifyEmail(token: string): Promise<VerifyEmailResponseDto> {
@@ -153,13 +158,13 @@ export class UserManagementService {
     };
   }
 
-  async getProfile(userId: string): Promise<ProfileResponseDto> { // Changed to ProfileResponseDto
+  async getProfile(userId: string): Promise<ProfileResponseDto> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
     if (!user.isVerified) {
-      throw new UnauthorizedException('Verify your account please'); // Changed to 401
+      throw new UnauthorizedException('Verify your account please');
     }
     return {
       message: 'User profile retrieved successfully',
