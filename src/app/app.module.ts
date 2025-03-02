@@ -1,9 +1,10 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomLogger } from '../core/logger/logger.service';
 import { UsersModule } from '../modules/users/users.module';
-import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import { FlightModule } from '../modules/flight/flight.module';
@@ -11,24 +12,18 @@ import { BookingModule } from '../modules/booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { VerifiedUserGuard } from '../common/guards/verifiedUser.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
-import { APP_PIPE } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { HealthController } from './app.controller';
+
 @Module({
   imports: [
     ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 10,
-        },
-      ],
+      throttlers: [{ ttl: 60000, limit: 10 }],
     }),
     CacheModule.register({
       store: redisStore,
@@ -39,7 +34,7 @@ import { redisStore } from 'cache-manager-redis-store';
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: path.join(__dirname, ''), // Points to /src/i18n/
+        path: path.join(__dirname, ''),
         watch: true,
       },
     }),
@@ -70,15 +65,15 @@ import { redisStore } from 'cache-manager-redis-store';
     BookingModule,
     ScheduleModule.forRoot(),
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({
-        transform: true,        // Transform DTO properties to correct types
-        whitelist: true,        // Strip unknown properties
+        transform: true,
+        whitelist: true,
         forbidNonWhitelisted: true,
-        stopAtFirstError: true, // Stop after first validation error
+        stopAtFirstError: true,
       }),
     },
     {
@@ -92,14 +87,6 @@ import { redisStore } from 'cache-manager-redis-store';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: VerifiedUserGuard,
     },
   ],
 })
