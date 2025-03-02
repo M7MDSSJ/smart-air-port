@@ -1,4 +1,3 @@
-// src/users/dto/profile-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { UserResponseDto } from './register-response.dto';
 

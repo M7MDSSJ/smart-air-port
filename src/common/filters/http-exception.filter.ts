@@ -9,16 +9,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>();
     const status = exception instanceof HttpException ? exception.getStatus() : 500;
 
+    const exceptionResponse = exception instanceof HttpException ? exception.getResponse() : {};
+    console.log('Exception:', exception);
+    const message = typeof exceptionResponse === 'string' ? exceptionResponse : exceptionResponse['message'] || exception.message || 'An error occurred';
+    const errors = typeof exceptionResponse === 'object' ? exceptionResponse['errors'] : undefined;
+
     const errorResponse: ErrorResponseDto = {
       success: false,
-      message: exception.message || 'An error occurred',
+      message,
       error: exception.name || 'Internal Server Error',
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url, // Dynamically sets the path to the request URL
-      errors: exception instanceof HttpException && exception.getResponse()['errors']
-        ? exception.getResponse()['errors']
-        : undefined,
+      path: request.url,
+      errors,
     };
 
     response.status(status).send(errorResponse);
