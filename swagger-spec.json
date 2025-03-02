@@ -1956,35 +1956,35 @@
         "properties": {
           "firstName": {
             "type": "string",
-            "example": "cse"
+            "example": "Ahmed"
           },
           "lastName": {
             "type": "string",
-            "example": "zag"
+            "example": "MMM"
           },
           "email": {
             "type": "string",
-            "example": "user@example.com"
+            "example": "cse.zag1@example.com"
           },
-          "roles": {
-            "example": [
-              "user"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "country": {
+            "type": "string",
+            "example": "KSA"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "01265564651"
           },
           "isVerified": {
             "type": "boolean",
-            "example": false
+            "example": true
           }
         },
         "required": [
           "firstName",
           "lastName",
           "email",
-          "roles",
+          "country",
+          "phoneNumber",
           "isVerified"
         ]
       },
