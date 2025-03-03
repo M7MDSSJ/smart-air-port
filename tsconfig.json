@@ -20,5 +20,5 @@
     "moduleResolution": "node",
     "types": ["node"]
   },
-  "include": ["src/**/*", "eslint.config.mjs","i18n/**/*"]
+  "include": ["src/**/*", "eslint.config.mjs","src/i18n/**/*"]
 }
