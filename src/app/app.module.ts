@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -13,7 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { I18nModule } from 'nestjs-i18n';
+import { I18nModule, HeaderResolver } from 'nestjs-i18n'; // Import HeaderResolver
 import * as path from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -30,13 +29,17 @@ import { HealthController } from './app.controller';
       host: 'localhost',
       port: 6379,
       ttl: 60,
+      password:undefined
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: path.join(__dirname, ''),
+        path: path.join(__dirname, '../i18n'), 
         watch: true,
       },
+      resolvers: [
+        new HeaderResolver(['Accept-Language']),
+      ],
     }),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -80,14 +83,8 @@ import { HealthController } from './app.controller';
       provide: CustomLogger,
       useValue: new CustomLogger('AppModule'),
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
+    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })
 export class AppModule {}

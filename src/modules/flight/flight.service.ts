@@ -19,6 +19,7 @@ import { FlightUpdateSeatsParams } from './dto/flight-update-seats.dto';
 import Redlock, { Lock } from 'redlock';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class FlightService {
@@ -29,6 +30,7 @@ export class FlightService {
     @Inject('REDLOCK') private readonly redlock: Redlock,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly i18n: I18nService,
   ) {}
 
   async create(createFlightDto: CreateFlightDto): Promise<Flight> {
@@ -37,21 +39,21 @@ export class FlightService {
     const arrTime = new Date(arrivalTime);
 
     if (isNaN(depTime.getTime()) || isNaN(arrTime.getTime())) {
-      throw new BadRequestException('Invalid date format');
+      throw new BadRequestException(this.i18n.t('errors.invalidDate'));
     }
     if (depTime >= arrTime) {
-      throw new BadRequestException('Departure must be before arrival');
+      throw new BadRequestException(this.i18n.t('errors.departureBeforeArrival'));
     }
     if (seats <= 0) {
-      throw new BadRequestException('Seats must be positive');
+      throw new BadRequestException(this.i18n.t('errors.seatsPositive'));
     }
     if (price <= 0) {
-      throw new BadRequestException('Price must be positive');
+      throw new BadRequestException(this.i18n.t('errors.pricePositive'));
     }
 
     const existingFlight = await this.flightRepository.findByFlightNumber(flightNumber);
     if (existingFlight) {
-      throw new ConflictException('Flight number already exists');
+      throw new ConflictException(this.i18n.t('errors.flightExists'));
     }
 
     this.logger.log(`Creating flight ${flightNumber}`);

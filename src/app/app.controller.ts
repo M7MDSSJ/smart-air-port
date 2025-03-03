@@ -6,6 +6,6 @@ Public()
 export class HealthController {
   @Get()
   testApp(){
-    return 'Hello from backend'
+    return 'GG Get Hacked'
   }
 }

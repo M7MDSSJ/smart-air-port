@@ -1,9 +1,9 @@
 {
-    "errors": {
-      "invalidDate": "Invalid date format",
-      "departureBeforeArrival": "Departure must be before arrival",
-      "seatsPositive": "Seats must be positive",
-      "pricePositive": "Price must be positive",
-      "flightExists": "Flight number already exists"
-    }
+  "errors": {
+    "invalidDate": "Invalid date format",
+    "departureBeforeArrival": "Departure must be before arrival",
+    "seatsPositive": "Seats must be positive",
+    "pricePositive": "Price must be positive",
+    "flightExists": "Flight number already exists"
   }
+}

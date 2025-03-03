@@ -3,8 +3,13 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "builder": "swc",
-    "watch": {
-      "watch": true
-    }
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "i18n/**/*",
+        "outDir": "dist",
+        "watchAssets": true
+      }
+    ]
   }
 }
