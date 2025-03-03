@@ -31,11 +31,11 @@ A reusable NestJS template with:
 - ⚡️ SWC compiler for faster builds
 - Mongoose as ORM dealing with mongoDB
 ## pre
-- **install npm** : [npm]('https://www.npmjs.com/')
+- **install npm** : [npm]('./https://www.npmjs.com/')
 - **install node**: [nodejs]('https://nodejs.org/en')
 - **install bun** : [bun]('https://bun.sh/')
 - **install nestjs/cli** : [@nestjs/cli]('https://docs.nestjs.com/')
-  **install swc** : [SWC]('https://swc.rs/')
+- **install swc** : [SWC]('https://swc.rs/')
   
 ## Usage
 
