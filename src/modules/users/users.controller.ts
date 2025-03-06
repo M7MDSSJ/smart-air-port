@@ -7,6 +7,8 @@ import {
   Get,
   Patch,
   UnauthorizedException,
+  Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserManagementService } from './services/user-management.service';
@@ -80,7 +82,7 @@ export class UsersController {
     type: ErrorResponseDto,
   })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @Get('all')
   async getAllUsers() {
@@ -122,11 +124,12 @@ export class UsersController {
     type: ErrorResponseDto,
   })
   @ApiBody({ type: VerifyEmailDto })
-  @Post('verify-email')
-  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
-    return this.userManagementService.verifyEmail(
-      verifyEmailDto.verificationToken,
-    );
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    if (!token) {
+      throw new BadRequestException('Verification token is required');
+    }
+    return this.userManagementService.verifyEmail(token);
   }
 
   @Public()
@@ -266,9 +269,15 @@ export class UsersController {
     type: ErrorResponseDto,
   })
   @ApiBody({ type: ResetPasswordDto })
-  @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.passwordResetService.resetPassword(resetPasswordDto);
+  @Get('reset-password')
+  async resetPassword(
+    @Query('token') token: string,
+    @Query('newPassword') newPassword: string,
+  ) {
+    if (!token || !newPassword) {
+      throw new BadRequestException('Token and new password are required');
+    }
+    return this.passwordResetService.resetPassword({ token, newPassword });
   }
 
   @ApiBearerAuth()

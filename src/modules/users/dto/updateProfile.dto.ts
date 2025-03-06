@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  Matches,
+} from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiProperty({ example: 'Ahmed', required: false })
@@ -22,5 +28,8 @@ export class UpdateProfileDto {
   @ApiProperty({ example: '01265564651', required: false })
   @IsString()
   @IsOptional()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Phone number must be a valid international number',
+  })
   phoneNumber?: string;
 }
