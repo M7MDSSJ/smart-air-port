@@ -10,10 +10,16 @@ export class ErrorResponseDto {
   })
   message: string;
 
-  @ApiProperty({ example: 'Bad Request', description: 'The type of error' })
+  @ApiProperty({
+    example: 'Bad Request',
+    description: 'HTTP error type',
+  })
   error: string;
 
-  @ApiProperty({ example: 400, description: 'HTTP status code of the error' })
+  @ApiProperty({
+    example: 400,
+    description: 'HTTP status code',
+  })
   statusCode: number;
 
   @ApiProperty({
@@ -24,14 +30,14 @@ export class ErrorResponseDto {
 
   @ApiProperty({
     example: '/users/register',
-    description: 'The endpoint path where the error occurred (varies by route)',
+    description: 'Request path',
   })
   path: string;
 
   @ApiProperty({
     required: false,
     example: { email: 'Invalid email format' },
-    description: 'Optional validation errors (if applicable)',
+    description: 'Validation errors (when applicable)',
   })
   errors?: Record<string, string>;
 }
