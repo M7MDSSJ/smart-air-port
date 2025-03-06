@@ -118,9 +118,18 @@
       }
     },
     "/users/verify-email": {
-      "post": {
+      "get": {
         "operationId": "UsersController_verifyEmail",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -410,9 +419,26 @@
       }
     },
     "/users/reset-password": {
-      "post": {
+      "get": {
         "operationId": "UsersController_resetPassword",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "newPassword",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1628,6 +1654,18 @@
           "verificationToken"
         ]
       },
+      "VerifyEmailData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Email verified successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "VerifyEmailResponseDto": {
         "type": "object",
         "properties": {
@@ -1635,14 +1673,13 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "Email verified successfully"
+          "data": {
+            "$ref": "#/components/schemas/VerifyEmailData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
       "ResendEmailVerificationDto": {
@@ -1658,6 +1695,18 @@
           "email"
         ]
       },
+      "ResendVerificationData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Verification email sent successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "ResendVerificationResponseDto": {
         "type": "object",
         "properties": {
@@ -1665,14 +1714,13 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "Verification email sent successfully"
+          "data": {
+            "$ref": "#/components/schemas/ResendVerificationData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
       "RefreshTokenDto": {
@@ -1688,13 +1736,9 @@
           "refreshToken"
         ]
       },
-      "RefreshTokenResponseDto": {
+      "RefreshTokenData": {
         "type": "object",
         "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
           "accessToken": {
             "type": "string",
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1705,9 +1749,24 @@
           }
         },
         "required": [
-          "success",
           "accessToken",
           "refreshToken"
+        ]
+      },
+      "RefreshTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/RefreshTokenData"
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       },
       "LoginUserDto": {
@@ -1778,6 +1837,18 @@
           "newPassword"
         ]
       },
+      "ChangePasswordData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Password changed successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "ChangePasswordResponseDto": {
         "type": "object",
         "properties": {
@@ -1785,14 +1856,13 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "Password changed successfully"
+          "data": {
+            "$ref": "#/components/schemas/ChangePasswordData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
       "RequestResetPasswordDto": {
@@ -1808,6 +1878,18 @@
           "email"
         ]
       },
+      "RequestResetPasswordData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Password reset email sent"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "RequestResetPasswordResponseDto": {
         "type": "object",
         "properties": {
@@ -1815,14 +1897,13 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "Password reset email sent"
+          "data": {
+            "$ref": "#/components/schemas/RequestResetPasswordData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
       "ResetPasswordDto": {
@@ -1844,6 +1925,18 @@
           "newPassword"
         ]
       },
+      "ResetPasswordData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Password reset successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "ResetPasswordResponseDto": {
         "type": "object",
         "properties": {
@@ -1851,17 +1944,16 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "Password reset successfully"
+          "data": {
+            "$ref": "#/components/schemas/ResetPasswordData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
-      "ProfileResponseDto": {
+      "ProfileData": {
         "type": "object",
         "properties": {
           "message": {
@@ -1875,6 +1967,22 @@
         "required": [
           "message",
           "user"
+        ]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProfileData"
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       },
       "UpdateProfileDto": {
@@ -1898,6 +2006,18 @@
           }
         }
       },
+      "LogoutData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User logged out successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "LogoutResponseDto": {
         "type": "object",
         "properties": {
@@ -1905,14 +2025,13 @@
             "type": "boolean",
             "example": true
           },
-          "message": {
-            "type": "string",
-            "example": "User logged out successfully"
+          "data": {
+            "$ref": "#/components/schemas/LogoutData"
           }
         },
         "required": [
           "success",
-          "message"
+          "data"
         ]
       },
       "DashboardResponseDto": {
@@ -1943,13 +2062,9 @@
         "type": "object",
         "properties": {}
       },
-      "UpdateRolesResponseDto": {
+      "UpdateRolesData": {
         "type": "object",
         "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
           "message": {
             "type": "string",
             "example": "User roles updated successfully"
@@ -1959,9 +2074,24 @@
           }
         },
         "required": [
-          "success",
           "message",
           "user"
+        ]
+      },
+      "UpdateRolesResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/UpdateRolesData"
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       },
       "CreateFlightDto": {

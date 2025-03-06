@@ -1,10 +1,14 @@
-// src/users/dto/changePassword-response.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+
+export class ChangePasswordData {
+  @ApiProperty({ example: 'Password changed successfully' })
+  message: string;
+}
 
 export class ChangePasswordResponseDto {
   @ApiProperty({ example: true })
   success: boolean;
 
-  @ApiProperty({ example: 'Password changed successfully' })
-  message: string;
+  @ApiProperty({ type: ChangePasswordData })
+  data: ChangePasswordData;
 }
