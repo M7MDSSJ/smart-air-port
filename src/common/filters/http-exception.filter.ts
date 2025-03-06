@@ -3,42 +3,68 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { ErrorResponseDto } from 'src/modules/users/dto/error-response.dto';
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest<FastifyRequest>();
-    const status =
-      exception instanceof HttpException ? exception.getStatus() : 500;
 
-    const exceptionResponse =
-      exception instanceof HttpException ? exception.getResponse() : {};
-    console.log('Exception:', exception);
-    const message =
-      typeof exceptionResponse === 'string'
-        ? exceptionResponse
-        : exceptionResponse['message'] ||
-          exception.message ||
-          'An error occurred';
-    const errors =
-      typeof exceptionResponse === 'object'
-        ? exceptionResponse['errors']
-        : undefined;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    let message = 'An error occurred';
+    let error = 'Internal Server Error';
+    let validationErrors: Record<string, string> | undefined;
+
+    if (exception instanceof HttpException) {
+      const exceptionResponse = exception.getResponse();
+
+      if (typeof exceptionResponse === 'object') {
+        const res = exceptionResponse as Record<string, any>;
+
+        if (Array.isArray(res.message)) {
+          message = 'Validation failed';
+          validationErrors = this.transformValidationErrors(res.message);
+        } else {
+          message = res.message || message;
+        }
+
+        error = res.error || error;
+      } else if (typeof exceptionResponse === 'string') {
+        message = exceptionResponse;
+        error = HttpStatus[status] || error;
+      }
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      error = exception.name;
+    }
 
     const errorResponse: ErrorResponseDto = {
       success: false,
       message,
-      error: exception.name || 'Internal Server Error',
+      error,
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      errors,
+      errors: validationErrors,
     };
 
     response.status(status).send(errorResponse);
+  }
+
+  private transformValidationErrors(messages: any[]): Record<string, string> {
+    return messages.reduce((acc, error) => {
+      if (error.property && error.constraints) {
+        acc[error.property] = Object.values(error.constraints).join(', ');
+      }
+      return acc;
+    }, {});
   }
 }

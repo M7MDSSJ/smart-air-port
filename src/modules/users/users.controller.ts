@@ -69,8 +69,18 @@ export class UsersController {
     description: 'Users retrieved successfully',
     type: [UserResponseDto],
   })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
   @Roles(Role.Admin, Role.Mod)
   @Get('all')
   async getAllUsers() {
@@ -356,7 +366,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Get admin dashboard' })
   @ApiResponse({
@@ -380,7 +390,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Manage flights' })
   @ApiResponse({
@@ -404,7 +414,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update user roles' })
   @ApiResponse({
