@@ -1,12 +1,14 @@
 import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app/app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../src/modules/users/dto/error-response.dto';
 import * as fs from 'fs';
-
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -78,8 +80,11 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0'); 
-  app.getHttpAdapter().getInstance().log.info(`Server ready on ${await app.getUrl()}`);
+  await app.listen(port, '0.0.0.0');
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .log.info(`Server ready on ${await app.getUrl()}`);
 }
 
 void bootstrap();

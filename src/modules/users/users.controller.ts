@@ -22,7 +22,10 @@ import { RefreshTokenDto } from './dto/refreshToken.dto';
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 import { UpdateProfileDto } from './dto/updateProfile.dto';
-import { RegisterResponseDto, UserResponseDto } from './dto/register-response.dto';
+import {
+  RegisterResponseDto,
+  UserResponseDto,
+} from './dto/register-response.dto';
 import { VerifyEmailResponseDto } from './dto/verifyEmail-response.dto';
 import { ResendVerificationResponseDto } from './dto/resendVerificationResponse.dto';
 import { RefreshTokenResponseDto } from './dto/refreshToken-response.dto';
@@ -61,9 +64,11 @@ export class UsersController {
   ) {}
 
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: [UserResponseDto] })
-  @ApiResponse({ status: 403, description: 'Forbidden', type: ErrorResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully',
+    type: [UserResponseDto],
+  })
   @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.Admin, Role.Mod)
@@ -75,9 +80,20 @@ export class UsersController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiCreatedResponse({ description: 'User registered successfully', type: RegisterResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation errors', type: ErrorResponseDto })
-  @ApiResponse({ status: 409, description: 'Email already exists', type: ErrorResponseDto })
+  @ApiCreatedResponse({
+    description: 'User registered successfully',
+    type: RegisterResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation errors',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Email already exists',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: CreateUserDto })
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userManagementService.register(createUserDto);
@@ -85,30 +101,64 @@ export class UsersController {
 
   @Public()
   @ApiOperation({ summary: 'Verify user email' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully', type: VerifyEmailResponseDto })
-  @ApiResponse({ status: 400, description: 'Invalid or expired verification token', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verified successfully',
+    type: VerifyEmailResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired verification token',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: VerifyEmailDto })
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
-    return this.userManagementService.verifyEmail(verifyEmailDto.verificationToken);
+    return this.userManagementService.verifyEmail(
+      verifyEmailDto.verificationToken,
+    );
   }
 
   @Public()
   @ApiOperation({ summary: 'Resend verification email' })
-  @ApiResponse({ status: 200, description: 'Verification email sent successfully', type: ResendVerificationResponseDto })
-  @ApiResponse({ status: 404, description: 'Email not found', type: ErrorResponseDto })
-  @ApiResponse({ status: 400, description: 'Bad request', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification email sent successfully',
+    type: ResendVerificationResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Email not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: ResendEmailVerificationDto })
   @Post('resend-verification')
-  async resendVerificationEmail(@Body() resendEmailDto: ResendEmailVerificationDto) {
-    return this.userManagementService.resendVerificationEmail(resendEmailDto.email);
+  async resendVerificationEmail(
+    @Body() resendEmailDto: ResendEmailVerificationDto,
+  ) {
+    return this.userManagementService.resendVerificationEmail(
+      resendEmailDto.email,
+    );
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Refresh JWT token' })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully', type: RefreshTokenResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully',
+    type: RefreshTokenResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: RefreshTokenDto })
   @Post('refresh-token')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
@@ -117,8 +167,16 @@ export class UsersController {
 
   @Public()
   @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({ status: 200, description: 'User logged in successfully', type: LoginResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User logged in successfully',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: LoginUserDto })
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
@@ -128,9 +186,21 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Change user password' })
-  @ApiResponse({ status: 200, description: 'Password changed successfully', type: ChangePasswordResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
-  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    type: ChangePasswordResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: ChangePasswordDto })
   @Put('change-password')
   async changePassword(
@@ -140,24 +210,51 @@ export class UsersController {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    return this.passwordResetService.changePassword(user._id.toString(), changePasswordDto);
+    return this.passwordResetService.changePassword(
+      user._id.toString(),
+      changePasswordDto,
+    );
   }
 
   @Public()
   @ApiOperation({ summary: 'Request password reset' })
-  @ApiResponse({ status: 200, description: 'Password reset email sent', type: RequestResetPasswordResponseDto })
-  @ApiResponse({ status: 404, description: 'Email not found', type: ErrorResponseDto })
-  @ApiResponse({ status: 400, description: 'Bad request', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent',
+    type: RequestResetPasswordResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Email not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: RequestResetPasswordDto })
   @Post('request-password-reset')
-  async requestPasswordReset(@Body() requestPasswordResetDto: RequestResetPasswordDto) {
-    return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
+  async requestPasswordReset(
+    @Body() requestPasswordResetDto: RequestResetPasswordDto,
+  ) {
+    return this.passwordResetService.requestPasswordReset(
+      requestPasswordResetDto.email,
+    );
   }
 
   @Public()
   @ApiOperation({ summary: 'Reset password' })
-  @ApiResponse({ status: 200, description: 'Password reset successfully', type: ResetPasswordResponseDto })
-  @ApiResponse({ status: 400, description: 'Invalid or expired reset token', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully',
+    type: ResetPasswordResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired reset token',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: ResetPasswordDto })
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
@@ -167,9 +264,21 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully', type: ProfileResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
-  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+    type: ProfileResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    type: ErrorResponseDto,
+  })
   @Get('profile')
   async getProfile(@GetUser() user: UserDocument) {
     if (!user || !user._id) {
@@ -181,11 +290,31 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Update user profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: ProfileResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation errors or email sending failed', type: ErrorResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
-  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
-  @ApiResponse({ status: 409, description: 'Email already exists', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: ProfileResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation errors or email sending failed',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Email already exists',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: UpdateProfileDto })
   @Patch('profile')
   async updateProfile(
@@ -195,17 +324,31 @@ export class UsersController {
     if (!user || !user._id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
-    return this.userManagementService.updateProfile(user._id.toString(), updateProfileDto);
+    return this.userManagementService.updateProfile(
+      user._id.toString(),
+      updateProfileDto,
+    );
   }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Logout user' })
-  @ApiResponse({ status: 200, description: 'User logged out successfully', type: LogoutResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User logged out successfully',
+    type: LogoutResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: RefreshTokenDto })
   @Post('logout')
-  async logout(@GetUser() user: UserDocument, @Body('refreshToken') refreshToken: string) {
+  async logout(
+    @GetUser() user: UserDocument,
+    @Body('refreshToken') refreshToken: string,
+  ) {
     if (!user || !user._id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
@@ -216,9 +359,21 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Get admin dashboard' })
-  @ApiResponse({ status: 200, description: 'Admin-only content', type: DashboardResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden', type: ErrorResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Admin-only content',
+    type: DashboardResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @Get('admin-dashboard')
   getAdminDashboard() {
     return { message: 'Admin-only content' };
@@ -228,9 +383,21 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Manage flights' })
-  @ApiResponse({ status: 200, description: 'Flight management dashboard', type: FlightManagementResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden', type: ErrorResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Flight management dashboard',
+    type: FlightManagementResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
   @Get('flight-management')
   manageFlights() {
     return { message: 'Flight management dashboard' };
@@ -240,10 +407,26 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update user roles' })
-  @ApiResponse({ status: 200, description: 'User roles updated successfully', type: UpdateRolesResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden', type: ErrorResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized', type: ErrorResponseDto })
-  @ApiResponse({ status: 400, description: 'Bad request', type: ErrorResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User roles updated successfully',
+    type: UpdateRolesResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    type: ErrorResponseDto,
+  })
   @ApiBody({ type: UpdateUserRolesDto })
   @Patch('roles')
   async updateRoles(
@@ -253,6 +436,10 @@ export class UsersController {
     if (!currentUser || !currentUser._id) {
       throw new UnauthorizedException('Unauthorized');
     }
-    return this.authService.updateRoles(updateUserRolesDto.userId, updateUserRolesDto, currentUser);
+    return this.authService.updateRoles(
+      updateUserRolesDto.userId,
+      updateUserRolesDto,
+      currentUser,
+    );
   }
 }
