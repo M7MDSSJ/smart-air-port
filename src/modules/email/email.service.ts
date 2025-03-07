@@ -62,21 +62,17 @@ export class EmailService implements OnModuleInit {
     }
   }
 
-  async sendVerificationEmail(email: string, token: string): Promise<void> {
-    if (!token) {
-      this.logger.error('Verification token missing for email: ' + email);
-      throw new BadRequestException('Verification token is required');
+  async sendVerificationEmail(email: string, code: string): Promise<void> {
+    if (!code) {
+      this.logger.error('Verification code missing for email: ' + email);
+      throw new BadRequestException('Verification code is required');
     }
 
-    const baseUrl =
-      this.config.get('FRONTEND_URL') || this.config.get('APP_URL');
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
     const html = this.generateEmailTemplate({
       title: 'Email Verification',
-      message:
-        'Hi there,<br><br>Thanks for signing up! Please click the button below to verify your email:',
-      buttonText: 'Verify Email',
-      buttonUrl: verificationUrl,
+      message: `Hi there,<br><br>Thanks for signing up! Your verification code is:<br><br><strong style="font-size: 24px; letter-spacing: 5px;">${code}</strong><br><br>Please enter this code in the app to verify your email.`,
+      buttonText: '', // No button
+      buttonUrl: '', // No URL
       footer:
         'If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team',
     });
@@ -88,7 +84,25 @@ export class EmailService implements OnModuleInit {
       from: `"Airport Team" <${this.config.get('MAIL_FROM')}>`,
     });
   }
-
+  private generateEmailTemplate(options: {
+    title: string;
+    message: string;
+    buttonText: string;
+    buttonUrl: string;
+    footer: string;
+  }): string {
+    const buttonHtml = options.buttonUrl
+      ? `<a href="${options.buttonUrl}" style="background-color: ${options.title.includes('Verification') ? '#2196F3' : '#4CAF50'}; color: white; padding: 14px 25px; text-align: center; text-decoration: none; display: inline-block; border-radius: 4px;">${options.buttonText}</a>`
+      : '';
+    return `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>${options.title}</h2>
+        <p>${options.message}</p>
+        ${buttonHtml}
+        <p style="margin-top: 20px; color: #666;">${options.footer}</p>
+      </div>
+    `;
+  }
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     if (!token) {
       this.logger.error('Password reset token missing for email: ' + email);
@@ -101,11 +115,11 @@ export class EmailService implements OnModuleInit {
     const html = this.generateEmailTemplate({
       title: 'Password Reset Request',
       message:
-        'Hi there,<br><br>We received a request to reset your password. Please click the button below to reset it:', // Friendly greeting and instruction
+        'Hi there,<br><br>We received a request to reset your password. Please click the button below to reset it:',
       buttonText: 'Reset Password',
       buttonUrl: resetUrl,
       footer:
-        'This link will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team', // Updated footer
+        'This link will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team',
     });
 
     await this.sendEmail({
@@ -151,28 +165,6 @@ export class EmailService implements OnModuleInit {
       );
       throw new BadRequestException('Failed to send email');
     }
-  }
-
-  private generateEmailTemplate(options: {
-    title: string;
-    message: string;
-    buttonText: string;
-    buttonUrl: string;
-    footer: string;
-  }): string {
-    return `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>${options.title}</h2>
-        <p>${options.message}</p>
-        <a href="${options.buttonUrl}"
-           style="background-color: ${options.title.includes('Verification') ? '#2196F3' : '#4CAF50'};
-                  color: white; padding: 14px 25px; text-align: center; text-decoration: none;
-                  display: inline-block; border-radius: 4px;">
-           ${options.buttonText}
-        </a>
-        <p style="margin-top: 20px; color: #666;">${options.footer}</p>
-      </div>
-    `;
   }
 }
 

@@ -120,18 +120,23 @@ export class UsersController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid or expired verification token',
+    description: 'Invalid or expired verification code',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Email not found',
     type: ErrorResponseDto,
   })
   @ApiBody({ type: VerifyEmailDto })
-  @Get('verify-email')
-  async verifyEmail(@Query('token') token: string) {
-    if (!token) {
-      throw new BadRequestException('Verification token is required');
-    }
-    return this.userManagementService.verifyEmail(token);
+  @Post('verify-email')
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.userManagementService.verifyEmail(
+      verifyEmailDto.email,
+      verifyEmailDto.code,
+    );
   }
-
+  
   @Public()
   @ApiOperation({ summary: 'Resend verification email' })
   @ApiResponse({
