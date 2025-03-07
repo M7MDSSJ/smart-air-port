@@ -87,7 +87,7 @@ export class UserManagementService {
           message:
             userCount === 0
               ? 'First admin user created successfully'
-              : 'User registered successfully',
+              : 'User registered successfully , Check your Email for code verification',
           user: userResponse,
         },
       };
