@@ -118,18 +118,9 @@
       }
     },
     "/users/verify-email": {
-      "get": {
+      "post": {
         "operationId": "UsersController_verifyEmail",
-        "parameters": [
-          {
-            "name": "token",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -152,7 +143,17 @@
             }
           },
           "400": {
-            "description": "Invalid or expired verification token",
+            "description": "Invalid or expired verification code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Email not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1644,14 +1645,20 @@
       "VerifyEmailDto": {
         "type": "object",
         "properties": {
-          "verificationToken": {
+          "email": {
             "type": "string",
-            "example": "e1dASL2qpwd2ld!@asca",
-            "description": "Verification token"
+            "example": "test@example.com",
+            "description": "User email address"
+          },
+          "code": {
+            "type": "string",
+            "example": "A1B2C3",
+            "description": "Verification code"
           }
         },
         "required": [
-          "verificationToken"
+          "email",
+          "code"
         ]
       },
       "VerifyEmailData": {
