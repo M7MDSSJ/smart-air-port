@@ -71,8 +71,8 @@ export class EmailService implements OnModuleInit {
     const html = this.generateEmailTemplate({
       title: 'Email Verification',
       message: `Hi there,<br><br>Thanks for signing up! Your verification code is:<br><br><strong style="font-size: 24px; letter-spacing: 5px;">${code}</strong><br><br>Please enter this code in the app to verify your email.`,
-      buttonText: '', // No button
-      buttonUrl: '', // No URL
+      buttonText: '',
+      buttonUrl: '',
       footer:
         'If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team',
     });
@@ -81,7 +81,7 @@ export class EmailService implements OnModuleInit {
       to: email,
       subject: 'Verify Your Email Address',
       html,
-      from: `"Airport Team" <${this.config.get('MAIL_FROM')}>`,
+      from: `"Backend Team" <${this.config.get('MAIL_FROM')}>`,
     });
   }
   private generateEmailTemplate(options: {
@@ -126,7 +126,7 @@ export class EmailService implements OnModuleInit {
       to: email,
       subject: 'Reset Your Password',
       html,
-      from: `"Airport Team" <${this.config.get('MAIL_FROM')}>`,
+      from: `"Backend Team" <${this.config.get('MAIL_FROM')}>`,
     });
   }
 
