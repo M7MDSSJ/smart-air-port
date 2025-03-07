@@ -73,16 +73,17 @@ export class EmailService implements OnModuleInit {
     const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
     const html = this.generateEmailTemplate({
       title: 'Email Verification',
-      message: 'Click the button below to verify your email address:',
+      message:
+        'Hi there,<br><br>Thanks for signing up! Please click the button below to verify your email:',
       buttonText: 'Verify Email',
       buttonUrl: verificationUrl,
       footer:
-        'If you didn’t request this verification, please ignore this email.',
+        'If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team',
     });
 
     await this.sendEmail({
       to: email,
-      subject: 'Email Verification',
+      subject: 'Verify Your Email Address',
       html,
       from: `"Airport Team" <${this.config.get('MAIL_FROM')}>`,
     });
@@ -99,16 +100,17 @@ export class EmailService implements OnModuleInit {
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
     const html = this.generateEmailTemplate({
       title: 'Password Reset Request',
-      message: 'Click the button below to reset your password:',
+      message:
+        'Hi there,<br><br>We received a request to reset your password. Please click the button below to reset it:', // Friendly greeting and instruction
       buttonText: 'Reset Password',
       buttonUrl: resetUrl,
       footer:
-        'This link will expire in 1 hour. If you didn’t request this, please ignore this email.',
+        'This link will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team', // Updated footer
     });
 
     await this.sendEmail({
       to: email,
-      subject: 'Password Reset Request',
+      subject: 'Reset Your Password',
       html,
       from: `"Airport Team" <${this.config.get('MAIL_FROM')}>`,
     });
