@@ -52,6 +52,17 @@ export class UserManagementService {
       if (existingUser) {
         throw new ConflictException('Email already exists');
       }
+
+      if (createUserDto.phoneNumber) {
+        const existingPhone = await this.userRepository.findByPhoneNumber(
+          createUserDto.phoneNumber,
+          { session },
+        );
+        if (existingPhone) {
+          throw new ConflictException('Phone number already exists');
+        }
+      }
+
       const userCount = await this.userRepository.countByRole('admin', {
         session,
       });
@@ -87,7 +98,7 @@ export class UserManagementService {
           message:
             userCount === 0
               ? 'First admin user created successfully'
-              : 'User registered successfully , Check your Email for code verification',
+              : 'User registered successfully, Check your Email for code verification',
           user: userResponse,
         },
       };
@@ -99,7 +110,7 @@ export class UserManagementService {
     code: string,
   ): Promise<VerifyEmailResponseDto> {
     return this.userRepository.withTransaction(async (session) => {
-      const user = await this.userRepository.findByEmail(email, { session }); 
+      const user = await this.userRepository.findByEmail(email, { session });
       if (!user) {
         throw new NotFoundException('Email not found');
       }
@@ -282,6 +293,14 @@ export class UserManagementService {
         data: { message: 'User logged out successfully' },
       };
     });
+  }
+  async deleteUserByEmail(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    await this.userRepository.delete(email);
+    return { message: `User with email ${email} deleted successfully` };
   }
 
   private excludeSensitiveFields(user: User): UserResponseDto {
