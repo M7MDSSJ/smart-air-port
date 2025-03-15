@@ -34,7 +34,7 @@ export interface IUserRepository {
   updateRefreshToken(
     userId: string,
     refreshToken: string | null,
-    options?: { session: ClientSession },
+    options?: { session?: ClientSession },
   ): Promise<void>;
   findByPhoneNumber(
     phoneNumber: string,
@@ -47,7 +47,7 @@ export interface IUserRepository {
   update(
     userId: string,
     updateData: UpdateQuery<UserDocument>,
-    options?: { session: ClientSession },
+    options?: { query?: any; new?: boolean; session?: ClientSession },
   ): Promise<UserDocument | null>;
   updateRoles(
     userId: string,

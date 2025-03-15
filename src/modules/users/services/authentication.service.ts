@@ -72,28 +72,24 @@ export class AuthenticationService {
   }
 
   async generateTokens(
-    user: User & { _id: Types.ObjectId },
+    userId: string,
+    email: string,
+    roles: string[],
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    return this.userRepository.withTransaction(async (session) => {
-      const accessToken = await this.jwtService.signAsync(
-        { sub: user._id.toString(), email: user.email, roles: user.roles },
-        { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
-      );
-      const refreshToken = await this.jwtService.signAsync(
-        { sub: user._id.toString(), email: user.email, roles: user.roles },
-        { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
-      );
-      await this.userRepository.updateRefreshToken(
-        user._id.toString(),
-        refreshToken,
-        { session },
-      );
-      return { accessToken, refreshToken };
-    });
+    const accessToken = await this.jwtService.signAsync(
+      { sub: userId, email, roles },
+      { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
+    );
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: userId, email, roles },
+      { secret: this.config.get('JWT_REFRESH_SECRET'), expiresIn: '7d' },
+    );
+    return { accessToken, refreshToken };
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
     try {
+      console.log('Verifying refresh token...');
       const payload = this.jwtService.verify<{
         sub: string;
         email: string;
@@ -101,30 +97,41 @@ export class AuthenticationService {
       }>(refreshToken, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
+      console.log('Refresh token verified successfully.');
 
-      return this.userRepository.withTransaction(async (session) => {
-        const user = await this.userRepository.findById(payload.sub, {
-          session,
-        });
-        if (!user || user.refreshToken !== refreshToken) {
-          throw new UnauthorizedException('Invalid or expired refresh token');
-        }
+      console.log('Finding and validating user...');
+      // Use repository's update method for atomic operation
+      const user = await this.userRepository.update(
+        payload.sub,
+        { $set: { refreshToken: null } }, // Clear the old token
+        {
+          query: { refreshToken }, // Additional condition to match refresh token
+          new: false, // Return the original document
+        },
+      );
 
-        await this.userRepository.updateRefreshToken(payload.sub, null, {
-          session,
-        });
-        const { accessToken, refreshToken: newToken } =
-          await this.generateTokens(user);
+      if (!user) {
+        console.error('Invalid or expired refresh token.');
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
 
-        return {
-          success: true,
-          data: {
-            accessToken,
-            refreshToken: newToken,
-          },
-        };
-      });
+      console.log('Generating new tokens...');
+      const { accessToken, refreshToken: newToken } = await this.generateTokens(
+        user._id.toString(),
+        user.email,
+        user.roles,
+      );
+
+      console.log('Updating refresh token with new value...');
+      await this.userRepository.updateRefreshToken(payload.sub, newToken);
+
+      console.log('Tokens generated and updated successfully.');
+      return {
+        success: true,
+        data: { accessToken, refreshToken: newToken },
+      };
     } catch (error) {
+      console.error('Error refreshing token:', error);
       if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid or expired refresh token');
     }

@@ -97,13 +97,20 @@ export class UserRepository implements IUserRepository {
     refreshToken: string | null,
     options?: { session: ClientSession },
   ): Promise<void> {
-    await this.userModel
-      .findByIdAndUpdate(
-        userId,
-        { refreshToken },
-        { new: true, session: options?.session ?? null },
-      )
-      .exec();
+    try {
+      console.log(`Updating refresh token for user ID: ${userId}`);
+      await this.userModel
+        .findByIdAndUpdate(
+          userId,
+          { refreshToken },
+          { new: true, session: options?.session ?? null },
+        )
+        .exec();
+      console.log('Refresh token updated successfully.');
+    } catch (error) {
+      console.error('Error updating refresh token:', error);
+      throw error;
+    }
   }
 
   async findByPhoneNumber(
@@ -133,11 +140,12 @@ export class UserRepository implements IUserRepository {
   async update(
     userId: string,
     updateData: UpdateQuery<UserDocument>,
-    options?: { session: ClientSession },
+    options?: { query?: any; new?: boolean; session?: ClientSession },
   ): Promise<UserDocument | null> {
+    const filter = { _id: userId, ...(options?.query || {}) };
     return this.userModel
-      .findByIdAndUpdate(userId, updateData, {
-        new: true,
+      .findOneAndUpdate(filter, updateData, {
+        new: options?.new ?? true,
         session: options?.session ?? null,
       })
       .exec();

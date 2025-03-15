@@ -12,7 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { I18nModule, HeaderResolver } from 'nestjs-i18n'; // Import HeaderResolver
+import { I18nModule, HeaderResolver } from 'nestjs-i18n';
 import * as path from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
