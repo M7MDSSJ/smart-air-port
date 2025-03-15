@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, UpdateQuery, ClientSession } from 'mongoose';
 import { User, UserDocument } from '../schemas/user.schema';
@@ -161,10 +161,13 @@ export class UserRepository implements IUserRepository {
     email: string,
     options?: { session: ClientSession },
   ): Promise<void> {
-    await this.userModel
+    const result = await this.userModel
       .findOneAndDelete({ email })
       .session(options?.session ?? null)
       .exec();
+    if (!result) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
   }
 
   async countByRole(

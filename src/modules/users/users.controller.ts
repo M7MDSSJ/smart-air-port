@@ -8,6 +8,8 @@ import {
   Patch,
   UnauthorizedException,
   Query,
+  Param,
+  Delete,
   BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -136,7 +138,7 @@ export class UsersController {
       verifyEmailDto.code,
     );
   }
-  
+
   @Public()
   @ApiOperation({ summary: 'Resend verification email' })
   @ApiResponse({
@@ -378,9 +380,25 @@ export class UsersController {
     }
     return this.userManagementService.logout(user._id.toString(), refreshToken);
   }
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a user by email' })
+  @ApiResponse({
+    status: 200,
+    description: 'User deleted successfully',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    type: ErrorResponseDto,
+  })
+  @Delete(':email')
+  async deleteUserByEmail(@Param('email') email: string) {
+    return this.userManagementService.deleteUserByEmail(email);
+  }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Get admin dashboard' })
   @ApiResponse({
@@ -404,7 +422,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @ApiOperation({ summary: 'Manage flights' })
   @ApiResponse({
@@ -428,7 +446,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Add AuthGuard
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update user roles' })
   @ApiResponse({

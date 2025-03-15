@@ -1,6 +1,14 @@
-// src/users/dto/register-user.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsStrongPassword, IsNotEmpty, MinLength, IsOptional, IsDateString } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsStrongPassword,
+  IsNotEmpty,
+  MinLength,
+  IsOptional,
+  IsDateString,
+  Matches,
+} from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -11,7 +19,10 @@ export class CreateUserDto {
   @ApiProperty({ example: 'Passsssword12@@' })
   @IsStrongPassword(
     { minSymbols: 1, minNumbers: 1, minLowercase: 1, minUppercase: 1 },
-    { message: 'Password must contain: 1 uppercase, 1 lowercase, 1 number, 1 symbol' }
+    {
+      message:
+        'Password must contain: 1 uppercase, 1 lowercase, 1 number, 1 symbol',
+    },
   )
   @MinLength(10, { message: 'Password must be at least 10 characters' })
   password: string;
@@ -31,6 +42,7 @@ export class CreateUserDto {
   @ApiProperty({ example: '22265564651', required: false })
   @IsString()
   @IsOptional()
+  @Matches(/^\d{10,15}$/, { message: 'Phone number must be 10-15 digits' })
   phoneNumber?: string;
 
   @ApiProperty({ example: 'KSA', required: false })

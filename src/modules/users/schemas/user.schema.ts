@@ -19,7 +19,7 @@ export class User {
   @Prop({ type: [String], default: ['user'] })
   roles: string[];
 
-  @Prop()
+  @Prop({unique:true})
   phoneNumber?: string;
 
   @Prop()

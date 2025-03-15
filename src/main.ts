@@ -9,6 +9,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../src/modules/users/dto/error-response.dto';
 import * as fs from 'fs';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -39,6 +40,18 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.enableCors({
+    origin: [
+      'http://13.81.120.153', // Production
+      'http://localhost:3000', // Backend self-test
+      'http://localhost:5000', // Flutter web default port
+      'http://localhost:8080', // Alternative Flutter port
+    ],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Smart Airport API')
