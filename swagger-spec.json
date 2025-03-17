@@ -854,139 +854,47 @@
         ]
       }
     },
-    "/flights": {
-      "post": {
-        "description": "Creates a new flight record. Only Admin or Moderator roles are allowed.",
-        "operationId": "FlightController_create",
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateFlightDto"
-              },
-              "examples": {
-                "example1": {
-                  "summary": "Create Flight Example",
-                  "value": {
-                    "flightNumber": "S12Z",
-                    "airline": "Air Cairo",
-                    "departureAirport": "CAIRO",
-                    "arrivalAirport": "LUX",
-                    "departureTime": "2025-02-17T12:00:00Z",
-                    "arrivalTime": "2025-02-17T14:30:00Z",
-                    "price": 250,
-                    "seats": 200
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Flight created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Create new flight",
-        "tags": [
-          "Flights"
-        ]
-      },
+    "/flights/search/available": {
       "get": {
-        "description": "Retrieves a paginated list of flights.",
-        "operationId": "FlightController_findAll",
+        "description": "Fetches real-time flight offers with caching.",
+        "operationId": "FlightController_searchAvailableFlights",
         "parameters": [
           {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": 10
-            }
-          },
-          {
-            "name": "page",
+            "name": "adults",
             "required": false,
             "in": "query",
             "schema": {
               "example": 1
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all flights",
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/search/available": {
-      "get": {
-        "description": "Search for flights with available seats using optional filters.",
-        "operationId": "FlightController_searchAvailableFlights",
-        "parameters": [
+          },
           {
             "name": "departureDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
-              "example": "2025-02-17"
+              "example": "2025-03-20"
             }
           },
           {
             "name": "arrivalAirport",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
-              "example": "LUX"
+              "example": "LAX"
             }
           },
           {
             "name": "departureAirport",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
-              "example": "CAIRO"
+              "example": "JFK"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "List of available flights",
+            "description": "List of available flight offers",
             "content": {
               "application/json": {
                 "schema": {
@@ -996,119 +904,7 @@
             }
           }
         },
-        "summary": "Search available flights",
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/{id}": {
-      "get": {
-        "description": "Retrieves flight details by ID.",
-        "operationId": "FlightController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Flight details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get flight by ID",
-        "tags": [
-          "Flights"
-        ]
-      },
-      "put": {
-        "description": "Updates an existing flight record by ID with optimistic locking.",
-        "operationId": "FlightController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFlightDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated flight details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update flight",
-        "tags": [
-          "Flights"
-        ]
-      },
-      "delete": {
-        "description": "Deletes a flight record by ID.",
-        "operationId": "FlightController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted flight details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete flight",
+        "summary": "Search available flights via Amadeus API",
         "tags": [
           "Flights"
         ]
@@ -2147,10 +1943,6 @@
           "data"
         ]
       },
-      "CreateFlightDto": {
-        "type": "object",
-        "properties": {}
-      },
       "ApiResponseDto": {
         "type": "object",
         "properties": {
@@ -2174,10 +1966,6 @@
           "success",
           "message"
         ]
-      },
-      "UpdateFlightDto": {
-        "type": "object",
-        "properties": {}
       },
       "SeatSelectionDto": {
         "type": "object",

@@ -1,150 +1,108 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
-import { Inject } from '@nestjs/common';
-import {
-  IFlightRepository,
-  FLIGHT_REPOSITORY,
-} from './repositories/flight.repository.interface';
-import { CreateFlightDto } from './dto/create-flight.dto';
+// flight.service.ts
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { AmadeusService } from './amadeus.service';
 import { QueryFlightDto } from './dto/query-flight.dto';
-import { UpdateFlightDto } from './dto/update-flight.dto';
-import { FlightAvailabilityQuery } from './dto/available-flight-query.dto';
-import { Flight } from './schemas/flight.schema';
-import { FlightUpdateSeatsParams } from './dto/flight-update-seats.dto';
-import Redlock, { Lock } from 'redlock';
+import { FlightOfferSearchResponse } from './dto/amadeus-flight-offer.dto';
 import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
-import { I18nService } from 'nestjs-i18n';
+import { Flight } from './schemas/flight.schema';
 
 @Injectable()
 export class FlightService {
   private readonly logger = new Logger(FlightService.name);
 
   constructor(
-    @Inject(FLIGHT_REPOSITORY) private readonly flightRepository: IFlightRepository,
-    @Inject('REDLOCK') private readonly redlock: Redlock,
+    private readonly amadeusService: AmadeusService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @InjectModel(Flight.name) private readonly flightModel: Model<Flight>,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
-    private readonly i18n: I18nService,
   ) {}
 
-  async create(createFlightDto: CreateFlightDto): Promise<Flight> {
-    const { departureTime, arrivalTime, seats, price, flightNumber } = createFlightDto;
-    const depTime = new Date(departureTime);
-    const arrTime = new Date(arrivalTime);
-
-    if (isNaN(depTime.getTime()) || isNaN(arrTime.getTime())) {
-      throw new BadRequestException(this.i18n.t('errors.invalidDate'));
-    }
-    if (depTime >= arrTime) {
-      throw new BadRequestException(this.i18n.t('errors.departureBeforeArrival'));
-    }
-    if (seats <= 0) {
-      throw new BadRequestException(this.i18n.t('errors.seatsPositive'));
-    }
-    if (price <= 0) {
-      throw new BadRequestException(this.i18n.t('errors.pricePositive'));
-    }
-
-    const existingFlight = await this.flightRepository.findByFlightNumber(flightNumber);
-    if (existingFlight) {
-      throw new ConflictException(this.i18n.t('errors.flightExists'));
-    }
-
-    this.logger.log(`Creating flight ${flightNumber}`);
-    return this.flightRepository.create(createFlightDto);
-  }
-
-  async updateSeats(params: FlightUpdateSeatsParams, retries = 3): Promise<Flight> {
-    const { flightId, seatDelta } = params;
-    const lockKey = `flight:${flightId}:seat_lock`;
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      let lock: Lock | undefined;
-      try {
-        lock = await this.redlock.acquire([lockKey], 5000);
-        const updatedFlight = await this.flightRepository.updateSeats(params);
-        if (!updatedFlight) throw new NotFoundException('Flight not found');
-        return updatedFlight;
-      } catch (error) {
-        this.logger.error(`Attempt ${attempt} failed: ${error.message}`);
-        if (attempt === retries) {
-          await this.emailService.sendImportantEmail(
-            this.configService.get<string>('ADMIN_EMAIL', 'admin@example.com'),
-            'Seat Update Failure',
-            `Failed to update seats for flight ${flightId} after ${retries} attempts.`,
-          );
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, attempt * 200));
-      } finally {
-        if (lock) await lock.release();
-      }
-    }
-    throw new Error('Unexpected exit from retry loop');
-  }
-
-  async findAll(query: QueryFlightDto, page = 1, limit = 10) {
-    const skip = (page - 1) * limit;
-    const [flights, total] = await Promise.all([
-      this.flightRepository.searchFlights({ ...query, skip, limit }),
-      this.flightRepository.countFlights(query),
-    ]);
-    return { flights, total, page, limit };
-  }
-
-  async findOne(id: string): Promise<Flight> {
-    const flight = await this.flightRepository.findById(id);
-    if (!flight) throw new NotFoundException('Flight not found');
-    return flight;
-  }
-
-  async update(id: string, updateFlightDto: UpdateFlightDto): Promise<Flight> {
-    if (typeof updateFlightDto.version !== 'number') {
-      throw new BadRequestException('Optimistic locking requires current version number');
-    }
-    const updateData = { ...updateFlightDto, version: updateFlightDto.version + 1 };
-    const flight = await this.flightRepository.findOneAndUpdate(
-      { _id: id, version: updateFlightDto.version },
-      { $set: updateData },
-    );
-    if (!flight) {
-      const current = await this.flightRepository.findById(id);
-      throw new ConflictException(`Version mismatch. Current version: ${current?.version || 0}`);
-    }
-    return flight;
-  }
-
-  async findByFlightNumber(flightNumber: string): Promise<Flight | null> {
-    return this.flightRepository.findByFlightNumber(flightNumber);
-  }
-
   async searchAvailableFlights(query: QueryFlightDto): Promise<Flight[]> {
-    const filter: FlightAvailabilityQuery = { seatsAvailable: { $gt: 0 } };
-    if (query.departureAirport) filter.departureAirport = query.departureAirport;
-    if (query.arrivalAirport) filter.arrivalAirport = query.arrivalAirport;
-    if (query.departureDate) {
-      const date = new Date(query.departureDate);
-      if (isNaN(date.getTime())) throw new BadRequestException('Invalid departure date format');
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      filter.departureTime = { $gte: startOfDay, $lte: endOfDay };
-    }
-    return this.flightRepository.searchAvailableFlights(filter);
-  }
+    const { departureAirport, arrivalAirport, departureDate, adults } = query;
 
-  async remove(id: string): Promise<Flight> {
-    this.logger.log(`Attempting to delete flight ${id}`);
-    const result = await this.flightRepository.delete(id);
-    if (!result) throw new NotFoundException('Flight not found');
-    this.logger.log(`Successfully deleted flight ${id}`);
-    return result;
+    if (!departureAirport || !arrivalAirport || !departureDate) {
+      throw new Error('departureAirport, arrivalAirport, and departureDate are required');
+    }
+
+    const cacheKey = `flight:${departureAirport}:${arrivalAirport}:${departureDate}:${adults || 1}`;
+
+    // Check cache
+    const cachedResult = await this.cacheManager.get<Flight[]>(cacheKey);
+    if (cachedResult) {
+      this.logger.log(`Cache hit for ${cacheKey}`);
+      return cachedResult;
+    }
+
+    // Check database
+    const dbFlights = await this.flightModel
+      .find({
+        departureAirport,
+        arrivalAirport,
+        departureTime: { $gte: new Date(departureDate), $lt: new Date(departureDate).setDate(new Date(departureDate).getDate() + 1) },
+      })
+      .exec();
+
+    if (dbFlights.length > 0) {
+      this.logger.log(`Database hit: Found ${dbFlights.length} flights`);
+      await this.cacheManager.set(cacheKey, dbFlights, 3600);
+      return dbFlights;
+    }
+
+    // Fetch from Amadeus
+    const amadeusFlights = await this.amadeusService.searchFlightOffers(
+      departureAirport,
+      arrivalAirport,
+      departureDate,
+      adults || 1,
+    );
+
+    // Transform and store
+    const flightDocs = await this.flightModel.create(
+      amadeusFlights.map((flight) => {
+        const segments = flight.itineraries[0].segments;
+        return {
+          offerId: flight.id,
+          flightNumber: `${segments[0].carrierCode}${segments[0].number}`,
+          airline: segments[0].carrierCode,
+          departureAirport: segments[0].departure.iataCode,
+          arrivalAirport: segments[segments.length - 1].arrival.iataCode,
+          departureTime: new Date(segments[0].departure.at),
+          arrivalTime: new Date(segments[segments.length - 1].arrival.at),
+          status: 'Scheduled',
+          aircraft: segments[0].aircraft?.code,
+          price: parseFloat(flight.price.total),
+          seatsAvailable: flight.numberOfBookableSeats,
+          stops: segments.slice(1).map((seg) => ({
+            airport: seg.arrival.iataCode,
+            arrivalTime: new Date(seg.arrival.at),
+            departureTime: new Date(seg.departure.at),
+            flightNumber: `${seg.carrierCode}${seg.number}`,
+            carrierCode: seg.carrierCode,
+          })),
+          lastTicketingDate: flight.lastTicketingDate,
+        };
+      })
+    );
+
+    this.logger.log(`Stored ${flightDocs.length} flights in database`);
+
+    // Cache the result
+    await this.cacheManager.set(cacheKey, flightDocs, 3600);
+    this.logger.log(`Cached flight offers for ${cacheKey}`);
+
+    // Notify admin
+    await this.emailService.sendImportantEmail(
+      this.configService.get<string>('ADMIN_EMAIL', 'admin@example.com'),
+      'New Flight Search',
+      `Searched flights from ${departureAirport} to ${arrivalAirport} on ${departureDate}`,
+    );
+
+    return flightDocs;
   }
 }
