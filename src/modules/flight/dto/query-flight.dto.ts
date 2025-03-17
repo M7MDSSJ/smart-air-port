@@ -1,4 +1,4 @@
-import { IsOptional, IsDateString, IsString } from 'class-validator';
+import { IsOptional, IsDateString, IsString, IsNumber, Min } from 'class-validator';
 
 export class QueryFlightDto {
   @IsOptional()
@@ -12,7 +12,13 @@ export class QueryFlightDto {
   @IsOptional()
   @IsDateString()
   departureDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  adults?: number;
 }
+
 export interface FlightQueryFilter {
   departureAirport?: string;
   arrivalAirport?: string;

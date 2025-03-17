@@ -1,56 +1,91 @@
-import { Schema, Document } from 'mongoose';
-import { StopSchema } from './stop.schema';
-export interface Flight extends Document {
-  flightNumber: string;
-  airline: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  departureTime: Date;
-  arrivalTime: Date;
-  status: 'Scheduled' | 'Delayed' | 'Cancelled' | 'Departed' | 'Arrived';
-  aircraft?: string;
-  price: number;
-  seats: number;
-  seatsAvailable: number;
-  stops?: Array<{
-    airport: string;
-    arrivalTime: Date;
-    departureTime: Date;
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
-  version: number; // Added version property for optimistic locking
-}
-export const FlightSchema = new Schema<Flight>(
-  {
-    flightNumber: { type: String, required: true, unique: true },
-    airline: { type: String, required: true },
-    departureAirport: { type: String, required: true, index: true },
-    arrivalAirport: { type: String, required: true, index: true },
-    departureTime: { type: Date, required: true, index: true },
-    arrivalTime: { type: Date, required: true },
-    status: {
-      type: String,
-      enum: ['Scheduled', 'Delayed', 'Cancelled', 'Departed', 'Arrived'],
-      default: 'Scheduled',
-    },
-    aircraft: { type: String },
-    price: { type: Number, required: true },
-    seats: { type: Number, required: true },
-    seatsAvailable: {
-      type: Number,
-      required: true,
-      min: 0,
-      default: function () {
-        return this.seats;
-      },
-    },
-    stops: { type: [StopSchema], default: [] },
-  },
-  {
-    timestamps: true,
-    versionKey: 'version',
-  },
-);
+// flight.schema.ts
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
-export default FlightSchema;
+export interface Stop {
+  airport: string;
+  arrivalTime: Date;
+  departureTime: Date;
+  flightNumber?: string; // Optional for multi-segment flights
+  carrierCode?: string;
+}
+
+@Schema({ _id: false })
+export class StopSchema {
+  @Prop({ required: true })
+  airport: string;
+
+  @Prop({ required: true })
+  arrivalTime: Date;
+
+  @Prop({ required: true })
+  departureTime: Date;
+
+  @Prop()
+  flightNumber?: string;
+
+  @Prop()
+  carrierCode?: string;
+}
+
+export const StopSchemaDef = SchemaFactory.createForClass(StopSchema);
+
+@Schema({ timestamps: true })
+export class Flight extends Document {
+  @Prop({ required: true, unique: true }) // Unique Amadeus offer ID
+  offerId: string;
+
+  @Prop({required: true}) // First segment’s flight number
+  flightNumber: string;
+
+  @Prop({ required: true }) // e.g., "F9" from carrierCode
+  airline: string;
+
+  @Prop({ required: true, index: true }) // e.g., "JFK"
+  departureAirport: string;
+
+  @Prop({ required: true, index: true }) // e.g., "LAX" or last segment’s arrival
+  arrivalAirport: string;
+
+  @Prop({ required: true, index: true }) // First segment’s departure
+  departureTime: Date;
+
+  @Prop({ required: true }) // Last segment’s arrival
+  arrivalTime: Date;
+
+  @Prop({
+    type: String,
+    enum: ['Scheduled', 'Delayed', 'Cancelled', 'Departed', 'Arrived'],
+    default: 'Scheduled',
+  })
+  status: 'Scheduled' | 'Delayed' | 'Cancelled' | 'Departed' | 'Arrived';
+
+  @Prop() // e.g., "32Q"
+  aircraft?: string;
+
+  @Prop({ required: true }) // e.g., 209.98
+  price: number;
+
+  @Prop() // Not provided by Amadeus, could estimate or fetch separately
+  seats?: number;
+
+  @Prop({ required: true, min: 0 }) // e.g., 4
+  seatsAvailable: number;
+
+  @Prop({ type: [StopSchemaDef], default: [] }) // Intermediate stops
+  stops: Stop[];
+
+  @Prop() // e.g., "2025-03-17"
+  lastTicketingDate?: string;
+
+  @Prop({ expires: 3600 }) // Auto-delete after 1 hour
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
+
+  @Prop({ versionKey: 'version' })
+  version: number;
+}
+
+export const FlightSchema = SchemaFactory.createForClass(Flight);
