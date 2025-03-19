@@ -44,6 +44,12 @@ export class User {
   resetTokenExpiry?: Date;
 
   @Prop()
+  resetCode?: string;
+
+  @Prop({ type: Date })
+  resetCodeExpiry?: Date;
+
+  @Prop()
   refreshToken?: string;
 
   @Prop({ type: Date })

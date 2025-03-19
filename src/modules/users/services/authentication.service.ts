@@ -100,7 +100,6 @@ export class AuthenticationService {
       console.log('Refresh token verified successfully.');
 
       console.log('Finding and validating user...');
-      // Use repository's update method for atomic operation
       const user = await this.userRepository.update(
         payload.sub,
         { $set: { refreshToken: null } }, // Clear the old token

@@ -103,23 +103,26 @@ export class EmailService implements OnModuleInit {
       </div>
     `;
   }
-  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
-    if (!token) {
-      this.logger.error('Password reset token missing for email: ' + email);
-      throw new BadRequestException('Reset token is required');
+  async sendPasswordResetEmail(email: string, code: string): Promise<void> {
+    if (!code) {
+      this.logger.error('Password reset code missing for email: ' + email);
+      throw new BadRequestException('Reset code is required');
     }
 
-    const baseUrl =
-      this.config.get('FRONTEND_URL') || this.config.get('APP_URL');
-    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
     const html = this.generateEmailTemplate({
-      title: 'Password Reset Request',
-      message:
-        'Hi there,<br><br>We received a request to reset your password. Please click the button below to reset it:',
-      buttonText: 'Reset Password',
-      buttonUrl: resetUrl,
-      footer:
-        'This link will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>Best,<br>The Airport Team',
+      title: 'Reset Your Password',
+      message: `
+        Hi there,<br><br>
+        We received a request to reset your password. Here’s your reset code:<br><br>
+        <span style="background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 20px; font-weight: bold; border-radius: 5px; display: inline-block;">${code}</span><br><br>
+        Please enter this code in the app to reset your password.
+      `,
+      buttonText: '', 
+      buttonUrl: '',
+      footer: `
+        This code will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>
+        Best,<br>The Airport Team
+      `,
     });
 
     await this.sendEmail({

@@ -18,7 +18,10 @@ export interface IUserRepository {
     userId: string,
     options?: { session: ClientSession },
   ): Promise<UserDocument | null>;
-
+  findByResetCode(
+    code: string,
+    options?: { session: ClientSession },
+  ): Promise<UserDocument | null>;
   create(
     user: Partial<User>,
     options?: { session: ClientSession },
