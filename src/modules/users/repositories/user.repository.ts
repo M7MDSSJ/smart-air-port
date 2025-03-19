@@ -187,4 +187,14 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+
+  async findByResetCode(
+    code: string,
+    options?: { session: ClientSession },
+  ): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({ resetCode: code })
+      .session(options?.session ?? null)
+      .exec();
+  }
 }

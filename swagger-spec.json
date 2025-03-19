@@ -383,7 +383,7 @@
         },
         "responses": {
           "200": {
-            "description": "Password reset email sent",
+            "description": "Password reset code sent",
             "content": {
               "application/json": {
                 "schema": {
@@ -420,26 +420,9 @@
       }
     },
     "/users/reset-password": {
-      "get": {
+      "post": {
         "operationId": "UsersController_resetPassword",
-        "parameters": [
-          {
-            "name": "token",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "newPassword",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -462,7 +445,7 @@
             }
           },
           "400": {
-            "description": "Invalid or expired reset token",
+            "description": "Invalid or expired reset code",
             "content": {
               "application/json": {
                 "schema": {
@@ -472,7 +455,7 @@
             }
           }
         },
-        "summary": "Reset password",
+        "summary": "Reset password using code",
         "tags": [
           "users"
         ]
@@ -1686,18 +1669,6 @@
           "newPassword"
         ]
       },
-      "ChangePasswordData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Password changed successfully"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
       "ChangePasswordResponseDto": {
         "type": "object",
         "properties": {
@@ -1706,7 +1677,13 @@
             "example": true
           },
           "data": {
-            "$ref": "#/components/schemas/ChangePasswordData"
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Password changed successfully"
+              }
+            }
           }
         },
         "required": [
@@ -1758,10 +1735,10 @@
       "ResetPasswordDto": {
         "type": "object",
         "properties": {
-          "token": {
+          "code": {
             "type": "string",
-            "example": "reset-token",
-            "description": "Reset token"
+            "example": "reset-code",
+            "description": "Reset code"
           },
           "newPassword": {
             "type": "string",
@@ -1770,7 +1747,7 @@
           }
         },
         "required": [
-          "token",
+          "code",
           "newPassword"
         ]
       },

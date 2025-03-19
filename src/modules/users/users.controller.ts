@@ -240,7 +240,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({
     status: 200,
-    description: 'Password reset email sent',
+    description: 'Password reset code sent',
     type: RequestResetPasswordResponseDto,
   })
   @ApiResponse({
@@ -264,7 +264,7 @@ export class UsersController {
   }
 
   @Public()
-  @ApiOperation({ summary: 'Reset password' })
+  @ApiOperation({ summary: 'Reset password using code' })
   @ApiResponse({
     status: 200,
     description: 'Password reset successfully',
@@ -272,19 +272,16 @@ export class UsersController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid or expired reset token',
+    description: 'Invalid or expired reset code',
     type: ErrorResponseDto,
   })
   @ApiBody({ type: ResetPasswordDto })
-  @Get('reset-password')
-  async resetPassword(
-    @Query('token') token: string,
-    @Query('newPassword') newPassword: string,
-  ) {
-    if (!token || !newPassword) {
-      throw new BadRequestException('Token and new password are required');
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    if (!resetPasswordDto.code || !resetPasswordDto.newPassword) {
+      throw new BadRequestException('Reset code and new password are required');
     }
-    return this.passwordResetService.resetPassword({ token, newPassword });
+    return this.passwordResetService.resetPassword(resetPasswordDto);
   }
 
   @ApiBearerAuth()
