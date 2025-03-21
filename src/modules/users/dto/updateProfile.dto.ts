@@ -1,35 +1,73 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEmail,
-  IsString,
   IsOptional,
-  MinLength,
-  Matches,
+  IsString,
+  IsDateString,
+  IsArray,
+  IsEnum,
+  IsBoolean,
 } from 'class-validator';
-
+enum CabinClass { Economy = 'Economy', Business = 'Business', First = 'First' }
 export class UpdateProfileDto {
-  @ApiProperty({ example: 'Ahmed', required: false })
-  @IsString()
   @IsOptional()
-  @MinLength(3, { message: 'First name must be at least 3 characters' })
+  @IsString()
   firstName?: string;
 
-  @ApiProperty({ example: 'MMM', required: false })
-  @IsString()
   @IsOptional()
-  @MinLength(3, { message: 'Last name must be at least 3 characters' })
+  @IsString()
   lastName?: string;
 
-  @ApiProperty({ example: 'cse.zag1@example.com', required: false })
-  @IsEmail({}, { message: 'Invalid email format' })
   @IsOptional()
+  @IsString()
   email?: string;
 
-  @ApiProperty({ example: '01265564651', required: false })
-  @IsString()
   @IsOptional()
-  @Matches(/^\+?[1-9]\d{1,14}$/, {
-    message: 'Phone number must be a valid international number',
-  })
+  @IsString()
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsDateString()
+  birthdate?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  preferredLanguage?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  preferredAirlines?: string[];
+
+  @IsOptional()
+  @IsString()
+  deviceType?: string;
+
+  @IsOptional()
+  loyaltyProgram?: {
+    status: string;
+    points: number;
+  };
+
+  @IsOptional()
+  @IsArray()
+  bookingHistory?: Array<{
+    airline: string;
+    date: string;
+    cabinClass: string;
+  }>;
+
+  @IsOptional()
+  @IsEnum(['economy', 'premium', 'business', 'first'])
+  preferredCabinClass?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  useRecommendationSystem?: boolean;
 }

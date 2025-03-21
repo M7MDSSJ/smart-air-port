@@ -117,8 +117,8 @@ export class EmailService implements OnModuleInit {
         <span style="background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 20px; font-weight: bold; border-radius: 5px; display: inline-block;">${code}</span><br><br>
         Please enter this code in the app to reset your password.
       `,
-      buttonText: '', 
-      buttonUrl: '',
+      buttonText: '', // No button
+      buttonUrl: '', // No URL
       footer: `
         This code will expire in 1 hour. If you didn’t request this, feel free to ignore this email.<br><br>
         Best,<br>The Airport Team

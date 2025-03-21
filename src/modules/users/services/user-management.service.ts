@@ -13,16 +13,16 @@ import { User, UserDocument } from '../schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../email/email.service';
 import { Inject } from '@nestjs/common';
-import { randomBytes } from 'crypto';
 import {
   UserResponseDto,
   RegisterResponseDto,
+  BasicUserResponseDto,
 } from '../dto/register-response.dto';
 import { VerifyEmailResponseDto } from '../dto/verifyEmail-response.dto';
 import { ResendVerificationResponseDto } from '../dto/resendVerificationResponse.dto';
 import { LogoutResponseDto } from '../dto/logout-response.dto';
 import { ProfileResponseDto } from '../dto/profile-response.dto';
-
+import { randomUUID } from 'crypto';
 @Injectable()
 export class UserManagementService {
   private readonly logger = new Logger(UserManagementService.name);
@@ -86,12 +86,16 @@ export class UserManagementService {
           savedUser.verificationToken as string,
         );
       } catch (error) {
-        this.logger.error(
-          `Failed to send verification email to ${savedUser.email}`,
-          error.stack,
+        await this.userRepository.update(
+          savedUser._id.toString(),
+          { needsEmailResend: true },
+          { session },
+        );
+        throw new BadRequestException(
+          'Failed to send verification email. Please try resending.',
         );
       }
-      const userResponse = this.excludeSensitiveFields(savedUser);
+      const userResponse = this.getBasicUserFields(savedUser);
       return {
         success: true,
         data: {
@@ -142,6 +146,7 @@ export class UserManagementService {
       if (!updatedUser) {
         throw new NotFoundException('Failed to update user verification');
       }
+      this.logger.log(`Email ${email} verified successfully`);
       return {
         success: true,
         data: { message: 'Email verified successfully' },
@@ -211,6 +216,7 @@ export class UserManagementService {
       }
 
       const updateData: Partial<User> = {};
+
       if (updateProfileDto.firstName)
         updateData.firstName = updateProfileDto.firstName;
       if (updateProfileDto.lastName)
@@ -242,6 +248,29 @@ export class UserManagementService {
         updateData.verificationToken = this.generateCode();
         updateData.verificationTokenExpiry = new Date(Date.now() + 3600000);
       }
+
+      if (updateProfileDto.gender) updateData.gender = updateProfileDto.gender;
+      if (updateProfileDto.preferredLanguage)
+        updateData.preferredLanguage = updateProfileDto.preferredLanguage;
+      if (updateProfileDto.preferredAirlines)
+        updateData.preferredAirlines = updateProfileDto.preferredAirlines;
+      if (updateProfileDto.deviceType)
+        updateData.deviceType = updateProfileDto.deviceType;
+      if (updateProfileDto.loyaltyProgram)
+        updateData.loyaltyProgram = updateProfileDto.loyaltyProgram;
+      if (updateProfileDto.bookingHistory)
+        updateData.bookingHistory = updateProfileDto.bookingHistory.map(
+          (bh) => ({
+            airline: bh.airline,
+            date: new Date(bh.date),
+            cabinClass: bh.cabinClass,
+          }),
+        );
+      if (updateProfileDto.preferredCabinClass)
+        updateData.preferredCabinClass = updateProfileDto.preferredCabinClass;
+      if (updateProfileDto.useRecommendationSystem !== undefined)
+        updateData.useRecommendationSystem =
+          updateProfileDto.useRecommendationSystem;
 
       const updatedUser = await this.userRepository.update(userId, updateData, {
         session,
@@ -302,7 +331,21 @@ export class UserManagementService {
     await this.userRepository.delete(email);
     return { message: `User with email ${email} deleted successfully` };
   }
-
+  private getBasicUserFields(user: User): BasicUserResponseDto {
+    const plainUser = (user as UserDocument).toObject();
+    return {
+      id: plainUser._id.toString(),
+      firstName: plainUser.firstName,
+      lastName: plainUser.lastName,
+      email: plainUser.email,
+      country: plainUser.country,
+      phoneNumber: plainUser.phoneNumber,
+      isVerified: plainUser.isVerified,
+      birthdate: plainUser.birthdate
+        ? plainUser.birthdate.toISOString().split('T')[0]
+        : undefined,
+    };
+  }
   private excludeSensitiveFields(user: User): UserResponseDto {
     const plainUser = (user as UserDocument).toObject();
     const {
@@ -314,6 +357,14 @@ export class UserManagementService {
       phoneNumber,
       isVerified,
       birthdate,
+      gender,
+      preferredLanguage,
+      preferredAirlines,
+      deviceType,
+      loyaltyProgram,
+      bookingHistory,
+      preferredCabinClass,
+      useRecommendationSystem,
     } = plainUser;
     return {
       id: _id.toString(),
@@ -324,6 +375,14 @@ export class UserManagementService {
       phoneNumber,
       isVerified,
       birthdate: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
+      gender,
+      preferredLanguage,
+      preferredAirlines,
+      deviceType,
+      loyaltyProgram,
+      bookingHistory,
+      preferredCabinClass,
+      useRecommendationSystem,
     };
   }
 
