@@ -1346,6 +1346,47 @@
           "birthdate": {
             "type": "string",
             "example": "1990-01-01"
+          },
+          "gender": {
+            "type": "string",
+            "example": "male"
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "example": "en"
+          },
+          "preferredAirlines": {
+            "example": [
+              "AA",
+              "UA"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deviceType": {
+            "type": "string",
+            "example": "mobile"
+          },
+          "loyaltyProgram": {
+            "type": "string",
+            "example": "miles"
+          },
+          "bookingHistory": {
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "preferredCabinClass": {
+            "type": "string",
+            "example": "economy"
+          },
+          "useRecommendationSystem": {
+            "type": "boolean",
+            "example": true
           }
         },
         "required": [
@@ -1813,24 +1854,7 @@
       },
       "UpdateProfileDto": {
         "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "example": "Ahmed"
-          },
-          "lastName": {
-            "type": "string",
-            "example": "MMM"
-          },
-          "email": {
-            "type": "string",
-            "example": "cse.zag1@example.com"
-          },
-          "phoneNumber": {
-            "type": "string",
-            "example": "01265564651"
-          }
-        }
+        "properties": {}
       },
       "LogoutData": {
         "type": "object",

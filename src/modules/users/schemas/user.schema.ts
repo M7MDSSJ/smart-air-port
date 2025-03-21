@@ -1,4 +1,3 @@
-// src/users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -19,13 +18,13 @@ export class User {
   @Prop({ type: [String], default: ['user'] })
   roles: string[];
 
-  @Prop({unique:true})
+  @Prop({ unique: true })
   phoneNumber?: string;
 
   @Prop()
   country?: string;
 
-  @Prop({ type: Date }) // Ensure this is present
+  @Prop({ type: Date })
   birthdate?: Date;
 
   @Prop({ default: false })
@@ -57,6 +56,48 @@ export class User {
 
   @Prop({ type: Date })
   updatedAt?: Date;
+
+  @Prop()
+  gender?: string;
+
+  @Prop()
+  preferredLanguage?: string;
+
+  @Prop({ type: [String] })
+  preferredAirlines?: string[];
+
+  @Prop()
+  deviceType?: string;
+
+  @Prop({ type: { status: String, points: Number } })
+  loyaltyProgram?: {
+    status: string;
+    points: number;
+  };
+
+  @Prop({
+    type: [
+      {
+        airline: String,
+        date: Date,
+        cabinClass: {
+          type: String,
+          enum: ['economy', 'premium', 'business', 'first'],
+        },
+      },
+    ],
+  })
+  bookingHistory?: Array<{
+    airline: string;
+    date: Date;
+    cabinClass: string;
+  }>;
+
+  @Prop({ enum: ['economy', 'premium', 'business', 'first'] })
+  preferredCabinClass?: string;
+
+  @Prop({ default: false })
+  useRecommendationSystem?: boolean;
 }
 
 export type UserDocument = User & Document & { _id: Types.ObjectId };
