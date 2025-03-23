@@ -40,31 +40,6 @@ async function bootstrap() {
       },
     }),
   );
-
-  // Dynamically set CORS origins based on environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  const corsOrigins = isProduction
-    ? ['https://sky-shifters.vercel.app', 'https://sky-shifters.duckdns.org']
-    : ['https://sky-shifters.vercel.app', 'http://localhost:3001'];
-
-  console.log('CORS Origins:', corsOrigins); // Debug log
-
-  app.enableCors({
-    origin: (origin, callback) => {
-      console.log('Request Origin:', origin); // Debug log
-      if (!origin || corsOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'), false);
-      }
-    },
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
-
   const config = new DocumentBuilder()
     .setTitle('Smart Airport API')
     .setDescription('API documentation for the Smart Airport application')
