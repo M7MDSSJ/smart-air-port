@@ -41,13 +41,14 @@ async function bootstrap() {
     }),
   );
 
+  // Dynamically set CORS origins based on environment
+  const isProduction = process.env.NODE_ENV === 'production';
+  const corsOrigins = isProduction
+    ? ['https://sky-shifters.vercel.app', 'https://sky-shifters.duckdns.org']
+    : ['https://sky-shifters.vercel.app', 'http://localhost:3001'];
+
   app.enableCors({
-    origin: [
-      'http://13.81.120.153', // Production
-      'http://localhost:3000', // Backend self-test
-      'http://localhost:5000', // Flutter web default port
-      'http://localhost:8080', // Alternative Flutter port
-    ],
+    origin: corsOrigins,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
     credentials: true,
@@ -94,10 +95,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .log.info(`Server ready on ${await app.getUrl()}`);
+  console.log(`Server running on port ${port}`);
 }
 
 void bootstrap();
