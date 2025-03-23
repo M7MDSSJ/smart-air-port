@@ -21,10 +21,10 @@ export class User {
   @Prop({ unique: true })
   phoneNumber?: string;
 
-  @Prop()
+  @Prop({ required: true })
   country?: string;
 
-  @Prop({ type: Date })
+  @Prop({ type: Date, required: true })
   birthdate?: Date;
 
   @Prop({ default: false })

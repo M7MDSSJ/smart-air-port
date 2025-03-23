@@ -227,7 +227,7 @@ export class UsersController {
     @GetUser() user: UserDocument,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    if (!user) {
+    if (!user || !user._id) {
       throw new UnauthorizedException('User not found');
     }
     return this.passwordResetService.changePassword(

@@ -1333,11 +1333,11 @@
           },
           "country": {
             "type": "string",
-            "example": "EGY"
+            "example": "Egypt"
           },
           "phoneNumber": {
             "type": "string",
-            "example": "22265564651"
+            "example": "+201234567890"
           },
           "isVerified": {
             "type": "boolean",
@@ -1394,7 +1394,9 @@
           "firstName",
           "lastName",
           "email",
-          "isVerified"
+          "country",
+          "isVerified",
+          "birthdate"
         ]
       },
       "ErrorResponseDto": {
@@ -1467,11 +1469,11 @@
           },
           "phoneNumber": {
             "type": "string",
-            "example": "22265564651"
+            "example": "+201234567890"
           },
           "country": {
             "type": "string",
-            "example": "KSA"
+            "example": "Egypt"
           },
           "birthdate": {
             "type": "string",
@@ -1482,7 +1484,9 @@
           "email",
           "password",
           "firstName",
-          "lastName"
+          "lastName",
+          "country",
+          "birthdate"
         ]
       },
       "RegisterResponseDto": {
@@ -1696,13 +1700,11 @@
         "properties": {
           "oldPassword": {
             "type": "string",
-            "example": "OldPassword123!",
-            "description": "Old password"
+            "example": "OldPasssssword12@@"
           },
           "newPassword": {
             "type": "string",
-            "example": "NewPassword123!",
-            "description": "New password"
+            "example": "NewPasssssword12@@"
           }
         },
         "required": [
@@ -1778,13 +1780,11 @@
         "properties": {
           "code": {
             "type": "string",
-            "example": "reset-code",
-            "description": "Reset code"
+            "example": "ABC12"
           },
           "newPassword": {
             "type": "string",
-            "example": "NewPassword123!",
-            "description": "New password"
+            "example": "NewPasssssword12@@"
           }
         },
         "required": [

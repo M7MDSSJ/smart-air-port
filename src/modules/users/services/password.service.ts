@@ -73,6 +73,17 @@ export class PasswordResetService {
         throw new BadRequestException('Reset code has expired');
       }
 
+      // Check if the new password matches the old password
+      if (!user.password) {
+        throw new NotFoundException('User password not found in database');
+      }
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        throw new BadRequestException(
+          'New password cannot be the same as the old password',
+        );
+      }
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       const updatedUser = await this.userRepository.update(
         user._id.toString(),
@@ -110,9 +121,18 @@ export class PasswordResetService {
         throw new NotFoundException('User password not found in database');
       }
 
+      // Verify the old password
       const isMatch = await bcrypt.compare(oldPassword, user.password);
       if (!isMatch) {
         throw new UnauthorizedException('Invalid old password');
+      }
+
+      // Check if the new password matches the old password
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        throw new BadRequestException(
+          'New password cannot be the same as the old password',
+        );
       }
 
       const hashedNewPassword = await bcrypt.hash(newPassword, 10);
