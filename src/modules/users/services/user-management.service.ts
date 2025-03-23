@@ -22,7 +22,7 @@ import { VerifyEmailResponseDto } from '../dto/verifyEmail-response.dto';
 import { ResendVerificationResponseDto } from '../dto/resendVerificationResponse.dto';
 import { LogoutResponseDto } from '../dto/logout-response.dto';
 import { ProfileResponseDto } from '../dto/profile-response.dto';
-import { randomUUID } from 'crypto';
+
 @Injectable()
 export class UserManagementService {
   private readonly logger = new Logger(UserManagementService.name);
@@ -44,48 +44,85 @@ export class UserManagementService {
     if ('roles' in createUserDto) {
       throw new BadRequestException('Role assignment is not allowed');
     }
+
     return this.userRepository.withTransaction(async (session) => {
+      // Check for existing email
       const existingUser = await this.userRepository.findByEmail(
         createUserDto.email,
         { session },
       );
       if (existingUser) {
+        this.logger.warn(
+          `Registration failed: Email ${createUserDto.email} already exists`,
+        );
         throw new ConflictException('Email already exists');
       }
 
+      // Check for existing phone number (if provided)
       if (createUserDto.phoneNumber) {
         const existingPhone = await this.userRepository.findByPhoneNumber(
           createUserDto.phoneNumber,
           { session },
         );
         if (existingPhone) {
+          this.logger.warn(
+            `Registration failed: Phone number ${createUserDto.phoneNumber} already exists`,
+          );
           throw new ConflictException('Phone number already exists');
         }
       }
 
+      // Determine roles (admin for first user, user for others)
       const userCount = await this.userRepository.countByRole('admin', {
         session,
       });
       const assignedRoles = userCount === 0 ? ['admin'] : ['user'];
+
+      // Hash the password
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+      // Convert birthdate to Date object (required field)
+      let birthdate: Date;
+      try {
+        birthdate = new Date(createUserDto.birthdate);
+        if (isNaN(birthdate.getTime())) {
+          this.logger.error(
+            `Invalid birthdate format: ${createUserDto.birthdate}`,
+          );
+          throw new BadRequestException('Invalid birthdate format');
+        }
+      } catch (error) {
+        this.logger.error(
+          `Failed to parse birthdate: ${createUserDto.birthdate}`,
+          error,
+        );
+        throw new BadRequestException('Invalid birthdate format');
+      }
+
+      // Create the new user
       const newUser: Partial<User> = {
         ...createUserDto,
         roles: assignedRoles,
         password: hashedPassword,
         isVerified: false,
         verificationToken: this.generateCode(),
-        verificationTokenExpiry: new Date(Date.now() + 3600000),
-        birthdate: createUserDto.birthdate
-          ? new Date(createUserDto.birthdate)
-          : undefined,
+        verificationTokenExpiry: new Date(Date.now() + 3600000), // 1 hour expiry
+        birthdate, // Store as Date object
       };
+
       const savedUser = await this.userRepository.create(newUser, { session });
+
+      // Send verification email
       try {
         await this.emailService.sendVerificationEmail(
           savedUser.email,
           savedUser.verificationToken as string,
         );
       } catch (error) {
+        this.logger.error(
+          `Failed to send verification email to ${savedUser.email}`,
+          error,
+        );
         await this.userRepository.update(
           savedUser._id.toString(),
           { needsEmailResend: true },
@@ -95,7 +132,9 @@ export class UserManagementService {
           'Failed to send verification email. Please try resending.',
         );
       }
+
       const userResponse = this.getBasicUserFields(savedUser);
+      this.logger.log(`User ${savedUser.email} registered successfully`);
       return {
         success: true,
         data: {
@@ -116,23 +155,35 @@ export class UserManagementService {
     return this.userRepository.withTransaction(async (session) => {
       const user = await this.userRepository.findByEmail(email, { session });
       if (!user) {
+        this.logger.warn(`Email verification failed: Email ${email} not found`);
         throw new NotFoundException('Email not found');
       }
       if (!user.verificationToken || !user.verificationTokenExpiry) {
+        this.logger.warn(
+          `Email verification failed: No verification code for ${email}`,
+        );
         throw new BadRequestException(
           'No verification code found for this email',
         );
       }
       if (user.verificationToken !== code) {
-        // Check code matches
+        this.logger.warn(
+          `Email verification failed: Invalid code for ${email}`,
+        );
         throw new BadRequestException('Invalid verification code');
       }
       const expirationDate = new Date(user.verificationTokenExpiry);
       const currentDate = new Date();
       if (expirationDate < currentDate) {
+        this.logger.warn(
+          `Email verification failed: Code expired for ${email}`,
+        );
         throw new BadRequestException('Verification code has expired');
       }
       if (user.isVerified) {
+        this.logger.warn(
+          `Email verification failed: ${email} already verified`,
+        );
         throw new BadRequestException('User is already verified');
       }
       const updatedUser = await this.userRepository.update(
@@ -144,6 +195,9 @@ export class UserManagementService {
         { session },
       );
       if (!updatedUser) {
+        this.logger.error(
+          `Email verification failed: Failed to update user ${email}`,
+        );
         throw new NotFoundException('Failed to update user verification');
       }
       this.logger.log(`Email ${email} verified successfully`);
@@ -160,9 +214,15 @@ export class UserManagementService {
     return this.userRepository.withTransaction(async (session) => {
       const user = await this.userRepository.findByEmail(email, { session });
       if (!user) {
+        this.logger.warn(
+          `Resend verification failed: Email ${email} not found`,
+        );
         throw new NotFoundException('Email not found');
       }
       if (user.isVerified) {
+        this.logger.warn(
+          `Resend verification failed: ${email} already verified`,
+        );
         throw new BadRequestException('User is already verified');
       }
       const verificationCode = this.generateCode();
@@ -173,24 +233,31 @@ export class UserManagementService {
         { session },
       );
       if (!updatedUser) {
+        this.logger.error(
+          `Resend verification failed: Failed to update user ${email}`,
+        );
         throw new NotFoundException('Failed to update user');
       }
       await this.emailService.sendVerificationEmail(
         user.email,
         verificationCode,
       );
+      this.logger.log(`Verification email resent to ${email}`);
       return {
         success: true,
         data: { message: 'Verification email sent successfully' },
       };
     });
   }
+
   async getProfile(userId: string): Promise<ProfileResponseDto> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
+      this.logger.warn(`Get profile failed: User ${userId} not found`);
       throw new NotFoundException('User not found');
     }
     if (!user.isVerified) {
+      this.logger.warn(`Get profile failed: User ${userId} not verified`);
       throw new UnauthorizedException('Verify your account please');
     }
     return {
@@ -209,9 +276,11 @@ export class UserManagementService {
     return this.userRepository.withTransaction(async (session) => {
       const user = await this.userRepository.findById(userId, { session });
       if (!user) {
+        this.logger.warn(`Update profile failed: User ${userId} not found`);
         throw new NotFoundException('User not found');
       }
       if (!user.isVerified) {
+        this.logger.warn(`Update profile failed: User ${userId} not verified`);
         throw new UnauthorizedException('Verify your account please');
       }
 
@@ -228,6 +297,9 @@ export class UserManagementService {
             { session },
           );
           if (phoneExists && phoneExists._id.toString() !== userId) {
+            this.logger.warn(
+              `Update profile failed: Phone number ${updateProfileDto.phoneNumber} already in use`,
+            );
             throw new ConflictException('Phone number already in use');
           }
         }
@@ -239,6 +311,9 @@ export class UserManagementService {
           { session },
         );
         if (existingUser) {
+          this.logger.warn(
+            `Update profile failed: Email ${updateProfileDto.email} already in use`,
+          );
           throw new ConflictException(
             'Email is already in use by another account',
           );
@@ -276,6 +351,9 @@ export class UserManagementService {
         session,
       });
       if (!updatedUser) {
+        this.logger.error(
+          `Update profile failed: Failed to update user ${userId}`,
+        );
         throw new NotFoundException('Failed to update user profile');
       }
 
@@ -286,6 +364,7 @@ export class UserManagementService {
         );
       }
 
+      this.logger.log(`Profile updated successfully for user ${userId}`);
       return {
         success: true,
         data: {
@@ -311,26 +390,35 @@ export class UserManagementService {
     return this.userRepository.withTransaction(async (session) => {
       const user = await this.userRepository.findById(userId, { session });
       if (!user) {
+        this.logger.warn(`Logout failed: User ${userId} not found`);
         throw new NotFoundException('User not found');
       }
       if (user.refreshToken !== providedRefreshToken) {
+        this.logger.warn(
+          `Logout failed: Invalid refresh token for user ${userId}`,
+        );
         throw new UnauthorizedException('Invalid refresh token');
       }
       await this.userRepository.updateRefreshToken(userId, null, { session });
+      this.logger.log(`User ${userId} logged out successfully`);
       return {
         success: true,
         data: { message: 'User logged out successfully' },
       };
     });
   }
+
   async deleteUserByEmail(email: string): Promise<{ message: string }> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
+      this.logger.warn(`Delete user failed: Email ${email} not found`);
       throw new NotFoundException(`User with email ${email} not found`);
     }
     await this.userRepository.delete(email);
+    this.logger.log(`User with email ${email} deleted successfully`);
     return { message: `User with email ${email} deleted successfully` };
   }
+
   private getBasicUserFields(user: User): BasicUserResponseDto {
     const plainUser = (user as UserDocument).toObject();
     return {
@@ -346,6 +434,7 @@ export class UserManagementService {
         : undefined,
     };
   }
+
   private excludeSensitiveFields(user: User): UserResponseDto {
     const plainUser = (user as UserDocument).toObject();
     const {

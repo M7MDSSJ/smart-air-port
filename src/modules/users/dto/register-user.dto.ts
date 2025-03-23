@@ -7,8 +7,10 @@ import {
   MinLength,
   IsOptional,
   IsDateString,
-  Matches,
 } from 'class-validator';
+import { IsValidCountry } from '../../../common/validators/is-valid-country';
+import { IsValidPhoneNumber } from '../../../common/validators/is-valid-phone-number';
+import { IsAdult } from '../../../common/validators/is-adult';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -39,19 +41,30 @@ export class CreateUserDto {
   @MinLength(3, { message: 'Last name must be at least 3 characters' })
   lastName: string;
 
-  @ApiProperty({ example: '22265564651', required: false })
+  @ApiProperty({ example: '+201234567890', required: false })
   @IsString()
   @IsOptional()
-  @Matches(/^\d{10,15}$/, { message: 'Phone number must be 10-15 digits' })
+  @IsValidPhoneNumber({
+    message:
+      'Phone number must be a valid international phone number (e.g., +201234567890)',
+  })
   phoneNumber?: string;
 
-  @ApiProperty({ example: 'KSA', required: false })
+  @ApiProperty({ example: 'Egypt' })
   @IsString()
-  @IsOptional()
-  country?: string;
+  @IsNotEmpty({ message: 'Country is required' })
+  @IsValidCountry({
+    message:
+      'Country must be a valid country name or ISO 3166-1 alpha-2/alpha-3 code',
+  })
+  country: string;
 
-  @ApiProperty({ example: '1990-01-01', required: false })
-  @IsDateString()
-  @IsOptional()
-  birthdate?: string;
+  @ApiProperty({ example: '1990-01-01' })
+  @IsDateString(
+    {},
+    { message: 'Birthdate must be a valid ISO date (e.g., 1990-01-01)' },
+  )
+  @IsNotEmpty({ message: 'Birthdate is required' })
+  @IsAdult({ message: 'User must be at least 18 years old' })
+  birthdate: string;
 }

@@ -86,7 +86,11 @@ async function bootstrap() {
           const constraints = error.constraints || {};
           errorResponse[error.property] = Object.values(constraints).join(', ');
         });
-        return new BadRequestException({ errors: errorResponse });
+        return new BadRequestException({
+          success: false,
+          message: 'Please check the following fields',
+          errors: errorResponse,
+        });
       },
     }),
   );

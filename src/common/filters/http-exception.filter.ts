@@ -3,68 +3,44 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
-  HttpStatus,
 } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
-import { ErrorResponseDto } from 'src/modules/users/dto/error-response.dto';
-@Catch()
+import { FastifyReply } from 'fastify';
+
+@Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest<FastifyRequest>();
+    const response = ctx.getResponse<FastifyReply>();
+    const status = exception.getStatus();
+    const exceptionResponse = exception.getResponse();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    let message = 'An error occurred';
-    let error = 'Internal Server Error';
-    let validationErrors: Record<string, string> | undefined;
-
-    if (exception instanceof HttpException) {
-      const exceptionResponse = exception.getResponse();
-
-      if (typeof exceptionResponse === 'object') {
-        const res = exceptionResponse as Record<string, any>;
-
-        if (Array.isArray(res.message)) {
-          message = 'Validation failed';
-          validationErrors = this.transformValidationErrors(res.message);
-        } else {
-          message = res.message || message;
-        }
-
-        error = res.error || error;
-      } else if (typeof exceptionResponse === 'string') {
-        message = exceptionResponse;
-        error = HttpStatus[status] || error;
-      }
-    } else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
-    }
-
-    const errorResponse: ErrorResponseDto = {
+    // Default error response structure
+    const errorResponse = {
       success: false,
-      message,
-      error,
+      message: exception.message || 'An error occurred',
+      error: exception.name || 'Error',
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
-      errors: validationErrors,
+      path: ctx.getRequest().url,
+      errors: {},
     };
 
-    response.status(status).send(errorResponse);
-  }
+    // Handle validation errors (BadRequestException)
+    if (status === 400 && typeof exceptionResponse === 'object') {
+      errorResponse.message =
+        (exceptionResponse as any).message ||
+        'Please check the following fields';
+      errorResponse.errors = (exceptionResponse as any).errors || {};
+    }
 
-  private transformValidationErrors(messages: any[]): Record<string, string> {
-    return messages.reduce((acc, error) => {
-      if (error.property && error.constraints) {
-        acc[error.property] = Object.values(error.constraints).join(', ');
-      }
-      return acc;
-    }, {});
+    // Handle other HTTP exceptions
+    if (status !== 400 && typeof exceptionResponse === 'string') {
+      errorResponse.message = exceptionResponse;
+    } else if (status !== 400 && typeof exceptionResponse === 'object') {
+      errorResponse.message =
+        (exceptionResponse as any).message || exception.message;
+    }
+
+    response.status(status).send(errorResponse);
   }
 }
