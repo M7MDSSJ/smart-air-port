@@ -35,7 +35,7 @@ export class Flight extends Document {
   @Prop({ required: true, unique: true }) // Unique Amadeus offer ID
   offerId: string;
 
-  @Prop({required: true}) // First segment’s flight number
+  @Prop({ required: true }) // First segment’s flight number
   flightNumber: string;
 
   @Prop({ required: true }) // e.g., "F9" from carrierCode
@@ -77,6 +77,12 @@ export class Flight extends Document {
 
   @Prop() // e.g., "2025-03-17"
   lastTicketingDate?: string;
+
+  @Prop({ type: Object })
+  baggageOptions: {
+    included: string;
+    options: Array<{ weightInKg: number; price: number }>;
+  };
 
   @Prop({ expires: 3600 }) // Auto-delete after 1 hour
   createdAt: Date;

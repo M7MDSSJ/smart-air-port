@@ -1,4 +1,3 @@
-// dto/amadeus-flight-offer.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 
 export class FlightOffer {

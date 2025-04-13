@@ -29,12 +29,12 @@ import { HealthController } from './app.controller';
       host: 'localhost',
       port: 6379,
       ttl: 60,
-      password:undefined
+      password: undefined
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: path.join(__dirname, '../i18n'), 
+        path: path.join(__dirname, '../i18n'),
         watch: true,
       },
       resolvers: [
@@ -48,7 +48,7 @@ import { HealthController } from './app.controller';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGO_URI', 'mongodb://localhost:27017/test1'),
+        uri: config.get<string>('MONGO_URI'),
         retryAttempts: 2,
         serverSelectionTimeoutMS: 5000,
       }),
@@ -87,4 +87,4 @@ import { HealthController } from './app.controller';
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })
-export class AppModule {}
+export class AppModule { }
