@@ -1,9 +1,33 @@
 {
   "errors": {
     "invalidDate": "Invalid date format",
-    "departureBeforeArrival": "Departure must be before arrival",
     "seatsPositive": "Seats must be positive",
     "pricePositive": "Price must be positive",
-    "flightExists": "Flight number already exists"
+    "flightExists": "Flight number already exists",
+    "departureBeforeArrival": "departureAirport, arrivalAirport, departureDate, tripType, adults, and cabinClass are required",
+    "returnDateRequired": "returnDate is required for round-trip",
+    "multiCityLegsRequired": "multiCityLegs are required for multi-city",
+    "flightNotFound": "Flight not found",
+    "notEnoughSeats": "Not enough seats available",
+    "seatInventoryChanged": "Seat inventory changed, please refresh",
+    "bookingWindowClosed": "Booking window closed",
+    "priceChanged": "Price changed - please refresh"
+  },
+  "baggage": {
+    "included": "{count} checked bag",
+    "included_plural": "{count} checked bags"
+  },
+  "response": {
+    "foundFlights": "Found {paginatedTotal} available flight offers (out of {total} total)"
+  },
+  "status": {
+    "Scheduled": "Scheduled"
+  },
+  "duration": {
+    "format": "{hours}h {minutes}m"
+  },
+  "email": {
+    "newFlightSearchSubject": "New Flight Search",
+    "newFlightSearchBody": "Searched flights ({tripType}) from {departureAirport} to {arrivalAirport} on {departureDate}"
   }
 }

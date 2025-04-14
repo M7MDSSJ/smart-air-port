@@ -1,4 +1,3 @@
-// src/flight/amadeus.service.ts
 import { Injectable, Logger, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FlightOfferSearchResponse } from './dto/amadeus-flight-offer.dto';
@@ -8,7 +7,7 @@ export class AmadeusService {
   private readonly logger = new Logger(AmadeusService.name);
   private readonly baseUrl = 'https://test.api.amadeus.com';
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async getAccessToken(): Promise<string> {
     const clientId = this.configService.get<string>('AMADEUS_API_KEY');
@@ -26,7 +25,7 @@ export class AmadeusService {
       this.logger.log('Fetched Amadeus access token');
       return data.access_token;
     } catch (error) {
-      this.logger.error(`Token fetch error: ${error.message}`);
+      this.logger.error(`Token fetch error: ${(error as Error).message}`);
       throw new HttpException('Failed to fetch access token', 500);
     }
   }
@@ -141,5 +140,40 @@ export class AmadeusService {
       );
     }
     return data.data;
+  }
+
+  // New method to verify price with Amadeus
+  async verifyPrice(offerId: string): Promise<number> {
+    const token = await this.getAccessToken();
+    const url = `${this.baseUrl}/v2/shopping/flight-offers?offerId=${offerId}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      this.logger.error(`Price verification error: ${JSON.stringify(data)}`);
+      throw new HttpException(
+        {
+          status: response.status,
+          message: data.errors?.[0]?.detail || 'Failed to verify price',
+          details: data,
+        },
+        response.status,
+      );
+    }
+    return parseFloat(data.data[0].price.total);
+  }
+
+  // New method to fetch flight status (mock implementation for now)
+  async getFlightStatus(flightNumber: string): Promise<string> {
+    // Note: Amadeus does not provide a direct flight status API in the test environment.
+    // This is a placeholder for a real implementation using an appropriate endpoint.
+    // For now, we'll return a mock status.
+    this.logger.log(`Fetching status for flight ${flightNumber}`);
+    return 'Scheduled'; // Replace with actual API call
   }
 }
