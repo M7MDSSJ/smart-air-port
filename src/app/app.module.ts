@@ -12,7 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { I18nModule, HeaderResolver } from 'nestjs-i18n';
+import { I18nModule, HeaderResolver, I18nService } from 'nestjs-i18n';
 import * as path from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -29,7 +29,7 @@ import { HealthController } from './app.controller';
       host: 'localhost',
       port: 6379,
       ttl: 60,
-      password: undefined
+      password: undefined,
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
@@ -83,8 +83,12 @@ import { HealthController } from './app.controller';
       provide: CustomLogger,
       useValue: new CustomLogger('AppModule'),
     },
-    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    {
+      provide: APP_INTERCEPTOR,
+      useFactory: (i18n: I18nService) => new TransformInterceptor(i18n),
+      inject: [I18nService],
+    },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
   ],
 })
-export class AppModule { }
+export class AppModule {}

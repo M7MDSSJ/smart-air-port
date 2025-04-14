@@ -116,6 +116,10 @@ export class QueryFlightDto {
   @Min(1)
   @Type(() => Number)
   limit?: number;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
 }
 
 export interface FlightQueryFilter {

@@ -1,18 +1,31 @@
-// src/common/interceptors/transform.interceptor.ts
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map,switchMap } from 'rxjs/operators';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class TransformInterceptor implements NestInterceptor {
+  constructor(private readonly i18n: I18nService) {}
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const language = request.query.language || 'en';
+
     return next.handle().pipe(
-      map(data => {
-        // Skip wrapping if data is already a DTO-like object
-        if (data && (typeof data === 'object') && ('success' in data || 'message' in data || 'firstName' in data)) {
-          return data;
+      switchMap(async data => {
+        if (data && data.message) {
+          const total = data.data?.pagination?.total || 0;
+          const paginatedTotal = data.data?.paginatedFlights?.length || data.data?.flights?.length || 0;
+          data.message = await this.i18n.t('response.foundFlights', {
+            lang: language,
+            args: { paginatedTotal, total },
+            defaultValue: `Found ${paginatedTotal} available flight offers (out of ${total} total)`,
+          });
         }
-        return { success: true, data };
+        return {
+          success: true,
+          ...data,
+        };
       }),
     );
   }
