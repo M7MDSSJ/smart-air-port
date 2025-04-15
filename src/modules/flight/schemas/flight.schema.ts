@@ -93,3 +93,5 @@ export class SeatHold extends Document {
 
 export const FlightSchema = SchemaFactory.createForClass(Flight);
 export const SeatHoldSchema = SchemaFactory.createForClass(SeatHold);
+
+FlightSchema.index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1 });

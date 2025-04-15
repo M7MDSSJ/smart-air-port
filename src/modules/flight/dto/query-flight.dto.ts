@@ -1,6 +1,6 @@
-// src/flight/dto/query-flight.dto.ts
-import { IsOptional, IsDateString, IsString, IsNumber, Min, IsEnum, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+// query-flight.dto.ts
+import { IsString, IsEnum, IsOptional, IsNumber, IsArray, IsDateString, Min, ValidateIf } from 'class-validator';
+import { IsIataCode } from 'src/common/validators/is-iata-code.validator';
 
 export enum TripType {
   OneWay = 'oneway',
@@ -15,12 +15,33 @@ export enum CabinClass {
   First = 'FIRST',
 }
 
+export enum DepartureTimeRange {
+  Morning = 'morning',
+  Afternoon = 'afternoon',
+  Evening = 'evening',
+  Night = 'night',
+}
+
+export enum SortBy {
+  Price = 'price',
+  Duration = 'duration',
+  Stops = 'stops',
+  TotalPrice = 'totalPrice',
+}
+
+export enum SortOrder {
+  Asc = 'asc',
+  Desc = 'desc',
+}
+
 export class MultiCityLeg {
   @IsString()
-  from: string;
+  @IsIataCode()
+  departureAirport: string;
 
   @IsString()
-  to: string;
+  @IsIataCode()
+  arrivalAirport: string;
 
   @IsDateString()
   departureDate: string;
@@ -31,9 +52,11 @@ export class QueryFlightDto {
   tripType: TripType;
 
   @IsString()
+  @IsIataCode()
   departureAirport: string;
 
   @IsString()
+  @IsIataCode()
   arrivalAirport: string;
 
   @IsDateString()
@@ -44,41 +67,36 @@ export class QueryFlightDto {
   returnDate?: string;
 
   @IsNumber()
-  @Min(1)
-  @Type(() => Number) // Transform string to number
+  @Min(1, { message: 'adults must be at least 1' })
   adults: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Type(() => Number) // Transform string to number
+  @Min(0, { message: 'children cannot be negative' })
   children?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Type(() => Number) // Transform string to number
+  @Min(0, { message: 'infants cannot be negative' })
   infants?: number;
 
-  @IsEnum(CabinClass)
+  @IsEnum(CabinClass, { message: 'cabinClass must be one of: ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST' })
   cabinClass: CabinClass;
 
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MultiCityLeg)
   multiCityLegs?: MultiCityLeg[];
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Type(() => Number)
+  @Min(0, { message: 'minPrice cannot be negative' })
   minPrice?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Type(() => Number)
+  @Min(0, { message: 'maxPrice cannot be negative' })
+  @ValidateIf((o: any) => o.minPrice !== undefined)
+  @Min(0, { message: 'maxPrice must be greater than or equal to minPrice' })
   maxPrice?: number;
 
   @IsOptional()
@@ -87,51 +105,34 @@ export class QueryFlightDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Type(() => Number)
+  @Min(0, { message: 'maxStops cannot be negative' })
   maxStops?: number;
 
+ @IsOptional()
+  @IsEnum(DepartureTimeRange, { message: 'departureTimeRange must be one of: morning, afternoon, evening, night' })
+  departureTimeRange?: DepartureTimeRange;
+  
   @IsOptional()
-  @IsString()
-  departureTimeRange?: 'morning' | 'afternoon' | 'evening' | 'night'; // e.g., morning: 00:00-12:00, afternoon: 12:00-18:00
-
-
-  @IsOptional()
-  @IsString()
-  sortBy?: 'price' | 'duration' | 'stops' | 'totalPrice';
+  @IsEnum(SortBy, { message: 'sortBy must be one of: price, duration, stops, totalPrice' })
+  sortBy?: SortBy;
 
   @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
+  @IsEnum(SortOrder, { message: 'sortOrder must be one of: asc, desc' })
+  sortOrder?: SortOrder;
 
-  // Pagination parameters
   @IsOptional()
   @IsNumber()
-  @Min(1)
-  @Type(() => Number)
+  @Min(1, { message: 'page must be at least 1' })
   page?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(1)
-  @Type(() => Number)
+  @Min(1, { message: 'limit must be at least 1' })
   limit?: number;
 
   @IsOptional()
   @IsString()
   language?: string;
-}
 
-export interface FlightQueryFilter {
-  departureAirport?: string;
-  arrivalAirport?: string;
-  departureTime?: {
-    $gte: Date;
-    $lte: Date;
-  };
-  adults?: number;
-  children?: number;
-  infants?: number;
-  cabinClass?: CabinClass;
-  multiCityLegs?: MultiCityLeg[];
+  
 }

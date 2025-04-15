@@ -12,7 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from '../modules/email/email.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { I18nModule, HeaderResolver, I18nService } from 'nestjs-i18n';
+import { I18nModule, HeaderResolver, I18nService, QueryResolver, AcceptLanguageResolver } from 'nestjs-i18n';
 import * as path from 'path';
 import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -24,21 +24,27 @@ import { HealthController } from './app.controller';
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 10 }],
     }),
-    CacheModule.register({
-      store: redisStore,
-      host: 'localhost',
-      port: 6379,
-      ttl: 60,
-      password: undefined,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        store: redisStore,
+        host: configService.get<string>('REDIS_HOST', 'localhost'),
+        port: configService.get<number>('REDIS_PORT', 6379),
+        ttl: configService.get<number>('REDIS_TTL', 3600),
+        password: configService.get<string>('REDIS_PASSWORD'),
+      }),
+      inject: [ConfigService],
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: path.join(__dirname, '../i18n'),
+        path: path.join(process.cwd(), 'src/i18n'),
         watch: true,
       },
       resolvers: [
-        new HeaderResolver(['Accept-Language']),
+        { use: QueryResolver, options: ['lang', 'language'] },
+        AcceptLanguageResolver,
       ],
     }),
     ConfigModule.forRoot({
@@ -74,6 +80,7 @@ import { HealthController } from './app.controller';
       provide: APP_PIPE,
       useValue: new ValidationPipe({
         transform: true,
+        transformOptions: { enableImplicitConversion: true }, // Enable string-to-number conversion
         whitelist: true,
         forbidNonWhitelisted: true,
         stopAtFirstError: true,
