@@ -1,31 +1,52 @@
 import { Injectable, Logger, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FlightOfferSearchResponse } from './dto/amadeus-flight-offer.dto';
+import axios from 'axios';
+import rax from 'retry-axios';
 
 @Injectable()
 export class AmadeusService {
   private readonly logger = new Logger(AmadeusService.name);
   private readonly baseUrl = 'https://test.api.amadeus.com';
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {
+    rax.attach();
+  }
+
+  private getAxiosInstance() {
+    const instance = axios.create();
+    instance.defaults.raxConfig = {
+      instance,
+      retry: 3,
+      retryDelay: 1000,
+      backoffType: 'exponential',
+      onRetryAttempt: (err) => {
+        const cfg = rax.getConfig(err);
+        this.logger.warn(`Retry attempt #${cfg?.currentRetryAttempt}`);
+      },
+    };
+    rax.attach(instance);
+    return instance;
+  }
 
   async getAccessToken(): Promise<string> {
     const clientId = this.configService.get<string>('AMADEUS_API_KEY');
     const clientSecret = this.configService.get<string>('AMADEUS_API_SECRET');
-    const body = `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
+    const body = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId!,
+      client_secret: clientSecret!,
+    });
+
+    const axiosInstance = this.getAxiosInstance();
 
     try {
-      const response = await fetch(`${this.baseUrl}/v1/security/oauth2/token`, {
-        method: 'POST',
+      const response = await axiosInstance.post(`${this.baseUrl}/v1/security/oauth2/token`, body.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(JSON.stringify(data));
       this.logger.log('Fetched Amadeus access token');
-      return data.access_token;
+      return response.data.access_token;
     } catch (error) {
-      this.logger.error(`Token fetch error: ${(error as Error).message}`);
+      this.logger.error(`Token fetch error: ${error}`);
       throw new HttpException('Failed to fetch access token', 500);
     }
   }
@@ -38,79 +59,54 @@ export class AmadeusService {
     children: number = 0,
     infants: number = 0,
     cabinClass: string,
-  ): Promise<FlightOfferSearchResponse> {
+    returnDate?: string,
+    limit: number = 10,
+  ): Promise<any[]> {
     const token = await this.getAccessToken();
-    const url = `${this.baseUrl}/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=10`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      this.logger.error(`Flight search error: ${JSON.stringify(data)}`);
+    let url = `${this.baseUrl}/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=${limit}`;
+    if (returnDate) {
+      url += `&returnDate=${returnDate}`;
+    }
+
+    const axiosInstance = this.getAxiosInstance();
+
+    try {
+      const response = await axiosInstance.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+      this.logger.log(`Fetched ${response.data.data.length} flight offers from Amadeus`);
+      return response.data.data;
+    } catch (error) {
+      this.logger.error(`Flight search error: ${JSON.stringify(error.response?.data || error.message)}`);
       throw new HttpException(
         {
-          status: response.status,
-          message: data.errors?.[0]?.detail || 'Failed to fetch flight offers',
-          details: data,
+          status: error.response?.status || 500,
+          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch flight offers',
+          details: error.response?.data,
         },
-        response.status,
+        error.response?.status || 500,
       );
     }
-    this.logger.log(`Fetched ${data.data.length} flight offers from Amadeus`);
-    return data.data;
   }
 
-  async searchRoundTripOffers(
-    origin: string,
-    destination: string,
-    departureDate: string,
-    returnDate: string,
+  async searchMultiCityFlights(
+    legs: { origin: string; destination: string; departureDate: string }[],
     adults: number,
     children: number = 0,
     infants: number = 0,
     cabinClass: string,
-  ): Promise<FlightOfferSearchResponse> {
+    limit: number = 10,
+  ): Promise<any[]> {
     const token = await this.getAccessToken();
-    const url = `${this.baseUrl}/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departureDate}&returnDate=${returnDate}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=10`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      this.logger.error(`Round-trip search error: ${JSON.stringify(data)}`);
-      throw new HttpException(
-        {
-          status: response.status,
-          message: data.errors?.[0]?.detail || 'Failed to fetch round-trip offers',
-          details: data,
-        },
-        response.status,
-      );
-    }
-    return data.data;
-  }
 
-  async searchMultiCityOffers(
-    legs: { from: string; to: string; departureDate: string }[],
-    adults: number,
-    children: number = 0,
-    infants: number = 0,
-    cabinClass: string,
-  ): Promise<FlightOfferSearchResponse> {
-    const token = await this.getAccessToken();
     const originDestinations = legs
       .map((leg, index) => ({
         id: `${index + 1}`,
-        originLocationCode: leg.from,
-        destinationLocationCode: leg.to,
+        originLocationCode: leg.origin,
+        destinationLocationCode: leg.destination,
         departureDateTimeRange: { date: leg.departureDate },
       }))
       .map((param) => ({
@@ -119,61 +115,62 @@ export class AmadeusService {
       }))
       .map((param) => new URLSearchParams(param).toString())
       .join('&');
-    const url = `${this.baseUrl}/v2/shopping/flight-offers?${originDestinations}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=10`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      this.logger.error(`Multi-city search error: ${JSON.stringify(data)}`);
+
+    const url = `${this.baseUrl}/v2/shopping/flight-offers?${originDestinations}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=${limit}`;
+
+    const axiosInstance = this.getAxiosInstance();
+
+    try {
+      const response = await axiosInstance.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      this.logger.error(`Multi-city search error: ${JSON.stringify(error.response?.data || error.message)}`);
       throw new HttpException(
         {
-          status: response.status,
-          message: data.errors?.[0]?.detail || 'Failed to fetch multi-city offers',
-          details: data,
+          status: error.response?.status || 500,
+          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch multi-city offers',
+          details: error.response?.data,
         },
-        response.status,
+        error.response?.status || 500,
       );
     }
-    return data.data;
   }
 
-  // New method to verify price with Amadeus
-  async verifyPrice(offerId: string): Promise<number> {
+  async getFlightOffer(offerId: string): Promise<any> {
     const token = await this.getAccessToken();
-    const url = `${this.baseUrl}/v2/shopping/flight-offers?offerId=${offerId}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      this.logger.error(`Price verification error: ${JSON.stringify(data)}`);
+    const url = `${this.baseUrl}/v2/shopping/flight-offers/${offerId}`;
+
+    const axiosInstance = this.getAxiosInstance();
+
+    try {
+      const response = await axiosInstance.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      this.logger.error(`Flight offer fetch error: ${JSON.stringify(error.response?.data || error.message)}`);
       throw new HttpException(
         {
-          status: response.status,
-          message: data.errors?.[0]?.detail || 'Failed to verify price',
-          details: data,
+          status: error.response?.status || 500,
+          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch flight offer',
+          details: error.response?.data,
         },
-        response.status,
+        error.response?.status || 500,
       );
     }
-    return parseFloat(data.data[0].price.total);
   }
 
-  // New method to fetch flight status (mock implementation for now)
   async getFlightStatus(flightNumber: string): Promise<string> {
-    // Note: Amadeus does not provide a direct flight status API in the test environment.
-    // This is a placeholder for a real implementation using an appropriate endpoint.
-    // For now, we'll return a mock status.
-    this.logger.log(`Fetching status for flight ${flightNumber}`);
-    return 'Scheduled'; // Replace with actual API call
+    // TODO: Integrate with a real flight status API (e.g., FlightAware, AviationStack)
+    this.logger.warn(`Flight status for ${flightNumber} is mocked; returning 'Scheduled'`);
+    return 'Scheduled'; // Mock for now
   }
 }
