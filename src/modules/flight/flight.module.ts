@@ -7,7 +7,9 @@ import { AmadeusService } from './amadeus.service';
 import { EmailModule } from '../email/email.module';
 import { FlightStatusService } from './flight-status.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SeatHoldSchema } from './schemas/flight.schema';
+import { FlightSchema, SeatHoldSchema } from './schemas/flight.schema';
+import { FlightRepository } from './repositories/flight.repository';
+import { FLIGHT_REPOSITORY } from './repositories/flight.repository.interface';
 
 @Module({
   imports: [
@@ -15,13 +17,21 @@ import { SeatHoldSchema } from './schemas/flight.schema';
       isGlobal: true,
     }),
     EmailModule,
-    MongooseModule.forFeature([{ name: 'SeatHold', schema: SeatHoldSchema }]),
+    MongooseModule.forFeature([
+      { name: 'Flight', schema: FlightSchema },
+      { name: 'SeatHold', schema: SeatHoldSchema }
+    ]),
   ],
   controllers: [FlightController],
   providers: [
     FlightService,
     AmadeusService,
     FlightStatusService,
+    FlightRepository,
+    {
+      provide: FLIGHT_REPOSITORY,
+      useClass: FlightRepository
+    }
   ],
   exports: [FlightService, AmadeusService, FlightStatusService],
 })

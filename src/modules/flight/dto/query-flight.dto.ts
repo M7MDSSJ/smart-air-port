@@ -34,6 +34,20 @@ export enum SortOrder {
   Desc = 'desc',
 }
 
+// Interface used for MongoDB flight queries
+export interface FlightQueryFilter {
+  departureAirport?: string;
+  arrivalAirport?: string;
+  departureTime?: { $gte?: Date; $lte?: Date };
+  arrivalTime?: { $gte?: Date; $lte?: Date };
+  price?: { $gte?: number; $lte?: number };
+  airline?: string;
+  'stops.length'?: { $lte?: number };
+  offerId?: string;
+  seatsAvailable?: { $gte?: number };
+  [key: string]: any;
+}
+
 export class MultiCityLeg {
   @IsString()
   @IsIataCode()

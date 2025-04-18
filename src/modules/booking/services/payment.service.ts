@@ -3,11 +3,16 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { EventBus } from 'src/common/event-bus.service';
 
+// TODO: Support multiple payment providers (Stripe, PayPal, etc.)
+// TODO: Support dynamic multi-currency everywhere (not just intent creation)
+// TODO: Use idempotency keys for all payment actions for safety
+// NOTE: Always include bookingRef and userId in payment intent metadata for traceability
+// NOTE: Improve user-facing error messages for payment failures (currently technical)
 type PaymentIntentParams = {
   amount: number;
   currency: string;
   paymentMethod: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, any>; // Should always include bookingRef and userId
 };
 
 @Injectable()
@@ -21,18 +26,25 @@ export class PaymentService {
   ) {
     const stripeKey =
       this.configService.getOrThrow<string>('STRIPE_SECRET_KEY');
-    this.stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
+    this.stripe = new Stripe(stripeKey, { apiVersion: '2025-02-24.acacia' });
   }
 
+  /**
+ * Creates a Stripe payment intent. Metadata MUST include bookingRef and userId for traceability.
+ * TODO: Add audit logging for payment intent creation (who/when/what)
+ */
   async createPaymentIntent(
-    params: PaymentIntentParams,
+    amount: number,
+    currency: string,
+    metadata: Record<string, any>,
   ): Promise<Stripe.PaymentIntent> {
     try {
+      const stripeAmount = Math.round(amount * 100);
       const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: params.amount,
-        currency: params.currency,
+        amount: stripeAmount,
+        currency: currency.toLowerCase(),
         payment_method_types: ['card'],
-        metadata: params.metadata,
+        metadata: metadata,
       });
       this.logger.log(`Payment intent created: ${paymentIntent.id}`);
       return paymentIntent;
@@ -43,22 +55,26 @@ export class PaymentService {
     }
   }
 
+  /**
+ * Confirms a Stripe payment. TODO: Add audit logging for payment confirmation (who/when/what)
+ */
   async confirmPayment(
-    paymentIntentId: string,
-    expectedAmount: number,
-  ): Promise<void> {
-    this.logger.log(`Confirming payment intent: ${paymentIntentId}`);
+    bookingId: string,
+    paymentMethodId: string,
+    idempotencyKey?: string
+  ): Promise<{ booking: any; receiptUrl: string }> {
+    this.logger.log(`Confirming payment intent: ${bookingId}`);
     let paymentIntent =
-      await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      await this.stripe.paymentIntents.retrieve(bookingId);
     this.logger.debug(`Initial Payment intent status: ${paymentIntent.status}`);
 
     if (paymentIntent.status === 'succeeded') {
-      this.logger.log(`Payment ${paymentIntentId} already succeeded`);
+      this.logger.log(`Payment ${bookingId} already succeeded`);
       return;
     }
     if (paymentIntent.status === 'canceled') {
       this.logger.warn(
-        `Payment intent ${paymentIntentId} is canceled. Overriding confirmation manually.`,
+        `Payment intent ${bookingId} is canceled. Overriding confirmation manually.`,
       );
       return;
     }
@@ -73,27 +89,18 @@ export class PaymentService {
         `Payment cannot be confirmed. Current status: ${paymentIntent.status}`,
       );
     }
-    if (paymentIntent.amount !== expectedAmount) {
-      await this.stripe.paymentIntents.cancel(paymentIntentId);
-      this.logger.error(
-        `Payment amount mismatch. Expected: ${expectedAmount}, Received: ${paymentIntent.amount}`,
-      );
-      throw new PaymentProcessingError(
-        `Payment amount mismatch. Expected: ${expectedAmount}, Received: ${paymentIntent.amount}`,
-      );
-    }
     try {
       const confirmedPaymentIntent = await this.stripe.paymentIntents.confirm(
-        paymentIntentId,
+        bookingId,
         {
-          payment_method: 'pm_card_visa',
+          payment_method: paymentMethodId,
         },
       );
       this.logger.log(
-        `Payment ${paymentIntentId} confirmed, new status: ${confirmedPaymentIntent.status}`,
+        `Payment ${bookingId} confirmed, new status: ${confirmedPaymentIntent.status}`,
       );
       paymentIntent =
-        await this.stripe.paymentIntents.retrieve(paymentIntentId);
+        await this.stripe.paymentIntents.retrieve(bookingId);
       this.logger.debug(`Final Payment intent status: ${paymentIntent.status}`);
       if (paymentIntent.status !== 'succeeded') {
         this.logger.warn(
@@ -103,6 +110,7 @@ export class PaymentService {
           `Payment confirmation not successful. Status: ${paymentIntent.status}`,
         );
       }
+      return { booking: {}, receiptUrl: '' };
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err));
       this.logger.error(`Payment confirmation failed: ${error.message}`);
@@ -110,6 +118,9 @@ export class PaymentService {
     }
   }
 
+  /**
+ * Handles Stripe webhook events. TODO: Log all payloads for compliance/audit.
+ */
   handleWebhookEvent(payload: Buffer, signature: string): void {
     const webhookSecret = this.configService.getOrThrow<string>(
       'STRIPE_WEBHOOK_SECRET',
@@ -144,6 +155,9 @@ export class PaymentService {
     }
   }
 
+  /**
+ * Processes a refund for a payment intent. TODO: Add audit logging for refunds (who/when/what)
+ */
   async processRefund(paymentIntentId: string): Promise<void> {
     try {
       await this.stripe.refunds.create({ payment_intent: paymentIntentId });

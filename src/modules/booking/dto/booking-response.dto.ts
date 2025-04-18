@@ -15,6 +15,9 @@ export class SeatResponseDto {
 }
 
 export class BookingResponseDto {
+  @ApiProperty({ example: 'SMAIR-20250418-XYZ123', description: 'User-friendly booking reference code' })
+  bookingRef: string;
+
   @ApiProperty({ example: '67be8671461b2609214e658b' })
   _id: string;
 
@@ -53,4 +56,7 @@ export class BookingResponseDto {
 
   @ApiProperty({ example: '2025-02-26T03:08:37.898Z' })
   updatedAt: string;
+  
+  @ApiProperty({ example: 0, description: 'Optimistic concurrency control version' })
+  version: number;
 }

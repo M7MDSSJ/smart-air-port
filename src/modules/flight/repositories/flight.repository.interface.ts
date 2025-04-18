@@ -1,19 +1,19 @@
 import { Flight } from '../schemas/flight.schema';
-import { CreateFlightDto } from '../dto/create-flight.dto';
 import { UpdateFlightDto } from '../dto/update-flight.dto';
 import { QueryFlightDto } from '../dto/query-flight.dto';
 import { FlightAvailabilityQuery } from '../dto/available-flight-query.dto';
 import { FlightUpdateSeatsParams } from '../dto/flight-update-seats.dto';
-import { UpdateQuery } from 'mongoose';
+import { UpdateQuery, FilterQuery, QueryOptions } from 'mongoose';
 export const FLIGHT_REPOSITORY = 'FLIGHT_REPOSITORY';
 
 export interface IFlightRepository {
-  create(createFlightDto: CreateFlightDto): Promise<Flight>;
+  
   findAll(): Promise<Flight[]>;
   findById(id: string): Promise<Flight | null>;
   findOneAndUpdate(
-    filter: { _id: string; version: number },
+    filter: FilterQuery<Flight>,
     update: UpdateQuery<Flight>,
+    options?: QueryOptions
   ): Promise<Flight | null>;
   findByFlightNumber(flightNumber: string): Promise<Flight | null>;
   searchFlights(query: QueryFlightDto & { skip?: number; limit?: number }): Promise<Flight[]>; 
