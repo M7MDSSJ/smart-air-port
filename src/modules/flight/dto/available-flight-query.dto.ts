@@ -7,4 +7,6 @@ export interface FlightAvailabilityQuery
     $gte?: Date;
     $lte?: Date;
   };
+  // Added to support optimized query with minimum seats
+  minSeats?: number;
 }

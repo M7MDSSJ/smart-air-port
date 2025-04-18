@@ -10,6 +10,7 @@ import {
   BadRequestException,
   Logger,
   Get,
+  Query,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
@@ -27,12 +28,13 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { BookingResponseDto } from '../dto/booking-response.dto';
+import { QueryBookingDto } from '../dto/query-booking.dto';
+import { PaginatedBookingsResponseDto } from '../dto/paginated-bookings-response.dto';
 
 @ApiTags('Bookings')
-@UseGuards(AuthGuard('jwt'))
-@ApiBearerAuth()
 @Controller('booking')
 export class BookingController {
   private readonly logger = new Logger(BookingController.name);
@@ -43,6 +45,8 @@ export class BookingController {
   ) {}
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create a new booking',
     description:
@@ -115,9 +119,9 @@ export class BookingController {
         throw new BadRequestException('At least one seat is required');
       }
       createBookingDto.seats.forEach((seat) => {
-        if (!/^[A-Z]\d+$/.test(seat.seatNumber)) {
+        if (!/^([A-Z]\d+|\d+[A-Z])$/.test(seat.seatNumber)) {
           throw new BadRequestException(
-            `Invalid seat number format: ${seat.seatNumber}`,
+            `Invalid seat number format: ${seat.seatNumber}. Use formats like 'A1' or '1A'`
           );
         }
       });
@@ -173,6 +177,8 @@ export class BookingController {
   }
 
   @Get(':id/status')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get booking status',
     description: 'Retrieves the status of a booking by its ID.',
@@ -204,6 +210,8 @@ export class BookingController {
   }
 
   @Post('confirm/:bookingId')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Confirm a booking',
     description:
@@ -236,7 +244,7 @@ export class BookingController {
 
     const html = `
       <p>Dear ${user.firstName || 'User'},</p>
-      <p>Your booking <strong>${booking.id}</strong> has been confirmed.</p>
+      <p>Your booking <strong>${booking.bookingRef || booking.id}</strong> has been confirmed.</p>
       <p>Thank you for choosing our service.</p>
     `;
     await this.emailService.sendImportantEmail(
@@ -248,16 +256,103 @@ export class BookingController {
     return this.transformBookingToResponse(booking);
   }
 
+  @Get()
+  @ApiOperation({
+    summary: 'List bookings with pagination and filtering',
+    description: 'Retrieve a paginated list of bookings with optional filters',
+  })
+  @ApiQuery({ type: QueryBookingDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookings retrieved successfully',
+    type: PaginatedBookingsResponseDto,
+  })
+  async getBookings(@Query() queryDto: QueryBookingDto): Promise<PaginatedBookingsResponseDto> {
+    const startTime = Date.now();
+    try {
+      // Add current user's ID to filter if using auth guard
+      const result = await this.bookingService.findBookings(queryDto);
+      
+      // Transform to response DTOs
+      const transformedBookings = result.data.map(booking => 
+        this.transformBookingToResponse(booking)
+      );
+      
+      this.logger.debug(`Retrieved ${result.data.length} bookings in ${Date.now() - startTime}ms`);
+      
+      return {
+        success: true,
+        message: `Retrieved ${result.data.length} bookings`,
+        data: transformedBookings,
+        meta: result.meta
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get bookings: ${error.message}`);
+      throw new HttpException(
+        'Failed to retrieve bookings',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  @Get('my-bookings')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List current user\'s bookings',
+    description: 'Retrieve a paginated list of the authenticated user\'s bookings',
+  })
+  @ApiQuery({ type: QueryBookingDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User\'s bookings retrieved successfully',
+    type: PaginatedBookingsResponseDto,
+  })
+  async getMyBookings(
+    @GetUser() user: UserDocument,
+    @Query() queryDto: QueryBookingDto
+  ): Promise<PaginatedBookingsResponseDto> {
+    const startTime = Date.now();
+    try {
+      // Add current user's ID to filter
+      queryDto.userId = user._id.toString();
+      const result = await this.bookingService.findBookings(queryDto);
+      
+      // Transform to response DTOs
+      const transformedBookings = result.data.map(booking => 
+        this.transformBookingToResponse(booking)
+      );
+      
+      this.logger.debug(`Retrieved ${result.data.length} bookings for user ${user._id} in ${Date.now() - startTime}ms`);
+      
+      return {
+        success: true,
+        message: `Retrieved ${result.data.length} of your bookings`,
+        data: transformedBookings,
+        meta: result.meta
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get user's bookings: ${error.message}`);
+      throw new HttpException(
+        'Failed to retrieve your bookings',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+  
   private transformBookingToResponse(
     booking: BookingDocument,
   ): BookingResponseDto {
+    // TODO: Add audit logging for API actions (who/when/what)
+
     const plainBooking = booking.toObject ? booking.toObject() : booking;
     return {
       _id: plainBooking._id.toString(),
-      user: plainBooking.user.toString(),
-      flight: plainBooking.flight.toString(),
+      bookingRef: plainBooking.bookingRef,
+      user: typeof plainBooking.user === 'object' ? plainBooking.user._id.toString() : plainBooking.user.toString(),
+      flight: typeof plainBooking.flight === 'object' ? plainBooking.flight._id.toString() : plainBooking.flight.toString(),
       seats: plainBooking.seats.map(seat => ({
-        _id: seat._id.toString(),
+        _id: seat._id ? seat._id.toString() : '',
         seatNumber: seat.seatNumber,
         class: seat.class,
         price: seat.price,
@@ -268,9 +363,10 @@ export class BookingController {
       paymentProvider: plainBooking.paymentProvider,
       idempotencyKey: plainBooking.idempotencyKey,
       paymentIntentId: plainBooking.paymentIntentId,
-      expiresAt: plainBooking.expiresAt?.toISOString(),
-      createdAt: plainBooking.createdAt.toISOString(),
-      updatedAt: plainBooking.updatedAt.toISOString(),
+      expiresAt: plainBooking.expiresAt?.toISOString ? plainBooking.expiresAt?.toISOString() : plainBooking.expiresAt,
+      createdAt: plainBooking.createdAt.toISOString ? plainBooking.createdAt.toISOString() : plainBooking.createdAt,
+      updatedAt: plainBooking.updatedAt.toISOString ? plainBooking.updatedAt.toISOString() : plainBooking.updatedAt,
+      version: plainBooking.version,
     };
   }
 }

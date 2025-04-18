@@ -851,6 +851,20 @@
         ]
       }
     },
+    "/flights/admin/cleanup-seat-holds": {
+      "post": {
+        "operationId": "FlightController_cleanupAllSeatHolds",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
     "/booking": {
       "post": {
         "description": "Creates a new booking for the authenticated user. Requires flight details, seat selections, payment provider, and an idempotency key to prevent duplicates. Sends an email notification upon success.",
@@ -931,6 +945,201 @@
           }
         ],
         "summary": "Create a new booking",
+        "tags": [
+          "Bookings"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a paginated list of bookings with optional filters",
+        "operationId": "BookingController_getBookings",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Booking status filter",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "expired",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "User ID to filter bookings",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromDate",
+            "required": false,
+            "in": "query",
+            "description": "Start date for booking search range (ISO format)",
+            "schema": {
+              "example": "2025-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "toDate",
+            "required": false,
+            "in": "query",
+            "description": "End date for booking search range (ISO format)",
+            "schema": {
+              "example": "2025-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort results by",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "updatedAt",
+                "status",
+                "totalPrice"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (-1 for descending, 1 for ascending)",
+            "schema": {
+              "default": -1,
+              "type": "number",
+              "enum": [
+                1,
+                -1
+              ]
+            }
+          },
+          {
+            "description": "Page number for pagination",
+            "required": false,
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "required": false,
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Booking status filter",
+            "required": false,
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User ID to filter bookings",
+            "required": false,
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start date for booking search range (ISO format)",
+            "required": false,
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "example": "2025-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End date for booking search range (ISO format)",
+            "required": false,
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "example": "2025-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Field to sort results by",
+            "required": false,
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "default": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (-1 for descending, 1 for ascending)",
+            "required": false,
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "default": -1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bookings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedBookingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List bookings with pagination and filtering",
         "tags": [
           "Bookings"
         ]
@@ -1043,6 +1252,208 @@
         ]
       }
     },
+    "/booking/my-bookings": {
+      "get": {
+        "description": "Retrieve a paginated list of the authenticated user's bookings",
+        "operationId": "BookingController_getMyBookings",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Booking status filter",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "cancelled",
+                "expired",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "User ID to filter bookings",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromDate",
+            "required": false,
+            "in": "query",
+            "description": "Start date for booking search range (ISO format)",
+            "schema": {
+              "example": "2025-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "toDate",
+            "required": false,
+            "in": "query",
+            "description": "End date for booking search range (ISO format)",
+            "schema": {
+              "example": "2025-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort results by",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "updatedAt",
+                "status",
+                "totalPrice"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order (-1 for descending, 1 for ascending)",
+            "schema": {
+              "default": -1,
+              "type": "number",
+              "enum": [
+                1,
+                -1
+              ]
+            }
+          },
+          {
+            "description": "Page number for pagination",
+            "required": false,
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "required": false,
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Booking status filter",
+            "required": false,
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User ID to filter bookings",
+            "required": false,
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start date for booking search range (ISO format)",
+            "required": false,
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "example": "2025-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End date for booking search range (ISO format)",
+            "required": false,
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "example": "2025-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Field to sort results by",
+            "required": false,
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "default": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (-1 for descending, 1 for ascending)",
+            "required": false,
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "default": -1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User's bookings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedBookingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List current user's bookings",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
     "/payment/webhook": {
       "post": {
         "description": "Receives and processes Stripe webhook events. Rate-limited to 10 requests per minute.",
@@ -1113,7 +1524,7 @@
     "/payment/confirm/{paymentIntentId}": {
       "post": {
         "description": "Confirms a payment using the payment intent ID and updates the associated booking status.",
-        "operationId": "PaymentController_confirmPayment",
+        "operationId": "PaymentController_confirmIntentPayment",
         "parameters": [
           {
             "name": "paymentIntentId",
@@ -1150,7 +1561,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaymentResponseDto"
+                  "$ref": "#/components/schemas/PaymentConfirmationResponseDto"
                 }
               }
             }
@@ -1190,43 +1601,47 @@
         ]
       }
     },
-    "/payment/{id}/retry-payment": {
+    "/payment/confirm": {
       "post": {
-        "description": "Retries a payment for a booking that previously failed.",
-        "operationId": "PaymentController_retryPayment",
+        "description": "Confirms payment for a booking and updates its status",
+        "operationId": "PaymentController_confirmPayment",
         "parameters": [
           {
-            "name": "id",
+            "name": "Idempotency-Key",
             "required": true,
-            "in": "path",
-            "description": "Booking ID",
+            "in": "header",
             "schema": {
-              "example": "67be8671461b2609214e658b",
               "type": "string"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmPaymentDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Payment retry initiated successfully",
+            "description": "Payment confirmed successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetryPaymentResponseDto"
+                  "$ref": "#/components/schemas/PaymentConfirmationResponseDto"
                 }
               }
             }
           },
           "400": {
-            "description": "Booking not in a retryable state",
+            "description": "Invalid payment method or booking state",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpException"
-                },
-                "example": {
-                  "statusCode": 400,
-                  "message": "Booking cannot be retried"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1236,17 +1651,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpException"
-                },
-                "example": {
-                  "statusCode": 404,
-                  "message": "Booking not found"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment already processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
           }
         },
-        "summary": "Retry a failed payment",
+        "summary": "Confirm payment for a booking",
         "tags": [
           "Payments"
         ]
@@ -2001,6 +2422,11 @@
       "BookingResponseDto": {
         "type": "object",
         "properties": {
+          "bookingRef": {
+            "type": "string",
+            "example": "SMAIR-20250418-XYZ123",
+            "description": "User-friendly booking reference code"
+          },
           "_id": {
             "type": "string",
             "example": "67be8671461b2609214e658b"
@@ -2054,9 +2480,15 @@
           "updatedAt": {
             "type": "string",
             "example": "2025-02-26T03:08:37.898Z"
+          },
+          "version": {
+            "type": "number",
+            "example": 0,
+            "description": "Optimistic concurrency control version"
           }
         },
         "required": [
+          "bookingRef",
           "_id",
           "user",
           "flight",
@@ -2067,27 +2499,107 @@
           "paymentProvider",
           "idempotencyKey",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "version"
         ]
       },
       "HttpException": {
         "type": "object",
         "properties": {}
       },
-      "ConfirmPaymentDto": {
+      "PaginationMetaDto": {
         "type": "object",
         "properties": {
-          "expectedAmount": {
+          "total": {
             "type": "number",
-            "description": "Expected amount in cents for payment confirmation",
-            "example": 25000
+            "description": "Total number of bookings that match the filter criteria",
+            "example": 157
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "description": "Number of items per page",
+            "example": 10
+          },
+          "pages": {
+            "type": "number",
+            "description": "Total number of pages",
+            "example": 16
           }
         },
         "required": [
+          "total",
+          "page",
+          "limit",
+          "pages"
+        ]
+      },
+      "PaginatedBookingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the request was successful",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result",
+            "example": "Retrieved 10 bookings"
+          },
+          "data": {
+            "description": "The booking data",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingResponseDto"
+            }
+          },
+          "meta": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "data",
+          "meta"
+        ]
+      },
+      "ConfirmPaymentDto": {
+        "type": "object",
+        "properties": {
+          "bookingId": {
+            "type": "string",
+            "description": "Booking ID",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "paymentMethodId": {
+            "type": "string",
+            "description": "Stripe payment method ID",
+            "example": "pm_card_visa"
+          },
+          "expectedAmount": {
+            "type": "number",
+            "description": "Expected amount in smallest currency unit (e.g. cents)",
+            "example": 5000
+          }
+        },
+        "required": [
+          "bookingId",
+          "paymentMethodId",
           "expectedAmount"
         ]
       },
-      "PaymentResponseDto": {
+      "PaymentConfirmationResponseDto": {
         "type": "object",
         "properties": {
           "success": {
@@ -2096,27 +2608,22 @@
           },
           "message": {
             "type": "string",
-            "example": "Booking 67be8671461b2609214e658b confirmed successfully."
-          }
-        },
-        "required": [
-          "success",
-          "message"
-        ]
-      },
-      "RetryPaymentResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
+            "example": "Booking bkg_12345 confirmed successfully."
           },
           "data": {
-            "$ref": "#/components/schemas/BookingResponseDto"
+            "type": "object",
+            "example": {
+              "booking": {
+                "id": "bkg_12345",
+                "status": "confirmed"
+              },
+              "receiptUrl": "https://stripe.com/receipt/abc123"
+            }
           }
         },
         "required": [
           "success",
+          "message",
           "data"
         ]
       }

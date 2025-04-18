@@ -1,7 +1,6 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { Inject } from '@nestjs/common';
 import { AmadeusService } from './amadeus.service';
 import { DepartureTimeRange, QueryFlightDto, SortBy, SortOrder, TripType } from './dto/query-flight.dto';
 import { EmailService } from '../email/email.service';
@@ -9,88 +8,19 @@ import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
 import { FlightStatusService } from './flight-status.service';
 import axios from 'axios';
-import { Model } from 'mongoose';
+import { Model, Types, FilterQuery, UpdateQuery, QueryOptions } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { SeatHold } from './schemas/flight.schema';
+import { SeatHold, Flight } from './schemas/flight.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
-// Static mappings (unchanged)
-const AIRLINE_MAP: { [key: string]: { en: string; ar: string } } = {
-  F9: { en: 'Frontier Airlines', ar: 'فرونتير ايرلاينز' },
-  AA: { en: 'American Airlines', ar: 'الخطوط الجوية الأمريكية' },
-  DL: { en: 'Delta Air Lines', ar: 'خطوط دلتا الجوية' },
-  UA: { en: 'United Airlines', ar: 'الخطوط الجوية المتحدة' },
-  SV: { en: 'Saudia', ar: 'السعودية' },
-  NE: { en: 'Nesma Airlines', ar: 'طيران ناسما' },
-  MS: { en: 'EgyptAir', ar: 'مصر للطيران' },
-  XY: { en: 'Flynas', ar: 'فلاي ناس' },
-  TK: { en: 'Turkish Airlines', ar: 'الخطوط الجوية التركية' },
-  ET: { en: 'Ethiopian Airlines', ar: 'الخطوط الجوية الإثيوبية' },
-};
-
-const AIRPORT_MAP: { [key: string]: { en: string; ar: string } } = {
-  CAI: { en: 'Cairo International Airport', ar: 'مطار القاهرة الدولي' },
-  JED: { en: 'King Abdulaziz International Airport', ar: 'مطار الملك عبدالعزيز الدولي' },
-  IST: { en: 'Istanbul Airport', ar: 'مطار إسطنبول' },
-  ADD: { en: 'Addis Ababa Bole International Airport', ar: 'مطار أديس أبابا بولي الدولي' },
-  DMM: { en: 'King Fahd International Airport', ar: 'مطار الملك فهد الدولي' },
-};
-
-const AIRPORT_TIMEZONES: { [key: string]: string } = {
-  CAI: 'Africa/Cairo',
-  JED: 'Asia/Riyadh',
-};
-
-const EXCHANGE_RATES: { [key: string]: number } = {
-  USD_TO_EGP: 48.5,
-  USD_TO_SAR: 3.75,
-};
-
-export interface FormattedFlight {
-  offerId: string;
-  flightNumber: string;
-  airline: string;
-  airlineName: string;
-  departureAirport: string;
-  departureAirportName: string;
-  departureTime: Date;
-  departureTimeLocal: string;
-  arrivalAirport: string;
-  arrivalAirportName: string;
-  arrivalTime: Date;
-  arrivalTimeLocal: string;
-  status: string;
-  aircraft?: string;
-  price: number;
-  currency: string;
-  totalPrice: number;
-  seatsAvailable: number;
-  stops: Array<{
-    airport: string;
-    bookable: boolean;
-    airportName: string;
-    arrivalTime: Date;
-    departureTime: Date;
-    flightNumber: string;
-    carrierCode: string;
-    layoverDuration?: string;
-    layoverDurationInMinutes?: number;
-  }>;
-  lastTicketingDate: string;
-  baggageOptions: {
-    included: string;
-    options: Array<{ weightInKg: number; price: number }>;
-  };
-  duration: string;
-  durationInMinutes: number;
-  numberOfStops: number;
-  isRecommended: boolean;
-  departureHour: number;
-  sessionId?: string;
-}
+import { AIRLINE_MAP, AIRPORT_MAP, AIRPORT_TIMEZONES, EXCHANGE_RATES, FormattedFlight} from './interfaces/flight-data.interface';
+import { IFlightRepository } from './repositories/flight.repository.interface';
+import { format } from 'date-fns';
 
 @Injectable()
 export class FlightService {
+  // In-memory cache for flight search results
+  private readonly flightCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes cache lifetime
   private readonly logger = new Logger(FlightService.name);
 
   constructor(
@@ -100,8 +30,42 @@ export class FlightService {
     private readonly configService: ConfigService,
     private readonly i18n: I18nService,
     private readonly flightStatusService: FlightStatusService,
+    @InjectModel('Flight') private readonly flightModel: Model<Flight>,
     @InjectModel('SeatHold') private readonly seatHoldModel: Model<SeatHold>,
+    @Inject('FLIGHT_REPOSITORY') private readonly flightRepository: IFlightRepository
   ) {}
+
+  private formatFlightForResponse(flight: any, language: string = 'en'): FormattedFlight {
+    return {
+      _id: flight._id.toString(),
+      offerId: flight.offerId,
+      flightNumber: flight.flightNumber,
+      airline: flight.airline,
+      airlineName: flight.airlineName || AIRLINE_MAP[flight.airline]?.[language] || flight.airline,
+      departureAirport: flight.departureAirport,
+      departureAirportName: flight.departureAirportName || AIRPORT_MAP[flight.departureAirport]?.[language] || flight.departureAirport,
+      departureTime: flight.departureTime,
+      departureTimeLocal: flight.departureTime ? format(new Date(flight.departureTime), 'HH:mm') : '',
+      arrivalAirport: flight.arrivalAirport,
+      arrivalAirportName: flight.arrivalAirportName || AIRPORT_MAP[flight.arrivalAirport]?.[language] || flight.arrivalAirport,
+      arrivalTime: flight.arrivalTime,
+      arrivalTimeLocal: flight.arrivalTime ? format(new Date(flight.arrivalTime), 'HH:mm') : '',
+      status: flight.status,
+      aircraft: flight.aircraft,
+      price: flight.price,
+      totalPrice: flight.totalPrice,
+      currency: flight.currency,
+      seatsAvailable: flight.seatsAvailable,
+      stops: flight.stops,
+      lastTicketingDate: flight.lastTicketingDate,
+      baggageOptions: flight.baggageOptions,
+      duration: flight.duration,
+      durationInMinutes: flight.durationInMinutes,
+      numberOfStops: flight.numberOfStops,
+      isRecommended: flight.isRecommended,
+      departureHour: flight.departureHour
+    };
+  }
 
   async searchAvailableFlights(query: QueryFlightDto): Promise<{ paginatedFlights: FormattedFlight[]; total: number }> {
     const {
@@ -148,11 +112,23 @@ export class FlightService {
       );
     }
 
-    const cacheKey = `flight:${tripType}:${departureAirport}:${arrivalAirport}:${departureDate}:${returnDate || 'none'}:${adults}:${children}:${infants}:${cabinClass}:${language}`;
-    const cachedResult = await this.cacheManager.get<{ paginatedFlights: FormattedFlight[]; total: number }>(cacheKey);
-    if (cachedResult) {
-      this.logger.log(`Cache hit for ${cacheKey}`);
-      return cachedResult;
+    // Create a more specific cache key that includes filter parameters
+    const cacheKey = `flight:${tripType}:${departureAirport}:${arrivalAirport}:${departureDate}:${returnDate || 'none'}:${adults}:${children}:${infants}:${cabinClass}:${minPrice || 0}:${maxPrice || 9999999}:${airline || 'any'}:${maxStops !== undefined ? maxStops : 'any'}:${departureTimeRange || 'any'}:${sortBy || 'price'}:${sortOrder || 'asc'}`;
+    
+    // Check in-memory cache first (faster than distributed cache)
+    const memoryCachedResult = this.flightCache.get(cacheKey);
+    if (memoryCachedResult && (Date.now() - memoryCachedResult.timestamp) < this.CACHE_TTL) {
+      this.logger.log(`Memory cache hit for ${cacheKey}`);
+      return memoryCachedResult.data;
+    }
+    
+    // Then check distributed cache
+    const distributedCachedResult = await this.cacheManager.get<{ paginatedFlights: FormattedFlight[]; total: number }>(cacheKey);
+    if (distributedCachedResult) {
+      this.logger.log(`Distributed cache hit for ${cacheKey}`);
+      // Update memory cache
+      this.flightCache.set(cacheKey, { data: distributedCachedResult, timestamp: Date.now() });
+      return distributedCachedResult;
     }
 
     const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
@@ -249,49 +225,55 @@ export class FlightService {
 
     const formattedFlights = await this.formatFlightResponse(rawFlights, query);
 
+    // Don't create seat holds during search - this is a performance bottleneck
+    // Only assign sessionId to track the search session
     for (const flight of formattedFlights) {
-      if (flight.seatsAvailable >= totalPassengers) {
-        const expiresAt = new Date(Date.now() + holdDuration);
-        if (isNaN(expiresAt.getTime())) {
-          this.logger.error(`Failed to create expiresAt date: holdDuration=${holdDuration}`);
-          throw new HttpException('Internal server error: Invalid expiration time for seat hold', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        const seatHold = new this.seatHoldModel({
-          flightId: flight.offerId,
-          seats: totalPassengers,
-          sessionId,
-          expiresAt,
-        });
-        await seatHold.save();
-        this.logger.log(`Created seat hold for flight ${flight.offerId}, session ${sessionId}, expires at ${expiresAt}`);
-      }
+      flight.sessionId = sessionId;
     }
+    
+    // Log performance metrics
+    this.logger.log(`Processed ${formattedFlights.length} flights in search`);
+    
+    const totalFlights = formattedFlights.length;
+    let filteredFlights = [...formattedFlights];
+    const startFilterTime = Date.now();
 
-    let filteredFlights = formattedFlights;
-
-    if (minPrice !== undefined) {
-      filteredFlights = filteredFlights.filter(flight => flight.price >= minPrice);
-    }
-    if (maxPrice !== undefined) {
-      filteredFlights = filteredFlights.filter(flight => flight.price <= maxPrice);
-    }
-    if (airline) {
-      filteredFlights = filteredFlights.filter(flight => flight.airline === airline);
-    }
-    if (maxStops !== undefined) {
-      filteredFlights = filteredFlights.filter(flight => flight.numberOfStops <= maxStops);
-    }
-    if (departureTimeRange) {
-      filteredFlights = filteredFlights.filter(flight => {
+    // Apply filters in a single pass for better performance
+    filteredFlights = filteredFlights.filter(flight => {
+      // Price range filter
+      if (minPrice !== undefined && flight.price < minPrice) return false;
+      if (maxPrice !== undefined && flight.price > maxPrice) return false;
+      
+      // Airline filter
+      if (airline && flight.airline !== airline) return false;
+      
+      // Stops filter
+      if (maxStops !== undefined && flight.numberOfStops > maxStops) return false;
+      
+      // Departure time range filter
+      if (departureTimeRange) {
         const hour = flight.departureHour;
-        if (departureTimeRange === DepartureTimeRange.Morning) return hour >= 0 && hour < 12;
-        if (departureTimeRange === DepartureTimeRange.Afternoon) return hour >= 12 && hour < 18;
-        if (departureTimeRange === DepartureTimeRange.Evening) return hour >= 18 && hour < 21;
-        if (departureTimeRange === DepartureTimeRange.Night) return hour >= 21 || hour < 0;
-        return true;
-      });
-    }
-
+        switch (departureTimeRange) {
+          case DepartureTimeRange.Morning: 
+            if (!(hour >= 6 && hour < 12)) return false;
+            break;
+          case DepartureTimeRange.Afternoon: 
+            if (!(hour >= 12 && hour < 18)) return false;
+            break;
+          case DepartureTimeRange.Evening: 
+            if (!(hour >= 18 && hour < 21)) return false;
+            break;
+          case DepartureTimeRange.Night: 
+            if (!(hour >= 21 || hour < 6)) return false;
+            break;
+        }
+      }
+      
+      // If we made it here, the flight passed all filters
+      return true;
+    });
+    
+    this.logger.log(`Applied filters in ${Date.now() - startFilterTime}ms`);
     const effectiveSortBy = sortBy || SortBy.Price;
     const effectiveSortOrder = sortOrder || SortOrder.Asc;
     filteredFlights.sort((a, b) => {
@@ -308,70 +290,197 @@ export class FlightService {
       return effectiveSortOrder === 'desc' ? -comparison : comparison;
     });
 
-    const total = filteredFlights.length;
-    this.logger.log(`Total flights after filtering: ${total}`);
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedFlights = filteredFlights.slice(startIndex, endIndex);
 
-    const result = { paginatedFlights, total };
-    result.paginatedFlights = result.paginatedFlights.map(flight => ({
-      ...flight,
-      sessionId,
-    }));
-
-    await this.cacheManager.set(cacheKey, result, 3600);
-    this.logger.log(`Cached flight offers for ${cacheKey}`);
-
-    await this.emailService.sendImportantEmail(
-      this.configService.get<string>('ADMIN_EMAIL', 'admin@example.com'),
-      await this.i18n.t('email.newFlightSearchSubject', { lang: language }),
-      await this.i18n.t('email.newFlightSearchBody', {
-        lang: language,
-        args: { tripType, departureAirport, arrivalAirport, departureDate },
-      }),
+    // Persist and format flights
+    const persistedFlights = await Promise.all(
+      paginatedFlights.map(async (flight) => {
+        // Avoid updating immutable _id field
+        const { _id, ...flightData } = flight;
+        const dbFlight = await this.flightModel.findOneAndUpdate(
+          { offerId: flight.offerId },
+          { $set: flightData },
+          { upsert: true, new: true, lean: true }
+        );
+        return this.formatFlightForResponse(dbFlight, query.language);
+      })
     );
+
+    // Prepare result object
+    const result = { paginatedFlights: persistedFlights, total: filteredFlights.length };
+    
+    // Update both caches
+    this.flightCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    await this.cacheManager.set(cacheKey, result, 600); // 10 minutes TTL
+    
+    // Send notification email asynchronously to avoid blocking the response
+    setTimeout(() => {
+      this.emailService.sendImportantEmail(
+        this.configService.get<string>('ADMIN_EMAIL', 'admin@example.com'),
+        this.i18n.t('email.newFlightSearchSubject', { lang: language }),
+        this.i18n.t('email.newFlightSearchBody', {
+          lang: language,
+          args: { tripType, departureAirport, arrivalAirport, departureDate },
+        })
+      ).catch(err => this.logger.error(`Failed to send notification email: ${err.message}`));
+    }, 0);
 
     return result;
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async cleanupExpiredSeatHolds() {
+  @Cron(CronExpression.EVERY_MINUTE)
+  async cleanupExpiredHolds() {
     try {
       const now = new Date();
-      const deleted = await this.seatHoldModel.deleteMany({ expiresAt: { $lte: now } });
-      this.logger.log(`Cleaned up ${deleted.deletedCount} expired seat holds`);
+      
+      // Get all expired holds in one query
+      const expiredHolds = await this.seatHoldModel.find({ expiresAt: { $lt: now } });
+      
+      if (expiredHolds.length === 0) {
+        this.logger.log('No expired seat holds to clean up');
+        return;
+      }
+      
+      let successCount = 0;
+      
+      // Process each expired hold
+      for (const hold of expiredHolds) {
+        try {
+          // First try finding the flight using the proper approach
+          let flight;
+          try {
+            // First try to find it directly by ID if it's a valid ObjectId
+            if (Types.ObjectId.isValid(hold.flightId)) {
+              flight = await this.flightModel.findById(hold.flightId);
+            }
+            
+            // If that didn't work, try searching by offerId
+            if (!flight) {
+              flight = await this.flightModel.findOne({ offerId: hold.flightId.toString() });
+            }
+          } catch (findError) {
+            // Handle case where flightId is not a valid ObjectId
+            flight = await this.flightModel.findOne({ offerId: hold.flightId.toString() });
+          }
+          
+          // If we found the flight, update its available seats
+          if (flight) {
+            await this.flightModel.updateOne(
+              { _id: flight._id },
+              { $inc: { seatsAvailable: hold.seats, version: 1 } }
+            );
+            this.logger.log(`Released ${hold.seats} seats for flight ${flight.offerId}`);
+            successCount++;
+          }
+          
+          // Always remove the hold, even if flight not found
+          await this.seatHoldModel.deleteOne({ _id: hold._id });
+        } catch (err) {
+          this.logger.error(`Failed to process expired hold ${hold._id}: ${err.message}`);
+        }
+      }
+      
+      this.logger.log(`Cleaned up ${expiredHolds.length} expired seat holds, successfully processed ${successCount}`);
     } catch (error) {
-      this.logger.error(`Failed to clean up expired seat holds: ${(error as Error).message}`);
+      this.logger.error(`Error cleaning up expired holds: ${error.message}`);
+    }
+  }
+  
+  /**
+   * One-time cleanup for all seat holds - use with caution
+   * This is useful for clearing out problematic seat holds
+   */
+  async cleanupAllSeatHolds() {
+    try {
+      const result = await this.seatHoldModel.deleteMany({});
+      this.logger.log(`Cleaned up all ${result.deletedCount} seat holds`);
+      return { success: true, count: result.deletedCount };
+    } catch (error) {
+      this.logger.error(`Failed to clean up all seat holds: ${error.message}`);
+      throw new HttpException('Failed to clean up seat holds', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async initiateBooking(flightOfferId: string, language: string = 'en'): Promise<any> {
+  async createSeatHold(flightId: string, seats: number, sessionId: string) {
+    const startTime = Date.now();
+    
     try {
-      const flightOffer = await this.amadeusService.getFlightOffer(flightOfferId);
-      if (!flightOffer) {
-        throw new HttpException(
-          await this.i18n.t('errors.flightNotFound', { lang: language }),
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      const lastTicketingDate = new Date(flightOffer.lastTicketingDate);
-      if (new Date() > lastTicketingDate) {
-        throw new HttpException(
-          await this.i18n.t('errors.bookingWindowClosed', { lang: language }),
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      return flightOffer;
-    } catch (error) {
-      this.logger.error(`Failed to fetch flight offer ${flightOfferId}: ${(error as Error).message}`);
-      throw new HttpException(
-        await this.i18n.t('errors.flightNotFound', { lang: language }),
-        HttpStatus.NOT_FOUND,
+      // Performance improvement: Use findOneAndUpdate in a single atomic operation
+      // This combines the find, check, and update operations into one database call
+      const flight = await this.flightModel.findOneAndUpdate(
+        { 
+          offerId: flightId, 
+          seatsAvailable: { $gte: seats } // Only update if enough seats are available
+        },
+        { 
+          $inc: { seatsAvailable: -seats, version: 1 } 
+        },
+        { 
+          new: false // Return the document before update
+        }
       );
+      
+      // Flight not found or not enough seats
+      if (!flight) {
+        // Find flight to determine the exact error
+        const existingFlight = await this.flightModel.findOne({ offerId: flightId });
+        
+        if (!existingFlight) {
+          this.logger.error(`Flight not found: ${flightId}`);
+          throw new HttpException('Flight not found', HttpStatus.NOT_FOUND);
+        } else {
+          this.logger.error(`Not enough seats available. Requested: ${seats}, Available: ${existingFlight.seatsAvailable}`);
+          throw new HttpException('Not enough seats available', HttpStatus.BAD_REQUEST);
+        }
+      }
+      
+      // Calculate expiry date (15 minutes from now)
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+      
+      // Create seat hold
+      const seatHold = new this.seatHoldModel({
+        flightId: flight._id,
+        seats,
+        sessionId,
+        expiresAt,
+      });
+      
+      await seatHold.save();
+      this.logger.log(`Created seat hold for flight ${flightId}, ${seats} seats, session ${sessionId} in ${Date.now() - startTime}ms`);
+      
+      return {
+        holdId: seatHold._id,
+        flightId,
+        seats,
+        expiresAt,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`Error creating seat hold: ${error.message}`);
+      throw new HttpException('Failed to create seat hold', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async getAvailableSeats(flightId: string): Promise<number> {
+    if (!Types.ObjectId.isValid(flightId)) {
+      throw new HttpException('Invalid flight ID format', HttpStatus.BAD_REQUEST);
+    }
+    
+    const flight = await this.flightModel
+      .findById(flightId)
+      .select('seatsAvailable version')
+      .lean();
+      
+    if (!flight) {
+      throw new HttpException('Flight not found', HttpStatus.NOT_FOUND);
+    }
+    
+    return flight.seatsAvailable;
   }
 
   private parseBaggageOptions(flight: any): { included: string; options: Array<{ weightInKg: number; price: number }> } {
@@ -403,6 +512,8 @@ export class FlightService {
   }
 
   private async getExchangeRate(fromCurrency: string, toCurrency: string): Promise<number> {
+    if (fromCurrency === toCurrency) return 1;
+    
     const cacheKey = `exchange:${fromCurrency}:${toCurrency}`;
     const cachedRate = await this.cacheManager.get<number>(cacheKey);
     if (cachedRate) {
@@ -428,8 +539,88 @@ export class FlightService {
       return fallbackRate;
     }
   }
-
-  private async formatFlightResponse(flights: any[], query: QueryFlightDto): Promise<FormattedFlight[]> {
+  
+  /**
+   * Find a flight by its ID
+   */
+  async findOne(id: string): Promise<Flight> {
+    try {
+      // Try to interpret id as MongoDB ObjectId first
+      if (Types.ObjectId.isValid(id)) {
+        const flight = await this.flightModel.findById(id).lean().exec();
+        if (flight) return flight;
+      }
+      
+      // If not found by _id, try by offerId
+      const flight = await this.flightModel.findOne({ offerId: id }).lean().exec();
+      
+      if (!flight) {
+        throw new HttpException(`Flight with ID ${id} not found`, HttpStatus.NOT_FOUND);
+      }
+      
+      return flight;
+    } catch (error) {
+      this.logger.error(`Error finding flight ${id}: ${error.message}`);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('Error finding flight', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
+  /**
+   * Update available seats for a flight using optimistic concurrency control
+   */
+  async updateSeats(params: { flightId: string; seatDelta: number; expectedVersion: number }): Promise<Flight> {
+    const { flightId, seatDelta, expectedVersion } = params;
+    
+    try {
+      // Find the flight first to validate it exists
+      const flight = await this.findOne(flightId);
+      
+      // Perform optimistic concurrency control
+      if (flight.version !== expectedVersion) {
+        throw new HttpException(
+          'Flight was modified by another operation. Please retry.',
+          HttpStatus.CONFLICT
+        );
+      }
+      
+      // Calculate new seat availability
+      const newSeatCount = flight.seatsAvailable + seatDelta;
+      
+      // Validate there are enough seats available if reducing
+      if (seatDelta < 0 && newSeatCount < 0) {
+        throw new HttpException(
+          `Not enough seats available. Requested ${Math.abs(seatDelta)}, but only ${flight.seatsAvailable} available.`,
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      
+      // Update the flight with new seat count and increment version
+      const updatedFlight = await this.flightModel.findOneAndUpdate(
+        { _id: flight._id, version: expectedVersion },
+        { 
+          $inc: { version: 1, seatsAvailable: seatDelta },
+          $set: { updatedAt: new Date() }
+        },
+        { new: true }
+      ).lean().exec();
+      
+      if (!updatedFlight) {
+        throw new HttpException(
+          'Failed to update flight. It may have been modified by another operation.',
+          HttpStatus.CONFLICT
+        );
+      }
+      
+      return updatedFlight;
+    } catch (error) {
+      this.logger.error(`Error updating seats for flight ${flightId}: ${error.message}`);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('Error updating flight seats', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
+  async formatFlightResponse(flights: any[], query: QueryFlightDto): Promise<FormattedFlight[]> {
     const {
       adults,
       children = 0,
@@ -565,6 +756,7 @@ export class FlightService {
           : firstSegment.carrierCode || 'Unknown';
 
         return {
+          _id: flight._id ? flight._id.toString() : new Types.ObjectId().toString(),
           offerId: flight.id || '',
           flightNumber: firstSegment.number || `${firstSegment.carrierCode || ''}${firstSegment.number || ''}`,
           airline: firstSegment.carrierCode || '',
@@ -598,5 +790,19 @@ export class FlightService {
         };
       }),
     );
+  }
+
+  /**
+   * Atomically finds and updates a flight document
+   */
+  async findOneAndUpdate(
+    filter: FilterQuery<Flight>,
+    update: UpdateQuery<Flight>,
+    options?: QueryOptions & { lean?: boolean }
+  ): Promise<Flight | null> {
+    return this.flightModel.findOneAndUpdate(filter, update, {
+      ...options,
+      session: options?.session
+    }).lean();
   }
 }

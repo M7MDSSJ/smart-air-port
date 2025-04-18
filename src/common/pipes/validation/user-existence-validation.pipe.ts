@@ -1,11 +1,11 @@
 import { PipeTransform, Injectable, NotFoundException } from '@nestjs/common';
-import { UsersService } from 'src/modules/users/users.service';
+import { UserManagementService } from '../../../modules/users/services/user-management.service';
 @Injectable()
 export class UserExistenceValidationPipe implements PipeTransform {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UserManagementService) {}
 
   async transform(value: string) {
-    const user = await this.usersService.getUserById(value);
+    const user = await this.usersService.getById(value);
     if (user === null) {
       throw new NotFoundException('User not found');
     }

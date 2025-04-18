@@ -28,7 +28,7 @@ export class BaggageOptions {
   options: Array<{ weightInKg: number; price: number }>;
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: 'version' })
 export class Flight extends Document {
   @Prop({ required: true })
   offerId: string;
@@ -72,6 +72,9 @@ export class Flight extends Document {
   @Prop({ type: BaggageOptions, required: true })
   baggageOptions: BaggageOptions;
 
+  @Prop({ default: 'USD' })
+  currency: string;
+
   @Prop({ default: 0 })
   version: number; // For optimistic concurrency
 }
@@ -94,4 +97,17 @@ export class SeatHold extends Document {
 export const FlightSchema = SchemaFactory.createForClass(Flight);
 export const SeatHoldSchema = SchemaFactory.createForClass(SeatHold);
 
-FlightSchema.index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1 });
+// Add performance optimizing indexes
+FlightSchema.index({ offerId: 1 }, { unique: true });
+FlightSchema.index({ seatsAvailable: 1 });
+FlightSchema.index({ price: 1 });
+FlightSchema.index({ departureTime: 1 });
+FlightSchema.index({ arrivalTime: 1 });
+FlightSchema.index({ airline: 1 });
+FlightSchema.index({ version: 1 });
+FlightSchema.index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1, price: 1 });
+
+// Add indexes for seat hold operations
+SeatHoldSchema.index({ expiresAt: 1 });
+SeatHoldSchema.index({ sessionId: 1 });
+SeatHoldSchema.index({ flightId: 1 });

@@ -1,14 +1,10 @@
 // src/modules/flight/flight.controller.ts
-import { Controller, Get, Query, UseGuards, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { FlightService, FormattedFlight } from './flight.service';
+import { Controller, Get, Post, Query, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { FlightService } from './flight.service';
 import { QueryFlightDto } from './dto/query-flight.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '../../common/enums/role.enum';
 import { plainToClass } from 'class-transformer';
 import { FlightResponseDto } from './dto/flight-response.dto';
 import { I18nService } from 'nestjs-i18n';
@@ -83,4 +79,28 @@ async searchAvailableFlights(@Query() query: QueryFlightDto) {
     },
   });
 }
+
+  /**
+   * WARNING: Admin-only endpoint
+   * Cleans up all seat holds - use with caution
+   * This helps fix the 'Cast to ObjectId failed' errors
+   */
+  @Post('admin/cleanup-seat-holds')
+  async cleanupAllSeatHolds() {
+    try {
+      this.logger.log('Running admin cleanup of all seat holds');
+      const result = await this.flightService.cleanupAllSeatHolds();
+      return new ApiResponseDto({
+        success: true,
+        message: `Successfully cleaned up ${result.count} seat holds`,
+        data: result
+      });
+    } catch (error) {
+      this.logger.error(`Failed to clean up seat holds: ${error.message}`);
+      throw new HttpException(
+        'Failed to clean up seat holds',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }

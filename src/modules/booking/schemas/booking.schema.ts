@@ -6,7 +6,7 @@ import {
   PaymentProvider,
 } from '../types/booking.types';
 
-@Schema({ timestamps: true, versionKey: false })
+@Schema({ timestamps: true })
 export class BookingEvent {
   @Prop({ required: true })
   type: string;
@@ -20,8 +20,17 @@ export class BookingEvent {
 
 export const BookingEventSchema = SchemaFactory.createForClass(BookingEvent);
 
-@Schema({ timestamps: true, versionKey: false })
+@Schema({ timestamps: true })
 export class Booking {
+  /**
+   * Unique, user-friendly reference code for this booking
+   * Example: 'SMAIR-20250418-XYZ123'
+   */
+  @Prop({ required: true, unique: true, index: true })
+  bookingRef: string; // For support and user lookup
+
+  @Prop({ default: 0, type: Number })
+  version: number;
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   user: Types.ObjectId;
 
@@ -77,10 +86,23 @@ export class Booking {
 
   @Prop({ type: [BookingEventSchema], default: [] })
   events: BookingEvent[];
+
+  // TODO: Expand audit/event logging for all status changes (who/when/what)
+
 }
 
 export type BookingDocument = Booking & Document;
 export const BookingSchema = SchemaFactory.createForClass(Booking);
+
+// Auto-generate bookingRef if not set
+BookingSchema.pre('validate', function (next) {
+  if (!this.bookingRef) {
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    this.bookingRef = `SMAIR-${date}-${random}`;
+  }
+  next();
+});
 
 // Set up the virtual 'id' field
 BookingSchema.virtual('id').get(function () {

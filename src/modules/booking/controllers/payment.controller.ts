@@ -1,29 +1,37 @@
-import { Controller, Post, Body, Headers, Param, HttpException } from '@nestjs/common';
+import { 
+  Controller, 
+  Post, 
+  Body, 
+  Headers, 
+  Param, 
+  HttpException, 
+  HttpStatus,
+  HttpCode,
+  Logger 
+} from '@nestjs/common';
 import { PaymentService } from '../services/payment.service';
-import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { BookingService } from '../services/booking.service';
-import { Throttle } from '@nestjs/throttler';
-import { EmailService } from '../../email/email.service';
-import { BookingResponseDto } from '../dto/booking-response.dto';
-import { BookingDocument } from '../schemas/booking.schema';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-  ApiParam,
-  ApiHeader,
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBody, 
+  ApiParam, 
+  ApiHeader 
 } from '@nestjs/swagger';
-import { PaymentResponseDto } from '../dto/payment-response.dto';
-import { RetryPaymentResponseDto } from '../dto/retry-payment.dto';
+import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
+import { PaymentConfirmationResponseDto } from '../dto/payment-response.dto';
+import { ErrorResponseDto } from '../dto/error-response.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Payments')
 @Controller('payment')
 export class PaymentController {
+  private readonly logger = new Logger(PaymentController.name);
+
   constructor(
     private readonly paymentService: PaymentService,
     private readonly bookingService: BookingService,
-    private readonly emailService: EmailService,
   ) {}
 
   @Throttle({ default: { limit: 10, ttl: 60 } })
@@ -38,7 +46,6 @@ export class PaymentController {
     description: 'Stripe signature for verifying the webhook event',
     required: true,
   })
-  // Updated here: use "schema" instead of "type" to define the request body
   @ApiBody({
     description: 'Raw webhook event data from Stripe (typically a JSON buffer)',
     schema: { type: 'object' },
@@ -101,7 +108,7 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: 'Payment confirmed successfully',
-    type: PaymentResponseDto,
+    type: PaymentConfirmationResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -115,61 +122,87 @@ export class PaymentController {
     type: HttpException,
     example: { statusCode: 404, message: 'Booking not found' },
   })
-  async confirmPayment(
+  async confirmIntentPayment(
     @Param('paymentIntentId') paymentIntentId: string,
     @Body() body: ConfirmPaymentDto,
-  ): Promise<PaymentResponseDto> {
-    await this.paymentService.confirmPayment(paymentIntentId, body.expectedAmount);
+  ): Promise<PaymentConfirmationResponseDto> {
+    const paymentResult = await this.paymentService.confirmPayment(
+      paymentIntentId, 
+      body.expectedAmount.toString()
+    );
     const booking = await this.bookingService.confirmBookingByPayment(paymentIntentId);
     return {
       success: true,
       message: `Booking ${booking.id} confirmed successfully.`,
+      data: {
+        booking: this.transformBookingToResponse(booking),
+        receiptUrl: paymentResult.receiptUrl
+      }
     };
   }
 
-  @Post(':id/retry-payment')
+  @Post('confirm')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Retry a failed payment',
-    description: 'Retries a payment for a booking that previously failed.',
+    summary: 'Confirm payment for a booking',
+    description: 'Confirms payment for a booking and updates its status'
   })
-  @ApiParam({
-    name: 'id',
-    description: 'Booking ID',
-    example: '67be8671461b2609214e658b',
-  })
+  @ApiBody({ type: ConfirmPaymentDto })
   @ApiResponse({
     status: 200,
-    description: 'Payment retry initiated successfully',
-    type: RetryPaymentResponseDto, // Reference the external DTO
+    description: 'Payment confirmed successfully',
+    type: PaymentConfirmationResponseDto
   })
   @ApiResponse({
     status: 400,
-    description: 'Booking not in a retryable state',
-    type: HttpException,
-    example: { statusCode: 400, message: 'Booking cannot be retried' },
+    description: 'Invalid payment method or booking state',
+    type: ErrorResponseDto
   })
   @ApiResponse({
     status: 404,
     description: 'Booking not found',
-    type: HttpException,
-    example: { statusCode: 404, message: 'Booking not found' },
+    type: ErrorResponseDto
   })
-  async retryPayment(
-    @Param('id') bookingId: string,
-  ): Promise<RetryPaymentResponseDto> {
-    const booking = await this.bookingService.retryPayment(bookingId);
-    return {
-      success: true,
-      data: this.transformBookingToResponse(booking),
-    };
+  @ApiResponse({
+    status: 409,
+    description: 'Payment already processed',
+    type: ErrorResponseDto
+  })
+  async confirmPayment(
+    @Body() confirmPaymentDto: ConfirmPaymentDto,
+    @Headers('Idempotency-Key') idempotencyKey?: string
+  ): Promise<any> {
+    try {
+      const result = await this.paymentService.confirmPayment(
+        confirmPaymentDto.bookingId,
+        confirmPaymentDto.paymentMethodId,
+        idempotencyKey
+      );
+      
+      return {
+        success: true,
+        data: {
+          booking: result.booking,
+          receiptUrl: result.receiptUrl
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Payment confirmation failed: ${error.message}`);
+      throw new HttpException(
+        error.message, 
+        HttpStatus.BAD_REQUEST
+      );
+    }
   }
 
+
   private transformBookingToResponse(
-    booking: BookingDocument,
-  ): BookingResponseDto {
+    booking: any,
+  ): any {
     const plainBooking = booking.toObject ? booking.toObject() : booking;
     return {
       _id: plainBooking._id.toString(),
+      bookingRef: plainBooking.bookingRef,
       user: plainBooking.user.toString(),
       flight: plainBooking.flight.toString(),
       seats: plainBooking.seats.map(seat => ({
@@ -187,6 +220,7 @@ export class PaymentController {
       expiresAt: plainBooking.expiresAt?.toISOString(),
       createdAt: plainBooking.createdAt.toISOString(),
       updatedAt: plainBooking.updatedAt.toISOString(),
+      version: plainBooking.version || 0,
     };
   }
 }
