@@ -1,16 +1,9 @@
-import {
-  IsArray,
-  IsNotEmpty,
-  IsString,
-  ValidateNested,
-  IsNumber,
-  IsEnum,
-  Min,
-} from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsArray, ValidateNested, IsOptional, IsString, IsNotEmpty, IsEnum, Min, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SeatClass } from '../types/booking.types';
 import { PaymentProvider } from '../types/booking.types';
+import { BaggageSelectionDto } from '../../../shared/dtos/baggage.dto';
 
 export class SeatSelectionDto {
   @ApiProperty({ example: 'B2', description: 'Seat number (e.g., A1, B2)' })
@@ -66,4 +59,10 @@ export class CreateBookingDto {
   @IsString()
   @IsNotEmpty({ message: 'Idempotency key is required' })
   idempotencyKey: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BaggageSelectionDto)
+  baggageOptions?: BaggageSelectionDto[];
 }

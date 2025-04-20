@@ -1,5 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Types, Schema as MongooseSchema } from 'mongoose';
+
+// Add index decorator manually
+const Index = (spec: any, options?: any) => {
+  return (target: any) => {
+    SchemaFactory.createForClass(target).index(spec, options);
+  };
+};
 
 @Schema()
 export class Stop {
@@ -19,16 +26,56 @@ export class Stop {
   carrierCode: string;
 }
 
-@Schema()
+@Schema({ _id: false })
+export class BaggageOption {
+  @Prop({ required: true })
+  type: string;
+
+  @Prop({ required: true })
+  weightInKg: number;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop({ required: false })
+  quantity?: number;
+}
+
+@Schema({ _id: false })
 export class BaggageOptions {
   @Prop({ required: true })
   included: string;
 
-  @Prop({ type: [{ weightInKg: Number, price: Number }], required: true })
-  options: Array<{ weightInKg: number; price: number }>;
+  @Prop({ type: [BaggageOption], default: [] })
+  options: BaggageOption[];
+}
+
+@Schema({ _id: false })
+export class PricingDetail {
+  @Prop({ required: true })
+  totalPrice: number;
+
+  @Prop({ required: true })
+  basePrice: number;
+
+  @Prop({ required: true })
+  taxes: number;
+
+  @Prop({ required: true })
+  currency: string;
+
+  // Explicitly define the type for the breakdown field
+  @Prop({
+    type: MongooseSchema.Types.Mixed, // Use Mixed for complex/ambiguous types
+    required: true,
+  })
+  breakdown: Record<string, any>; // Adjust to match your structure
 }
 
 @Schema({ timestamps: true, versionKey: 'version' })
+@Index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1 }, { background: true })
+@Index({ airline: 1, price: 1 }, { background: true })
+@Index({ 'stops.airport': 1 }, { background: true })
 export class Flight extends Document {
   @Prop({ required: true })
   offerId: string;
@@ -60,6 +107,9 @@ export class Flight extends Document {
   @Prop({ required: true })
   price: number;
 
+  @Prop({ type: PricingDetail, required: false })
+  pricingDetail?: PricingDetail;
+
   @Prop({ required: true })
   seatsAvailable: number;
 
@@ -76,7 +126,7 @@ export class Flight extends Document {
   currency: string;
 
   @Prop({ default: 0 })
-  version: number; // For optimistic concurrency
+  version: number;
 }
 
 @Schema({ timestamps: true })
@@ -97,7 +147,7 @@ export class SeatHold extends Document {
 export const FlightSchema = SchemaFactory.createForClass(Flight);
 export const SeatHoldSchema = SchemaFactory.createForClass(SeatHold);
 
-// Add performance optimizing indexes
+// Add performance-optimizing indexes
 FlightSchema.index({ offerId: 1 }, { unique: true });
 FlightSchema.index({ seatsAvailable: 1 });
 FlightSchema.index({ price: 1 });
@@ -107,7 +157,19 @@ FlightSchema.index({ airline: 1 });
 FlightSchema.index({ version: 1 });
 FlightSchema.index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1, price: 1 });
 
-// Add indexes for seat hold operations
+// Add indexes for seat-hold operations
 SeatHoldSchema.index({ expiresAt: 1 });
 SeatHoldSchema.index({ sessionId: 1 });
 SeatHoldSchema.index({ flightId: 1 });
+
+// Add pre-save hook to validate flightId
+SeatHoldSchema.pre('save', async function (next) {
+  if (!Types.ObjectId.isValid(this.flightId)) {
+    return next(new Error('Invalid flightId: must be a valid ObjectId'));
+  }
+  const flight = await this.model('Flight').findById(this.flightId);
+  if (!flight) {
+    return next(new Error(`No flight found for flightId: ${this.flightId}`));
+  }
+  next();
+});

@@ -18,7 +18,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { HealthController } from './app.controller';
-
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -55,20 +54,13 @@ import { HealthController } from './app.controller';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGO_URI'),
-        // Improved connection parameters
         retryAttempts: 3,
         retryDelay: 1000,
         serverSelectionTimeoutMS: 10000,
-        // Connection pool settings
-        minPoolSize: 5,           // Minimum connections to maintain
-        maxPoolSize: 15,          // Maximum parallel connections
-        // Performance settings
-        socketTimeoutMS: 45000,   // How long to wait for responses
-        connectTimeoutMS: 10000,  // How long to wait for initial connection
-        // Modern MongoDB driver settings
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        // Heartbeat settings to detect connection issues
+        minPoolSize: 5,
+        maxPoolSize: 15,
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
         heartbeatFrequencyMS: 10000,
       }),
       inject: [ConfigService],

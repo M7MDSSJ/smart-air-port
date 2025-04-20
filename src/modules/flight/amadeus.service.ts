@@ -171,6 +171,6 @@ export class AmadeusService {
   async getFlightStatus(flightNumber: string): Promise<string> {
     // TODO: Integrate with a real flight status API (e.g., FlightAware, AviationStack)
     this.logger.warn(`Flight status for ${flightNumber} is mocked; returning 'Scheduled'`);
-    return 'Scheduled'; // Mock for now
+    return 'Scheduled';
   }
 }
