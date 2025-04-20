@@ -865,6 +865,93 @@
         ]
       }
     },
+    "/flights/admin/fix-seat-hold-flight-ids": {
+      "post": {
+        "operationId": "FlightController_fixSeatHoldFlightIds",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/flights/cache-test": {
+      "get": {
+        "operationId": "FlightController_cacheTest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/flights/{id}/validate-baggage": {
+      "post": {
+        "operationId": "FlightController_validateBaggage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
+    "/flights/{id}/seat-hold": {
+      "post": {
+        "operationId": "FlightController_createSeatHold",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
     "/booking": {
       "post": {
         "description": "Creates a new booking for the authenticated user. Requires flight details, seat selections, payment provider, and an idempotency key to prevent duplicates. Sends an email notification upon success.",

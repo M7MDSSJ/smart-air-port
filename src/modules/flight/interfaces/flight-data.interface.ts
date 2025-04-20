@@ -1,3 +1,80 @@
+export interface PricingDetail {
+  summary: {
+    totalPrice: number;
+    currency: string;
+    priceGuaranteedUntil: string;
+  };
+  breakdown: {
+    passengers: {
+      type: 'ADT' | 'CHD' | 'INF';
+      count: number;
+      priceEach: number;
+      subtotal: number;
+      description?: string;
+    }[];
+    fees: {
+      name: string;
+      amount: number;
+    }[];
+  };
+}
+export interface BaggageOptionDto {
+  type: 'CARRY_ON' | 'CHECKED' | 'PERSONAL_ITEM';
+  quantity: number;
+  price: string;
+  description: string;
+  weight: number;
+}
+
+export interface BaggageOptions {
+  included: string;
+  options: BaggageOptionDto[];
+}
+
+export interface FormattedFlight {
+  _id: any;
+  offerId: string;
+  flightNumber: string;
+  airline: string;
+  airlineName: string;
+  departureAirport: string;
+  departureAirportName: string;
+  departureTime: Date;
+  departureTimeLocal: string;
+  arrivalAirport: string;
+  arrivalAirportName: string;
+  arrivalTime: Date;
+  arrivalTimeLocal: string;
+  status: string;
+  aircraft?: string;
+  price: number;
+  pricingDetail: PricingDetail;
+  currency: string;
+  totalPrice?: number;
+  seatsAvailable: number;
+  stops: Array<{
+    airport: string;
+    bookable: boolean;
+    airportName: string;
+    arrivalTime: Date;
+    departureTime: Date;
+    flightNumber: string;
+    carrierCode: string;
+    layoverDuration?: string;
+    layoverDurationInMinutes?: number;
+  }>;
+  lastTicketingDate: string;
+  baggageOptions: BaggageOptions;
+  duration: string;
+  durationInMinutes: number;
+  numberOfStops: number;
+  isRecommended: boolean;
+  departureHour: number;
+  createdAt: Date;
+  updatedAt: Date;
+  sessionId?: string;
+}
+
 export const AIRLINE_MAP: { [key: string]: { en: string; ar: string } } = {
   F9: { en: 'Frontier Airlines', ar: 'فرونتير ايرلاينز' },
   AA: { en: 'American Airlines', ar: 'الخطوط الجوية الأمريكية' },
@@ -28,47 +105,3 @@ export const EXCHANGE_RATES: { [key: string]: number } = {
   USD_TO_EGP: 48.5,
   USD_TO_SAR: 3.75,
 };
-
-export interface FormattedFlight {
-  _id: string;
-  offerId: string;
-  flightNumber: string;
-  airline: string;
-  airlineName: string;
-  departureAirport: string;
-  departureAirportName: string;
-  departureTime: Date;
-  departureTimeLocal: string;
-  arrivalAirport: string;
-  arrivalAirportName: string;
-  arrivalTime: Date;
-  arrivalTimeLocal: string;
-  status: string;
-  aircraft?: string;
-  price: number;
-  currency: string;
-  totalPrice: number;
-  seatsAvailable: number;
-  stops: Array<{
-    airport: string;
-    bookable: boolean;
-    airportName: string;
-    arrivalTime: Date;
-    departureTime: Date;
-    flightNumber: string;
-    carrierCode: string;
-    layoverDuration?: string;
-    layoverDurationInMinutes?: number;
-  }>;
-  lastTicketingDate: string;
-  baggageOptions: {
-    included: string;
-    options: Array<{ weightInKg: number; price: number }>;
-  };
-  duration: string;
-  durationInMinutes: number;
-  numberOfStops: number;
-  isRecommended: boolean;
-  departureHour: number;
-  sessionId?: string;
-}

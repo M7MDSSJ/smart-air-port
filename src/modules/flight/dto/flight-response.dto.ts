@@ -1,95 +1,84 @@
 import { Exclude, Expose } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+
+export enum FlightStatus {
+  // Add your flight status values here
+}
+
+export class BaggageOptionsDto {
+  // Add your baggage options properties here
+}
 
 export class FlightResponseDto {
   @Expose()
-  offerId: string;
-
-  @Expose()
-  flightNumber: string;
-
-  @Expose()
-  airline: string;
-
-  @Expose()
-  airlineName: string;
-
-  @Expose()
-  departureAirport: string;
-
-  @Expose()
-  departureTime: Date;
-
-  @Expose()
-  departureTimeLocal: string;
-
-  @Expose()
-  arrivalAirport: string;
-
-  @Expose()
-  arrivalTime: Date;
-
-  @Expose()
-  arrivalTimeLocal: string;
-
-  @Expose()
-  status: string;
-
-  @Expose()
-  aircraft?: string;
-
-  @Expose()
-  price: number;
-
-  @Expose()
-  currency: string;
-
-  @Expose()
-  totalPrice: number;
-
-  @Expose()
-  seatsAvailable: number;
-  
-  @Expose()
-  bookable: boolean;
-
-  @Expose()
-  stops: Array<{
-    airport: string;
-    arrivalTime: Date;
-    departureTime: Date;
-    flightNumber: string;
-    carrierCode: string;
-    layoverDuration?: string;
-    layoverDurationInMinutes?: number;
-  }>;
-
-  @Expose()
-  lastTicketingDate: string;
-
-  @Expose()
-  baggageOptions: {
-    included: string;
-    options: Array<{ weightInKg: number; price: number }>;
-  };
-
-  @Expose()
+  @ApiProperty({ example: '6803fbee5815daa3adf959c1' })
   _id: string;
 
   @Expose()
-  duration: string;
+  @ApiProperty({ example: '1' })
+  offerId: string;
 
   @Expose()
-  durationInMinutes: number;
+  @ApiProperty({ example: 'NE' })
+  airline: string;
 
   @Expose()
-  numberOfStops: number;
+  @ApiProperty({ example: '174' })
+  flightNumber: string;
 
   @Expose()
-  isRecommended: boolean;
+  @ApiProperty({ example: '320' })
+  aircraft: string;
 
   @Expose()
-  departureHour: number;
+  @ApiProperty({ example: 'CAI' })
+  departureAirport: string;
 
-  @Exclude()
-  version: number;
+  @Expose()
+  @ApiProperty({ example: '2025-05-20T15:25:00.000Z' })
+  departureTime: Date;
+
+  @Expose()
+  @ApiProperty({ example: 'JED' })
+  arrivalAirport: string;
+
+  @Expose()
+  @ApiProperty({ example: '2025-05-20T17:40:00.000Z' })
+  arrivalTime: Date;
+
+  @Expose()
+  @ApiProperty({ example: 5118.13 })
+  price: number;
+
+  @Expose()
+  @ApiProperty({ example: 'EGP' })
+  currency: string;
+
+  @Expose()
+  @ApiProperty({ example: 9 })
+  seatsAvailable: number;
+
+  @Expose()
+  @ApiProperty({ enum: FlightStatus })
+  status: string;
+
+  @Expose()
+  @ApiProperty({ type: [String], example: [] })
+  stops: string[];
+
+  @Expose()
+  @ApiProperty({ example: '2025-05-20' })
+  lastTicketingDate: string;
+
+  @Expose()
+  @ApiProperty({ type: BaggageOptionsDto })
+  baggageOptions: BaggageOptionsDto;
+
+  @Expose()
+  @ApiProperty({ example: '2025-04-19T19:39:26.301Z' })
+  createdAt: Date;
+
+  @Expose()
+  @ApiProperty({ example: '2025-04-19T19:44:09.777Z' })
+  updatedAt: Date;
 }

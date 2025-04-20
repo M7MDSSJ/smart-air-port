@@ -1,9 +1,0 @@
-node_modules
-dist
-.git
-*.log
-.env
-Dockerfile
-.gitignore
-cert.pem
-key.pem

@@ -24,4 +24,11 @@ export interface CreateBookingInput {
   cancellationReason?: string;
   expiresAt?: Date;
   idempotencyKey?: string;
+  baggageFees: number;
+  baggageBreakdown: Array<{
+    type: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+  }>;
 }

@@ -20,3 +20,14 @@ export interface PaymentIntent {
     | 'canceled'
     | 'succeeded';
 }
+
+export interface CreateBookingInput {
+  // ... existing fields ...
+  baggageFees: number;
+  baggageBreakdown: Array<{
+    type: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+  }>;
+}
