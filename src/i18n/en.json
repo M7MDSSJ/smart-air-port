@@ -11,7 +11,11 @@
     "notEnoughSeats": "Not enough seats available",
     "seatInventoryChanged": "Seat inventory changed, please refresh",
     "bookingWindowClosed": "Booking window closed",
-    "priceChanged": "Price changed - please refresh"
+    "priceChanged": "Price changed - please refresh",
+    "amadeusFetchFailed": "Error fetching flights from Amadeus API. Please try again later. Details: {details}",
+    "missingRequiredFields": "Required fields are missing",
+    "tooManyPassengers": "Maximum {max} passengers allowed",
+    "tooManyInfants": "Number of infants cannot exceed number of adults"
   },
   "baggage": {
     "included": "{count} checked bag",

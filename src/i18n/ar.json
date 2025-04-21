@@ -11,11 +11,15 @@
     "notEnoughSeats": "لا توجد مقاعد كافية متاحة",
     "seatInventoryChanged": "تغيرت جرد المقاعد، يرجى التحديث",
     "bookingWindowClosed": "نافذة الحجز مغلقة",
-    "priceChanged": "تغير السعر - يرجى التحديث"
+    "priceChanged": "تغير السعر - يرجى التحديث",
+    "amadeusFetchFailed": "حدث خطأ أثناء جلب الرحلات من خدمة Amadeus. يرجى المحاولة مرة أخرى لاحقًا. التفاصيل: {details}",
+    "missingRequiredFields": "الحقول المطلوبة مفقودة",
+    "tooManyPassengers": "الحد الأقصى {max} ركاب مسموح",
+    "tooManyInfants": "لا يمكن أن يتجاوز عدد الرضع عدد البالغين"
   },
   "baggage": {
     "included": "{count} حقيبة مدفوعة",
-    "included_plural": "{count} حقائب مدفوعة"   
+    "included_plural": "{count} حقائب مدفوعة"
   },
   "status": {
     "Scheduled": "مجدول"

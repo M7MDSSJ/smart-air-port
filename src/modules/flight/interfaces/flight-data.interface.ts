@@ -28,8 +28,12 @@ export interface BaggageOptionDto {
 
 export interface BaggageOptions {
   included: string;
+  cabin?: string;
   options: BaggageOptionDto[];
 }
+
+// Import the FareTypeDto for the FormattedFlight interface
+import { FareTypeDto } from '../dto/fare-type.dto';
 
 export interface FormattedFlight {
   _id: any;
@@ -65,6 +69,7 @@ export interface FormattedFlight {
   }>;
   lastTicketingDate: string;
   baggageOptions: BaggageOptions;
+  fareTypes: FareTypeDto[];
   duration: string;
   durationInMinutes: number;
   numberOfStops: number;
@@ -90,9 +95,15 @@ export const AIRLINE_MAP: { [key: string]: { en: string; ar: string } } = {
 
 export const AIRPORT_MAP: { [key: string]: { en: string; ar: string } } = {
   CAI: { en: 'Cairo International Airport', ar: 'مطار القاهرة الدولي' },
-  JED: { en: 'King Abdulaziz International Airport', ar: 'مطار الملك عبدالعزيز الدولي' },
+  JED: {
+    en: 'King Abdulaziz International Airport',
+    ar: 'مطار الملك عبدالعزيز الدولي',
+  },
   IST: { en: 'Istanbul Airport', ar: 'مطار إسطنبول' },
-  ADD: { en: 'Addis Ababa Bole International Airport', ar: 'مطار أديس أبابا بولي الدولي' },
+  ADD: {
+    en: 'Addis Ababa Bole International Airport',
+    ar: 'مطار أديس أبابا بولي الدولي',
+  },
   DMM: { en: 'King Fahd International Airport', ar: 'مطار الملك فهد الدولي' },
 };
 

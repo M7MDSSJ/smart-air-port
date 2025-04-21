@@ -1,18 +1,16 @@
 import { Injectable, Logger, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import rax from 'retry-axios';
 
 @Injectable()
 export class AmadeusService {
   private readonly logger = new Logger(AmadeusService.name);
   private readonly baseUrl = 'https://test.api.amadeus.com';
 
-  constructor(private readonly configService: ConfigService) {
-    rax.attach();
-  }
+  constructor(private readonly configService: ConfigService) {}
 
-  private getAxiosInstance() {
+  private async getAxiosInstance() {
+    const rax = await import('retry-axios'); // Import the module directly
     const instance = axios.create();
     instance.defaults.raxConfig = {
       instance,
@@ -37,7 +35,7 @@ export class AmadeusService {
       client_secret: clientSecret!,
     });
 
-    const axiosInstance = this.getAxiosInstance();
+    const axiosInstance = await this.getAxiosInstance(); // Add 'await'
 
     try {
       const response = await axiosInstance.post(`${this.baseUrl}/v1/security/oauth2/token`, body.toString(), {
@@ -68,7 +66,7 @@ export class AmadeusService {
       url += `&returnDate=${returnDate}`;
     }
 
-    const axiosInstance = this.getAxiosInstance();
+    const axiosInstance = await this.getAxiosInstance(); // Add 'await'
 
     try {
       const response = await axiosInstance.get(url, {
@@ -118,7 +116,7 @@ export class AmadeusService {
 
     const url = `${this.baseUrl}/v2/shopping/flight-offers?${originDestinations}&adults=${adults}&children=${children}&infants=${infants}&travelClass=${cabinClass}&currencyCode=USD&max=${limit}`;
 
-    const axiosInstance = this.getAxiosInstance();
+    const axiosInstance = await this.getAxiosInstance(); // Add 'await'
 
     try {
       const response = await axiosInstance.get(url, {
@@ -145,7 +143,7 @@ export class AmadeusService {
     const token = await this.getAccessToken();
     const url = `${this.baseUrl}/v2/shopping/flight-offers/${offerId}`;
 
-    const axiosInstance = this.getAxiosInstance();
+    const axiosInstance = await this.getAxiosInstance(); // Add 'await'
 
     try {
       const response = await axiosInstance.get(url, {

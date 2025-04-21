@@ -46,8 +46,56 @@ export class BaggageOptions {
   @Prop({ required: true })
   included: string;
 
+  @Prop({ required: false })
+  cabin: string;
+
   @Prop({ type: [BaggageOption], default: [] })
   options: BaggageOption[];
+}
+
+@Schema({ _id: false })
+export class BaggageAllowance {
+  @Prop({ required: true })
+  carryOn: string;
+
+  @Prop({ required: true })
+  checked: string;
+}
+
+@Schema({ _id: false })
+export class FareFeature {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  included: boolean;
+
+  @Prop({ required: false })
+  description?: string;
+}
+
+@Schema({ _id: false })
+export class FareType {
+  @Prop({ required: true })
+  code: string;
+
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: false })
+  description?: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop({ required: true })
+  currency: string;
+
+  @Prop({ type: BaggageAllowance, required: true })
+  baggageAllowance: BaggageAllowance;
+
+  @Prop({ type: [FareFeature], default: [] })
+  features: FareFeature[];
 }
 
 @Schema({ _id: false })
@@ -73,7 +121,10 @@ export class PricingDetail {
 }
 
 @Schema({ timestamps: true, versionKey: 'version' })
-@Index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1 }, { background: true })
+@Index(
+  { departureAirport: 1, arrivalAirport: 1, departureTime: 1 },
+  { background: true },
+)
 @Index({ airline: 1, price: 1 }, { background: true })
 @Index({ 'stops.airport': 1 }, { background: true })
 export class Flight extends Document {
@@ -122,6 +173,9 @@ export class Flight extends Document {
   @Prop({ type: BaggageOptions, required: true })
   baggageOptions: BaggageOptions;
 
+  @Prop({ type: [FareType], default: [] })
+  fareTypes: FareType[];
+
   @Prop({ default: 'USD' })
   currency: string;
 
@@ -155,7 +209,12 @@ FlightSchema.index({ departureTime: 1 });
 FlightSchema.index({ arrivalTime: 1 });
 FlightSchema.index({ airline: 1 });
 FlightSchema.index({ version: 1 });
-FlightSchema.index({ departureAirport: 1, arrivalAirport: 1, departureTime: 1, price: 1 });
+FlightSchema.index({
+  departureAirport: 1,
+  arrivalAirport: 1,
+  departureTime: 1,
+  price: 1,
+});
 
 // Add indexes for seat-hold operations
 SeatHoldSchema.index({ expiresAt: 1 });
