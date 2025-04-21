@@ -1,9 +1,9 @@
 import { Exclude, Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { FareTypeDto } from './fare-type.dto';
 
-export enum FlightStatus {
-  // Add your flight status values here
-}
+export enum FlightStatus {}
+// Add your flight status values here
 
 export class BaggageOptionsDto {
   // Add your baggage options properties here
@@ -81,4 +81,11 @@ export class FlightResponseDto {
   @Expose()
   @ApiProperty({ example: '2025-04-19T19:44:09.777Z' })
   updatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: [FareTypeDto],
+    description: 'Available fare types for this flight',
+  })
+  fareTypes: FareTypeDto[];
 }

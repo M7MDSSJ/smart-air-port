@@ -1,0 +1,3983 @@
+"http://localhost:3000/flights/search/available?departureAirport=CAI&arrivalAirport=JED&departureDate=2025-05-01&adults=1&children=1&tripType=oneway&cabinClass=ECONOMY&sortBy=price&page=1&limit=10"
+{
+    "success": true,
+    "message": "Found 9 available flight offers (out of 9 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "6805f2365815daa3adf95cdf",
+                "offerId": "1",
+                "airline": "NE",
+                "airlineName": "Nesma Airlines",
+                "flightNumber": "170",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T00:40:00.000Z",
+                "departureTimeLocal": "3:40:00 AM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T02:55:00.000Z",
+                "arrivalTimeLocal": "5:55:00 AM",
+                "status": "Scheduled",
+                "price": 8373.8624,
+                "totalPrice": 16747.7248,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2555.5,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 8373.86,
+                                "description": "Adult",
+                                "subtotal": 8373.86
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 6699.09,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 6699.09
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2260.94
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 7117.783039999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 8373.8624,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 12142.10048,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 15072.95232,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 3,
+                "createdAt": "2025-04-21T07:22:30.405Z",
+                "updatedAt": "2025-04-21T08:05:49.365Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce0",
+                "offerId": "2",
+                "airline": "NE",
+                "airlineName": "Nesma Airlines",
+                "flightNumber": "172",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T08:35:00.000Z",
+                "departureTimeLocal": "11:35:00 AM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T10:50:00.000Z",
+                "arrivalTimeLocal": "1:50:00 PM",
+                "status": "Scheduled",
+                "price": 8373.8624,
+                "totalPrice": 16747.7248,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2555.5,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 8373.86,
+                                "description": "Adult",
+                                "subtotal": 8373.86
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 6699.09,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 6699.09
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2260.94
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 7117.783039999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 8373.8624,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 12142.10048,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 15072.95232,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 11,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce1",
+                "offerId": "3",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "306",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T12:10:00.000Z",
+                "departureTimeLocal": "3:10:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T14:25:00.000Z",
+                "arrivalTimeLocal": "5:25:00 PM",
+                "status": "Scheduled",
+                "price": 9774.2764,
+                "totalPrice": 19548.5528,
+                "currency": "EGP",
+                "seatsAvailable": 2,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 9774.28,
+                                "description": "Adult",
+                                "subtotal": 9774.28
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7330.71,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7330.71
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2565.75
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 8308.13494,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 9774.2764,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 14172.700780000001,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 17593.69752,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 15,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce2",
+                "offerId": "5",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "308",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T01:20:00.000Z",
+                "departureTimeLocal": "4:20:00 AM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T03:35:00.000Z",
+                "arrivalTimeLocal": "6:35:00 AM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 4,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce3",
+                "offerId": "6",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "382",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T03:50:00.000Z",
+                "departureTimeLocal": "6:50:00 AM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T06:05:00.000Z",
+                "arrivalTimeLocal": "9:05:00 AM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 6,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2375815daa3adf95ce6",
+                "offerId": "7",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "300",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T09:40:00.000Z",
+                "departureTimeLocal": "12:40:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T11:55:00.000Z",
+                "arrivalTimeLocal": "2:55:00 PM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 12,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2375815daa3adf95ce7",
+                "offerId": "8",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "330",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T14:50:00.000Z",
+                "departureTimeLocal": "5:50:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T17:05:00.000Z",
+                "arrivalTimeLocal": "8:05:00 PM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 17,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce4",
+                "offerId": "9",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "304",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T15:05:00.000Z",
+                "departureTimeLocal": "6:05:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T17:20:00.000Z",
+                "arrivalTimeLocal": "8:20:00 PM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 18,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce5",
+                "offerId": "10",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "388",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T20:20:00.000Z",
+                "departureTimeLocal": "11:20:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T22:35:00.000Z",
+                "arrivalTimeLocal": "1:35:00 AM",
+                "status": "Scheduled",
+                "price": 10643.1464,
+                "totalPrice": 21286.2928,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 10643.15,
+                                "description": "Adult",
+                                "subtotal": 10643.15
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 7982.36,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 7982.36
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 2793.83
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 9046.674439999999,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 10643.1464,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 15432.562279999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 19157.66352,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 23,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:05:49.366Z"
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 9,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
+
+"http://localhost:3000/flights/search/available?departureAirport=CAI&arrivalAirport=DXB&departureDate=2025-05-01&adults=1&children=1&tripType=oneway&cabinClass=ECONOMY&sortBy=price&page=1&limit=10"
+{
+    "success": true,
+    "message": "Found 10 available flight offers (out of 10 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "6805f2365815daa3adf95cdf",
+                "offerId": "1",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "546",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T08:20:00.000Z",
+                "departureTimeLocal": "11:20:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T14:55:00.000Z",
+                "arrivalTimeLocal": "2:55:00 PM",
+                "status": "Scheduled",
+                "price": 17652.3718,
+                "totalPrice": 35304.7436,
+                "currency": "EGP",
+                "seatsAvailable": 7,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T11:00:00.000Z",
+                        "departureTime": "2025-05-01T12:10:00.000Z",
+                        "flightNumber": "546",
+                        "carrierCode": "KU",
+                        "_id": "6805fd3dfa20506d590aea4c"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 17652.37,
+                                "description": "Adult",
+                                "subtotal": 17652.37
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 14121.9,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 14121.9
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 4766.14
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 15004.51603,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 17652.3718,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 25595.93911,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 31774.26924,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "6h 35m",
+                "durationInMinutes": 395,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 11,
+                "createdAt": "2025-04-21T07:22:30.405Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce0",
+                "offerId": "2",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "542",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T17:30:00.000Z",
+                "departureTimeLocal": "8:30:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-02T00:30:00.000Z",
+                "arrivalTimeLocal": "12:30:00 AM",
+                "status": "Scheduled",
+                "price": 17652.3718,
+                "totalPrice": 35304.7436,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T20:05:00.000Z",
+                        "departureTime": "2025-05-01T21:45:00.000Z",
+                        "flightNumber": "542",
+                        "carrierCode": "KU",
+                        "_id": "6805fd3dfa20506d590aea4e"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 17652.37,
+                                "description": "Adult",
+                                "subtotal": 17652.37
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 14121.9,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 14121.9
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 4766.14
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 15004.51603,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 17652.3718,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 25595.93911,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 31774.26924,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "7h 0m",
+                "durationInMinutes": 420,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 20,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce1",
+                "offerId": "3",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "544",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T01:20:00.000Z",
+                "departureTimeLocal": "4:20:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T09:05:00.000Z",
+                "arrivalTimeLocal": "9:05:00 AM",
+                "status": "Scheduled",
+                "price": 17652.3718,
+                "totalPrice": 35304.7436,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T04:00:00.000Z",
+                        "departureTime": "2025-05-01T06:15:00.000Z",
+                        "flightNumber": "544",
+                        "carrierCode": "KU",
+                        "_id": "6805fd3dfa20506d590aea50"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 17652.37,
+                                "description": "Adult",
+                                "subtotal": 17652.37
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 14121.9,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 14121.9
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 4766.14
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 15004.51603,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 17652.3718,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 25595.93911,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 31774.26924,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "7h 45m",
+                "durationInMinutes": 465,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 4,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805fb1e5815daa3adf95cf6",
+                "offerId": "4",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "546",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T08:20:00.000Z",
+                "departureTimeLocal": "11:20:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T17:55:00.000Z",
+                "arrivalTimeLocal": "5:55:00 PM",
+                "status": "Scheduled",
+                "price": 17652.3718,
+                "totalPrice": 35304.7436,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T11:00:00.000Z",
+                        "departureTime": "2025-05-01T15:05:00.000Z",
+                        "flightNumber": "546",
+                        "carrierCode": "KU",
+                        "_id": "6805fd3dfa20506d590aea52"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 17652.37,
+                                "description": "Adult",
+                                "subtotal": 17652.37
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 14121.9,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 14121.9
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 4766.14
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 15004.51603,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 17652.3718,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 25595.93911,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 31774.26924,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "9h 35m",
+                "durationInMinutes": 575,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 11,
+                "createdAt": "2025-04-21T08:00:30.300Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce2",
+                "offerId": "5",
+                "airline": "GF",
+                "airlineName": "GF",
+                "flightNumber": "80",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T02:30:00.000Z",
+                "departureTimeLocal": "5:30:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T09:05:00.000Z",
+                "arrivalTimeLocal": "9:05:00 AM",
+                "status": "Scheduled",
+                "price": 20984.7438,
+                "totalPrice": 41969.4876,
+                "currency": "EGP",
+                "seatsAvailable": 7,
+                "stops": [
+                    {
+                        "airport": "BAH",
+                        "arrivalTime": "2025-05-01T05:30:00.000Z",
+                        "departureTime": "2025-05-01T06:40:00.000Z",
+                        "flightNumber": "80",
+                        "carrierCode": "GF",
+                        "_id": "6805fd3dfa20506d590aea54"
+                    }
+                ],
+                "lastTicketingDate": "2025-04-30",
+                "baggageOptions": {
+                    "included": "23kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 20984.74,
+                                "description": "Adult",
+                                "subtotal": 20984.74
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 16787.8,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 16787.8
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5665.88
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 17837.03223,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 20984.7438,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 30427.87851,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 37772.53884,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "6h 35m",
+                "durationInMinutes": 395,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 5,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce3",
+                "offerId": "6",
+                "airline": "RJ",
+                "airlineName": "RJ",
+                "flightNumber": "504",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T11:05:00.000Z",
+                "departureTimeLocal": "2:05:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T17:35:00.000Z",
+                "arrivalTimeLocal": "5:35:00 PM",
+                "status": "Scheduled",
+                "price": 21475.3998,
+                "totalPrice": 42950.7996,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "AMM",
+                        "arrivalTime": "2025-05-01T12:35:00.000Z",
+                        "departureTime": "2025-05-01T13:35:00.000Z",
+                        "flightNumber": "504",
+                        "carrierCode": "RJ",
+                        "_id": "6805fd3dfa20506d590aea56"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 21475.4,
+                                "description": "Adult",
+                                "subtotal": 21475.4
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 17180.32,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 17180.32
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5798.36
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 18254.089829999997,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 21475.3998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 31139.329709999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 38655.71964,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "6h 30m",
+                "durationInMinutes": 390,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 14,
+                "createdAt": "2025-04-21T07:22:30.406Z",
+                "updatedAt": "2025-04-21T08:09:33.543Z"
+            },
+            {
+                "_id": "6805f2375815daa3adf95ce6",
+                "offerId": "7",
+                "airline": "RJ",
+                "airlineName": "RJ",
+                "flightNumber": "506",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T18:30:00.000Z",
+                "departureTimeLocal": "9:30:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-02T01:05:00.000Z",
+                "arrivalTimeLocal": "1:05:00 AM",
+                "status": "Scheduled",
+                "price": 21475.3998,
+                "totalPrice": 42950.7996,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "AMM",
+                        "arrivalTime": "2025-05-01T20:00:00.000Z",
+                        "departureTime": "2025-05-01T20:45:00.000Z",
+                        "flightNumber": "506",
+                        "carrierCode": "RJ",
+                        "_id": "6805fd3dfa20506d590aea58"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 21475.4,
+                                "description": "Adult",
+                                "subtotal": 21475.4
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 17180.32,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 17180.32
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5798.36
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 18254.089829999997,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 21475.3998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 31139.329709999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 38655.71964,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "6h 35m",
+                "durationInMinutes": 395,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 21,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:09:33.544Z"
+            },
+            {
+                "_id": "6805f2375815daa3adf95ce7",
+                "offerId": "8",
+                "airline": "RJ",
+                "airlineName": "RJ",
+                "flightNumber": "502",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T05:50:00.000Z",
+                "departureTimeLocal": "8:50:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T17:35:00.000Z",
+                "arrivalTimeLocal": "5:35:00 PM",
+                "status": "Scheduled",
+                "price": 21475.3998,
+                "totalPrice": 42950.7996,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "AMM",
+                        "arrivalTime": "2025-05-01T07:20:00.000Z",
+                        "departureTime": "2025-05-01T13:35:00.000Z",
+                        "flightNumber": "502",
+                        "carrierCode": "RJ",
+                        "_id": "6805fd3dfa20506d590aea5a"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 21475.4,
+                                "description": "Adult",
+                                "subtotal": 21475.4
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 17180.32,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 17180.32
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5798.36
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 18254.089829999997,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 21475.3998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 31139.329709999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 38655.71964,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "11h 45m",
+                "durationInMinutes": 705,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 8,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:09:33.544Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce4",
+                "offerId": "9",
+                "airline": "RJ",
+                "airlineName": "RJ",
+                "flightNumber": "504",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T11:05:00.000Z",
+                "departureTimeLocal": "2:05:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-02T01:05:00.000Z",
+                "arrivalTimeLocal": "1:05:00 AM",
+                "status": "Scheduled",
+                "price": 21475.3998,
+                "totalPrice": 42950.7996,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "AMM",
+                        "arrivalTime": "2025-05-01T12:35:00.000Z",
+                        "departureTime": "2025-05-01T20:45:00.000Z",
+                        "flightNumber": "504",
+                        "carrierCode": "RJ",
+                        "_id": "6805fd3dfa20506d590aea5c"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 21475.4,
+                                "description": "Adult",
+                                "subtotal": 21475.4
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 17180.32,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 17180.32
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5798.36
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 18254.089829999997,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 21475.3998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 31139.329709999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 38655.71964,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "14h 0m",
+                "durationInMinutes": 840,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 14,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:09:33.544Z"
+            },
+            {
+                "_id": "6805f2365815daa3adf95ce5",
+                "offerId": "10",
+                "airline": "RJ",
+                "airlineName": "RJ",
+                "flightNumber": "506",
+                "departureAirport": "CAI",
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T18:30:00.000Z",
+                "departureTimeLocal": "9:30:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-02T09:20:00.000Z",
+                "arrivalTimeLocal": "9:20:00 AM",
+                "status": "Scheduled",
+                "price": 21475.3998,
+                "totalPrice": 42950.7996,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "AMM",
+                        "arrivalTime": "2025-05-01T20:00:00.000Z",
+                        "departureTime": "2025-05-02T04:55:00.000Z",
+                        "flightNumber": "506",
+                        "carrierCode": "RJ",
+                        "_id": "6805fd3dfa20506d590aea5e"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "baggageOptions": {
+                    "included": "30kg total checked baggage\n1 piece",
+                    "cabin": "7 kg cabin baggage\n1 piece",
+                    "options": [
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 23,
+                            "price": 1533.3,
+                            "quantity": 1
+                        },
+                        {
+                            "type": "CHECKED",
+                            "weightInKg": 32,
+                            "price": 2299.95,
+                            "quantity": 1
+                        }
+                    ]
+                },
+                "pricingDetail": {
+                    "breakdown": {
+                        "passengers": [
+                            {
+                                "type": "ADT",
+                                "count": 1,
+                                "priceEach": 21475.4,
+                                "description": "Adult",
+                                "subtotal": 21475.4
+                            },
+                            {
+                                "type": "CHD",
+                                "count": 1,
+                                "priceEach": 17180.32,
+                                "description": "Child (2-11 years)",
+                                "subtotal": 17180.32
+                            }
+                        ],
+                        "fees": [
+                            {
+                                "name": "Taxes",
+                                "amount": 5798.36
+                            },
+                            {
+                                "name": "Service Fee",
+                                "amount": 50
+                            }
+                        ]
+                    }
+                },
+                "fareTypes": [
+                    {
+                        "code": "LIGHT",
+                        "name": "Light",
+                        "description": "Basic fare with no checked baggage",
+                        "price": 18254.089829999997,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "VALUE",
+                        "name": "Value",
+                        "description": "Standard economy with checked baggage included",
+                        "price": 21475.3998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "No checked bags"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": false
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": false
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": false
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PLUS",
+                        "name": "Plus",
+                        "description": "Enhanced economy with flexibility and 2 checked bags",
+                        "price": 31139.329709999998,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "7 kg cabin baggage\n1 piece",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": false
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Fee applies for changes"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            }
+                        ]
+                    },
+                    {
+                        "code": "PREMIUM_ECONOMY",
+                        "name": "Premium Economy",
+                        "description": "Enhanced comfort with extra legroom and premium services",
+                        "price": 38655.71964,
+                        "currency": "EGP",
+                        "baggageAllowance": {
+                            "carryOn": "1 carry-on bag + 1 personal item",
+                            "checked": "2 checked bags (23kg each)"
+                        },
+                        "features": [
+                            {
+                                "name": "Seat Selection",
+                                "included": true,
+                                "description": "Premium seats with extra legroom"
+                            },
+                            {
+                                "name": "Refundable",
+                                "included": true,
+                                "description": "Partially refundable"
+                            },
+                            {
+                                "name": "Change Fee",
+                                "included": true,
+                                "description": "Reduced change fees"
+                            },
+                            {
+                                "name": "Priority Boarding",
+                                "included": true
+                            },
+                            {
+                                "name": "Premium Meal",
+                                "included": true
+                            }
+                        ]
+                    }
+                ],
+                "duration": "14h 50m",
+                "durationInMinutes": 890,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 21,
+                "createdAt": "2025-04-21T07:22:30.407Z",
+                "updatedAt": "2025-04-21T08:09:33.544Z"
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 10,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
+
