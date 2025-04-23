@@ -15,7 +15,7 @@ export class TransformInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       switchMap(async data => {
-        this.logger.debug(`Transforming response for ${request.method} ${request.url}: ${JSON.stringify(data)}`);
+        // this.logger.debug(`Transforming response for ${request.method} ${request.url}: ${JSON.stringify(data)}`);
 
         // Only modify flight search responses
         if (

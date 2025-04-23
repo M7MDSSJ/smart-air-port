@@ -35,6 +35,11 @@ export interface BaggageOptions {
 // Import the FareTypeDto for the FormattedFlight interface
 import { FareTypeDto } from '../dto/fare-type.dto';
 
+export interface SeatInfo {
+  seatNumber: string;
+  status: 'available' | 'booked' | 'blocked';
+}
+
 export interface FormattedFlight {
   _id: any;
   offerId: string;
@@ -78,6 +83,7 @@ export interface FormattedFlight {
   createdAt: Date;
   updatedAt: Date;
   sessionId?: string;
+  seats: SeatInfo[];
 }
 
 export const AIRLINE_MAP: { [key: string]: { en: string; ar: string } } = {
