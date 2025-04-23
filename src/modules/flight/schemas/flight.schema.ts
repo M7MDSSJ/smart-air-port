@@ -127,7 +127,16 @@ export class PricingDetail {
 )
 @Index({ airline: 1, price: 1 }, { background: true })
 @Index({ 'stops.airport': 1 }, { background: true })
-export class Flight extends Document {
+export class Seat {
+  @Prop({ required: true })
+  seatNumber: string;
+
+  @Prop({ required: true, enum: ['available', 'booked', 'blocked'], default: 'available' })
+  status: string;
+}
+
+@Schema({ timestamps: true, versionKey: 'version' })
+export class Flight {
   @Prop({ required: true })
   offerId: string;
 
@@ -181,6 +190,9 @@ export class Flight extends Document {
 
   @Prop({ default: 0 })
   version: number;
+
+  @Prop({ type: [Seat], default: [] })
+  seats: Seat[];
 }
 
 @Schema({ timestamps: true })

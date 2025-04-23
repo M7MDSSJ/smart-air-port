@@ -128,6 +128,8 @@ export class FlightController {
         ...rest,
         pricingDetail,
         details,
+        _id: flight._id,
+        offerId: flight.offerId, // Amadeus offerId for debugging
       };
     });
 
@@ -146,5 +148,24 @@ export class FlightController {
     });
   }
 
- 
+  // NEW: Get seat map for a flight by flightId
+  @Get(':flightId/seatmap')
+  async getSeatMap(@Param('flightId') flightId: string) {
+    try {
+      // Find the flight in the database
+      const flight = await this.flightService.findOne(flightId);
+      if (!flight?.offerId) {
+        throw new HttpException('Flight offerId not found', HttpStatus.NOT_FOUND);
+      }
+      // Call Amadeus SeatMap API
+      const seatMap = await this.flightService.getSeatMapForFlight(flight.offerId);
+      return { success: true, seatMap };
+    } catch (error) {
+      // Log and return a safe error response
+      this.logger.error(`Seat map error for flight ${flightId}: ${error.message}`);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('Failed to fetch seat map', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
+

@@ -360,6 +360,29 @@
         ]
       }
     },
+    "/flights/{flightId}/seatmap": {
+      "get": {
+        "operationId": "FlightController_getSeatMap",
+        "parameters": [
+          {
+            "name": "flightId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Flights"
+        ]
+      }
+    },
     "/booking": {
       "post": {
         "description": "Creates a new booking for the authenticated user. Requires flight details, seat selections, payment provider, and an idempotency key to prevent duplicates. Sends an email notification upon success.",

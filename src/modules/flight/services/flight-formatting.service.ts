@@ -58,6 +58,10 @@ export class FlightFormattingService {
         : 1;
 
     // Filter flights based on date and available seats
+    // Debug: Log the first Amadeus flight object received
+    if (flights.length > 0) {
+      this.logger.warn('[DEBUG] First Amadeus flight object:', JSON.stringify(flights[0], null, 2));
+    }
     const filteredFlights = flights.filter((flight) => {
       const segments = flight.itineraries?.[0]?.segments || [];
       const firstSegment = segments[0] || {};
@@ -173,11 +177,45 @@ export class FlightFormattingService {
         });
 
         // Update or create the flight in the database
-        const dbFlight = await this.flightModel.findOneAndUpdate(
-          { offerId: flight.id },
+        const resolvedOfferId = flight.id; // Always use Amadeus offerId
+        // Upsert flight by offerId (Amadeus id)
+        this.logger.warn(`[DEBUG] Upserting flight with offerId=${resolvedOfferId}`);
+        await this.flightModel.updateOne(
+          { offerId: resolvedOfferId },
           {
             $set: {
-              offerId: flight.id,
+              offerId: resolvedOfferId,
+              flightNumber: flight.number,
+              airline: flight.carrierCode,
+              departureAirport: flight.itineraries[0]?.segments[0]?.departure?.iataCode,
+              arrivalAirport: flight.itineraries[0]?.segments.slice(-1)[0]?.arrival?.iataCode,
+              departureTime: new Date(flight.itineraries[0]?.segments[0]?.departure?.at),
+              arrivalTime: new Date(flight.itineraries[0]?.segments.slice(-1)[0]?.arrival?.at),
+              status: 'Scheduled',
+              price: flight.price?.total ? Number(flight.price.total) : 0,
+              pricingDetail: flight.price,
+              seatsAvailable: flight.numberOfBookableSeats || 0,
+              stops: flight.itineraries[0]?.segments.slice(1).map(s => ({
+                airport: s.departure?.iataCode,
+                arrivalTime: new Date(s.arrival?.at),
+                departureTime: new Date(s.departure?.at),
+                flightNumber: s.number,
+                carrierCode: s.carrierCode,
+              })) || [],
+              lastTicketingDate: flight.lastTicketingDate,
+              baggageOptions: {}, // Fill as needed
+              fareTypes: [], // Fill as needed
+              currency: flight.price?.currency || 'USD',
+              seats: [], // Fill as needed
+            }
+          },
+          { upsert: true }
+        );
+        const dbFlight = await this.flightModel.findOneAndUpdate(
+          { offerId: resolvedOfferId },
+          {
+            $set: {
+              offerId: resolvedOfferId,
               flightNumber: firstSegment.number || '',
               airline: firstSegment.carrierCode || '',
               departureAirport: firstSegment.departure?.iataCode || '',
@@ -202,6 +240,7 @@ export class FlightFormattingService {
         return this.formatFlight(
           {
             ...dbFlight,
+            offerId: resolvedOfferId, // Ensure Amadeus offerId is present in response
             pricingDetail: dbFlight.pricingDetail || pricingDetail, // Fallback to calculated if not in DB
             fareTypes: dbFlight.fareTypes || fareTypes, // Include fare types in the formatted response
           },
@@ -223,13 +262,14 @@ export class FlightFormattingService {
 
     return {
       _id: flight._id,
-      offerId: flight.offerId,
+      offerId: flight.offerId, // Always Amadeus offerId from DB or upsert
       airline: flight.airline,
       airlineName:
         AIRLINE_MAP[flight.airline]?.[language === 'ar' ? 'ar' : 'en'] ||
         flight.airline,
       flightNumber: flight.flightNumber,
       departureAirport: flight.departureAirport,
+      seats: flight.seats || [],
       departureAirportName:
         AIRPORT_MAP[flight.departureAirport]?.[
           language === 'ar' ? 'ar' : 'en'
@@ -668,7 +708,8 @@ export class FlightFormattingService {
           includedBagsQuantity > 1
             ? `${includedBagsQuantity} pieces`
             : '1 piece';
-        includedText = `${includedBagsWeight}${includedBagsWeightUnit.toLowerCase()} total checked baggage\n${piecesText}`;
+        const weightUnitSafe = typeof includedBagsWeightUnit === 'string' ? includedBagsWeightUnit.toLowerCase() : '';
+        includedText = `${includedBagsWeight}${weightUnitSafe} total checked baggage\n${piecesText}`;
       }
 
       // Format cabin baggage text

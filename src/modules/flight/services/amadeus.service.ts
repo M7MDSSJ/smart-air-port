@@ -41,7 +41,7 @@ export class AmadeusService {
       const response = await axiosInstance.post(`${this.baseUrl}/v1/security/oauth2/token`, body.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
-      this.logger.log('Fetched Amadeus access token');
+      // this.logger.log('Fetched Amadeus access token');
       return response.data.access_token;
     } catch (error) {
       this.logger.error(`Token fetch error: ${error}`);
@@ -75,7 +75,7 @@ export class AmadeusService {
           Accept: 'application/json',
         },
       });
-      this.logger.log(`Fetched ${response.data.data.length} flight offers from Amadeus`);
+      // this.logger.log(`Fetched ${response.data.data.length} flight offers from Amadeus`);
       return response.data.data;
     } catch (error) {
       this.logger.error(`Flight search error: ${JSON.stringify(error.response?.data || error.message)}`);
@@ -159,6 +159,43 @@ export class AmadeusService {
         {
           status: error.response?.status || 500,
           message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch flight offer',
+          details: error.response?.data,
+        },
+        error.response?.status || 500,
+      );
+    }
+  }
+
+  // NEW: Get seat map for a flight offer
+  async getSeatMap(offerId: string): Promise<any> {
+    const token = await this.getAccessToken();
+    const url = `${this.baseUrl}/v1/shopping/seatmaps`;
+    const axiosInstance = await this.getAxiosInstance();
+    try {
+      // Fetch the full flight offer object
+      this.logger.log(`Requesting seat map for Amadeus offerId: ${offerId}`);
+    const offer = await this.getFlightOffer(offerId);
+      // Send the full offer object in the seat map request
+      const response = await axiosInstance.post(
+        url,
+        {
+          data: [offer],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Seat map fetch error for offerId ${offerId}: ${JSON.stringify(error.response?.data || error.message)}`);
+      throw new HttpException(
+        {
+          status: error.response?.status || 500,
+          message: (error.response?.data?.errors?.[0]?.detail || 'Failed to fetch seat map') + '. The offer may have expired or is not available for seat maps.',
           details: error.response?.data,
         },
         error.response?.status || 500,

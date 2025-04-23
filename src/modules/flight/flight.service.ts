@@ -14,6 +14,7 @@ import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Flight } from './schemas/flight.schema';
 import { PricingService } from './services/pricing.service';
+import { AmadeusService } from './services/amadeus.service';
 @Injectable()
 export class FlightService {
   private readonly logger = new Logger(FlightService.name);
@@ -26,6 +27,7 @@ export class FlightService {
     private readonly configService: ConfigService,
     private readonly pricingService: PricingService,
     private readonly i18n: I18nService,
+    private readonly amadeusService: AmadeusService,
     @InjectModel('Flight') private readonly flightModel: Model<Flight>,
   ) {}
 
@@ -87,5 +89,17 @@ export class FlightService {
       basePrice: Number(flight.price),
       currency: flight.currency || 'USD',
     };
+  }
+
+  // Get seat map for a flight offerId (for controller)
+  async getSeatMapForFlight(offerId: string): Promise<any> {
+    try {
+      // Call AmadeusService to get seat map
+      // (You may want to cache this in production)
+      return await this.amadeusService.getSeatMap(offerId);
+    } catch (error) {
+      this.logger.error(`Error fetching seat map for offerId ${offerId}: ${error.message}`);
+      throw new HttpException('Failed to fetch seat map from Amadeus', HttpStatus.BAD_GATEWAY);
+    }
   }
 }
