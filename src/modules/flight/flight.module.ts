@@ -2,14 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { FlightController } from './flight.controller';
 import { FlightService } from './flight.service';
-import { AmadeusService } from './amadeus.service';
-import { FlightStatusService } from './flight-status.service';
-import { FlightSearchService } from './flight-search.service';
-import { FlightFormattingService } from './flight-formatting.service';
-import { SeatHoldService } from './seat-hold.service';
-import { BaggageService } from './baggage.service';
-import { CacheService } from './cache.service';
-import { ExchangeRateService } from './exchange-rate.service';
+import { AmadeusService } from './services/amadeus.service';
+import { FlightStatusService } from './services/flight-status.service';
+import { FlightSearchService } from './services/flight-search.service';
+import { FlightFormattingService } from './services/flight-formatting.service';
+import { BaggageService } from './services/baggage.service';
+import { CacheService } from './services/cache.service';
+import { ExchangeRateService } from './services/exchange-rate.service';
 import { EmailModule } from '../email/email.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { FlightSchema, SeatHoldSchema } from './schemas/flight.schema';
@@ -18,7 +17,7 @@ import { FLIGHT_REPOSITORY } from './repositories/flight.repository.interface';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { ConfigService } from '@nestjs/config';
-import { PricingService } from './pricing.service';
+import { PricingService } from './services/pricing.service';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -36,7 +35,6 @@ import { PricingService } from './pricing.service';
     }),
     MongooseModule.forFeature([
       { name: 'Flight', schema: FlightSchema },
-      { name: 'SeatHold', schema: SeatHoldSchema },
     ]),
   ],
   controllers: [FlightController],
@@ -46,7 +44,6 @@ import { PricingService } from './pricing.service';
     FlightStatusService,
     FlightSearchService,
     FlightFormattingService,
-    SeatHoldService,
     BaggageService,
     CacheService,
     ExchangeRateService,
@@ -54,6 +51,6 @@ import { PricingService } from './pricing.service';
     FlightRepository,
     { provide: FLIGHT_REPOSITORY, useClass: FlightRepository },
   ],
-  exports: [FlightService, AmadeusService, FlightStatusService,SeatHoldService],
+  exports: [FlightService, AmadeusService, FlightStatusService],
 })
 export class FlightModule {}

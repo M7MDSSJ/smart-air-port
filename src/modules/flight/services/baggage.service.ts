@@ -1,9 +1,9 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { BaggageSelectionDto } from '../../shared/dtos/baggage.dto';
+import { BaggageSelectionDto } from '../dto/baggage.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Flight, BaggageOptions } from './schemas/flight.schema';
-import { BaggageOptionDto } from './interfaces/flight-data.interface';
+import { Flight, BaggageOptions } from '../schemas/flight.schema';
+import { BaggageOptionDto } from '../interfaces/flight-data.interface';
 
 @Injectable()
 export class BaggageService {

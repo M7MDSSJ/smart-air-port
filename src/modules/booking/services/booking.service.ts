@@ -29,7 +29,7 @@ import { QueryBookingDto } from '../dto/query-booking.dto';
 import { PaginatedResult } from 'src/common/interfaces/paginated-result.interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { BaggageSelectionDto, BaggageFeeResult } from '../../../shared/dtos/baggage.dto';
+import { BaggageSelectionDto, BaggageFeeResult } from '../../flight/dto/baggage.dto';
 
 function isDuplicateKeyError(error: unknown): error is { code: number } {
   if (typeof error !== 'object' || error === null) return false;

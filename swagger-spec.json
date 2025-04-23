@@ -21,47 +21,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Users retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get all users",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -81,39 +45,11 @@
         },
         "responses": {
           "201": {
-            "description": "User registered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RegisterResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation errors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Email already exists",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "summary": "Register a new user",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -132,40 +68,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Email verified successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VerifyEmailResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid or expired verification code",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Email not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "summary": "Verify user email",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -184,40 +92,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Verification email sent successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResendVerificationResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Email not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "summary": "Resend verification email",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -236,35 +116,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Token refreshed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RefreshTokenResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Refresh JWT token",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -283,30 +140,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "User logged in successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "summary": "Login user",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -326,44 +165,11 @@
         },
         "responses": {
           "200": {
-            "description": "Password changed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChangePasswordResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Change user password",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -382,40 +188,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Password reset code sent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RequestResetPasswordResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Email not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "summary": "Request password reset",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -434,30 +212,12 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Password reset successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResetPasswordResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid or expired reset code",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "summary": "Reset password using code",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -467,44 +227,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "User profile retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get user profile",
         "tags": [
-          "users"
+          "Users"
         ]
       },
       "patch": {
@@ -522,64 +249,11 @@
         },
         "responses": {
           "200": {
-            "description": "Profile updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation errors or email sending failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Email already exists",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update user profile",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -587,46 +261,13 @@
       "post": {
         "operationId": "UsersController_logout",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshTokenDto"
-              }
-            }
-          }
-        },
         "responses": {
-          "200": {
-            "description": "User logged out successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LogoutResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+          "201": {
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Logout user",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -645,34 +286,11 @@
         ],
         "responses": {
           "200": {
-            "description": "User deleted successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Delete a user by email",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -682,44 +300,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Admin-only content",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DashboardResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get admin dashboard",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -729,44 +314,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Flight management dashboard",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FlightManagementResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Manage flights",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -786,54 +338,11 @@
         },
         "responses": {
           "200": {
-            "description": "User roles updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateRolesResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update user roles",
         "tags": [
-          "users"
+          "Users"
         ]
       }
     },
@@ -843,107 +352,6 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/admin/cleanup-seat-holds": {
-      "post": {
-        "operationId": "FlightController_cleanupAllSeatHolds",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/admin/fix-seat-hold-flight-ids": {
-      "post": {
-        "operationId": "FlightController_fixSeatHoldFlightIds",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/cache-test": {
-      "get": {
-        "operationId": "FlightController_cacheTest",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/{id}/validate-baggage": {
-      "post": {
-        "operationId": "FlightController_validateBaggage",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Flights"
-        ]
-      }
-    },
-    "/flights/{id}/seat-hold": {
-      "post": {
-        "operationId": "FlightController_createSeatHold",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
             "description": ""
           }
         },
@@ -1778,142 +1186,6 @@
       }
     },
     "schemas": {
-      "UserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "507f1f77bcf86cd799439011"
-          },
-          "firstName": {
-            "type": "string",
-            "example": "Ahmed"
-          },
-          "lastName": {
-            "type": "string",
-            "example": "MMM"
-          },
-          "email": {
-            "type": "string",
-            "example": "cse.zag1@example.com"
-          },
-          "country": {
-            "type": "string",
-            "example": "Egypt"
-          },
-          "phoneNumber": {
-            "type": "string",
-            "example": "+201234567890"
-          },
-          "isVerified": {
-            "type": "boolean",
-            "example": true
-          },
-          "birthdate": {
-            "type": "string",
-            "example": "1990-01-01"
-          },
-          "gender": {
-            "type": "string",
-            "example": "male"
-          },
-          "preferredLanguage": {
-            "type": "string",
-            "example": "en"
-          },
-          "preferredAirlines": {
-            "example": [
-              "AA",
-              "UA"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "deviceType": {
-            "type": "string",
-            "example": "mobile"
-          },
-          "loyaltyProgram": {
-            "type": "string",
-            "example": "miles"
-          },
-          "bookingHistory": {
-            "example": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "preferredCabinClass": {
-            "type": "string",
-            "example": "economy"
-          },
-          "useRecommendationSystem": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-          "country",
-          "isVerified",
-          "birthdate"
-        ]
-      },
-      "ErrorResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": false
-          },
-          "message": {
-            "type": "string",
-            "example": "Validation failed",
-            "description": "A human-readable error message"
-          },
-          "error": {
-            "type": "string",
-            "example": "Bad Request",
-            "description": "HTTP error type"
-          },
-          "statusCode": {
-            "type": "number",
-            "example": 400,
-            "description": "HTTP status code"
-          },
-          "timestamp": {
-            "type": "string",
-            "example": "2025-02-27T09:05:47.193Z",
-            "description": "Timestamp of the error"
-          },
-          "path": {
-            "type": "string",
-            "example": "/users/register",
-            "description": "Request path"
-          },
-          "errors": {
-            "type": "object",
-            "example": {
-              "email": "Invalid email format"
-            },
-            "description": "Validation errors (when applicable)"
-          }
-        },
-        "required": [
-          "success",
-          "message",
-          "error",
-          "statusCode",
-          "timestamp",
-          "path"
-        ]
-      },
       "CreateUserDto": {
         "type": "object",
         "properties": {
@@ -1955,29 +1227,6 @@
           "birthdate"
         ]
       },
-      "RegisterResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "example": "User registered successfully"
-              },
-              "user": {}
-            }
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "VerifyEmailDto": {
         "type": "object",
         "properties": {
@@ -1997,34 +1246,6 @@
           "code"
         ]
       },
-      "VerifyEmailData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Email verified successfully"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "VerifyEmailResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/VerifyEmailData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "ResendEmailVerificationDto": {
         "type": "object",
         "properties": {
@@ -2038,34 +1259,6 @@
           "email"
         ]
       },
-      "ResendVerificationData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Verification email sent successfully"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "ResendVerificationResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/ResendVerificationData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "RefreshTokenDto": {
         "type": "object",
         "properties": {
@@ -2077,39 +1270,6 @@
         },
         "required": [
           "refreshToken"
-        ]
-      },
-      "RefreshTokenData": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "refreshToken": {
-            "type": "string",
-            "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
-          }
-        },
-        "required": [
-          "accessToken",
-          "refreshToken"
-        ]
-      },
-      "RefreshTokenResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/RefreshTokenData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
         ]
       },
       "LoginUserDto": {
@@ -2131,36 +1291,6 @@
           "password"
         ]
       },
-      "LoginResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "example": "User logged in successfully"
-              },
-              "accessToken": {
-                "type": "string",
-                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-              },
-              "refreshToken": {
-                "type": "string",
-                "example": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
-              }
-            }
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "ChangePasswordDto": {
         "type": "object",
         "properties": {
@@ -2178,28 +1308,6 @@
           "newPassword"
         ]
       },
-      "ChangePasswordResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "example": "Password changed successfully"
-              }
-            }
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "RequestResetPasswordDto": {
         "type": "object",
         "properties": {
@@ -2211,34 +1319,6 @@
         },
         "required": [
           "email"
-        ]
-      },
-      "RequestResetPasswordData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Password reset email sent"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "RequestResetPasswordResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/RequestResetPasswordData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
         ]
       },
       "ResetPasswordDto": {
@@ -2258,157 +1338,13 @@
           "newPassword"
         ]
       },
-      "ResetPasswordData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Password reset successfully"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "ResetPasswordResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/ResetPasswordData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
-      "ProfileData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "User profile retrieved successfully"
-          },
-          "user": {
-            "$ref": "#/components/schemas/UserResponseDto"
-          }
-        },
-        "required": [
-          "message",
-          "user"
-        ]
-      },
-      "ProfileResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/ProfileData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "UpdateProfileDto": {
         "type": "object",
         "properties": {}
       },
-      "LogoutData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "User logged out successfully"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "LogoutResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/LogoutData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
-      "DashboardResponseDto": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Admin-only content"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "FlightManagementResponseDto": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Flight management dashboard"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
       "UpdateUserRolesDto": {
         "type": "object",
         "properties": {}
-      },
-      "UpdateRolesData": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "User roles updated successfully"
-          },
-          "user": {
-            "$ref": "#/components/schemas/UserResponseDto"
-          }
-        },
-        "required": [
-          "message",
-          "user"
-        ]
-      },
-      "UpdateRolesResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/UpdateRolesData"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
       },
       "SeatSelectionDto": {
         "type": "object",
@@ -2730,6 +1666,55 @@
         "required": [
           "statusCode",
           "message"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed",
+            "description": "A human-readable error message"
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request",
+            "description": "HTTP error type"
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 400,
+            "description": "HTTP status code"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2025-02-27T09:05:47.193Z",
+            "description": "Timestamp of the error"
+          },
+          "path": {
+            "type": "string",
+            "example": "/users/register",
+            "description": "Request path"
+          },
+          "errors": {
+            "type": "object",
+            "example": {
+              "email": "Invalid email format"
+            },
+            "description": "Validation errors (when applicable)"
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "error",
+          "statusCode",
+          "timestamp",
+          "path"
         ]
       }
     }

@@ -1,25 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { QueryFlightDto } from './dto/query-flight.dto';
+import { QueryFlightDto } from '../dto/query-flight.dto';
 import {
   FormattedFlight,
   AIRLINE_MAP,
   AIRPORT_MAP,
   AIRPORT_TIMEZONES,
-} from './interfaces/flight-data.interface';
+} from '../interfaces/flight-data.interface';
 import { FlightStatusService } from './flight-status.service';
 import { ExchangeRateService } from './exchange-rate.service';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Flight } from './schemas/flight.schema';
+import { Flight } from '../schemas/flight.schema';
 import { PricingService } from './pricing.service';
-import { FareTypeDto } from './dto/fare-type.dto';
+import { FareTypeDto } from '../dto/fare-type.dto';
 import {
   AIRLINE_BAGGAGE_POLICIES,
   DEFAULT_BAGGAGE_POLICY,
   getRouteKey,
   BaggagePolicy,
-} from './config/airline-baggage-policies';
+} from '../config/airline-baggage-policies';
 
 @Injectable()
 export class FlightFormattingService {
