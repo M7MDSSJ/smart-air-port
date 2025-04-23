@@ -5,8 +5,40 @@ import { FareTypeDto } from './fare-type.dto';
 export enum FlightStatus {}
 // Add your flight status values here
 
+export class BaggageOptionItemDto {
+  @Expose()
+  @ApiProperty({ example: 'CHECKED' })
+  type: string;
+
+  @Expose()
+  @ApiProperty({ example: 23 })
+  weightInKg: number;
+
+  @Expose()
+  @ApiProperty({ example: 1530.9 })
+  price: number;
+
+  @Expose()
+  @ApiProperty({ example: 1 })
+  quantity: number;
+}
+
 export class BaggageOptionsDto {
-  // Add your baggage options properties here
+  @Expose()
+  @ApiProperty({ example: '30kg total checked baggage\n1 piece' })
+  included: string;
+
+  @Expose()
+  @ApiProperty({ example: '7 kg cabin baggage\n1 piece' })
+  cabin: string;
+
+  @Expose()
+  @ApiProperty({ type: [BaggageOptionItemDto] })
+  options: BaggageOptionItemDto[];
+
+  @Expose()
+  @ApiProperty({ enum: ['amadeus', 'fallback'], example: 'fallback', description: 'Source of baggage data' })
+  source: 'amadeus' | 'fallback';
 }
 
 export class FlightResponseDto {

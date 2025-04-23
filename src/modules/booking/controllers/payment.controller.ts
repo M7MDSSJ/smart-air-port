@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { PaymentConfirmationResponseDto } from '../dto/payment-response.dto';
-import { ErrorResponseDto } from '../dto/error-response.dto';
+import { BookingErrorResponseDto } from '../dto/error-response.dto';
 import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Payments')
@@ -156,17 +156,17 @@ export class PaymentController {
   @ApiResponse({
     status: 400,
     description: 'Invalid payment method or booking state',
-    type: ErrorResponseDto
+    type: BookingErrorResponseDto
   })
   @ApiResponse({
     status: 404,
     description: 'Booking not found',
-    type: ErrorResponseDto
+    type: BookingErrorResponseDto
   })
   @ApiResponse({
     status: 409,
     description: 'Payment already processed',
-    type: ErrorResponseDto
+    type: BookingErrorResponseDto
   })
   async confirmPayment(
     @Body() confirmPaymentDto: ConfirmPaymentDto,
