@@ -7,8 +7,6 @@ import { Throttle } from '@nestjs/throttler';
 import { plainToClass } from 'class-transformer';
 import { FlightResponseDto, BaggageOptionsDto } from './dto/flight-response.dto';
 import { I18nService } from 'nestjs-i18n';
-import { BaggageSelectionDto } from './dto/baggage-selection.dto';
-import { SeatHoldService } from './seat-hold.service';
 
 @ApiTags('Flights')
 @Controller('flights')
@@ -18,7 +16,6 @@ export class FlightController {
   constructor(
     private readonly flightService: FlightService,
     private readonly i18n: I18nService,
-    private readonly seatHoldService: SeatHoldService,
   ) {}
 
   @Get('search/available')
@@ -149,67 +146,5 @@ export class FlightController {
     });
   }
 
-  @Post('admin/cleanup-seat-holds')
-  async cleanupAllSeatHolds() {
-    try {
-      this.logger.log('Running admin cleanup of all seat holds');
-      const result = await this.flightService.cleanupAllSeatHolds();
-      return new ApiResponseDto({
-        success: true,
-        message: `Successfully cleaned up ${result.count} seat holds`,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to clean up seat holds: ${error.message}`);
-      throw new HttpException('Failed to clean up seat holds', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Post('admin/fix-seat-hold-flight-ids')
-  async fixSeatHoldFlightIds() {
-    this.logger.log('Running admin fix for seat hold flight IDs');
-    await this.seatHoldService.fixSeatHoldFlightIds();
-    return new ApiResponseDto({
-      success: true,
-      message: `Successfully fixed seat hold flight IDs`,
-    });
-  }
-
-  @Get('cache-test')
-  async cacheTest() {
-    const testKey = 'cache_test_key';
-    const testValue = { data: 'cache_test_value', timestamp: Date.now() };
-
-    await this.flightService.setCache(testKey, testValue);
-    const cachedValue = await this.flightService.getCache(testKey);
-    const isWorking = JSON.stringify(cachedValue) === JSON.stringify(testValue);
-
-    return {
-      success: isWorking,
-      cachedValue,
-      expectedValue: testValue,
-      message: isWorking ? 'Cache is working correctly' : 'Cache verification failed',
-    };
-  }
-
-  @Post(':id/validate-baggage')
-  async validateBaggage(@Param('id') flightId: string, @Body() selections: BaggageSelectionDto[]) {
-    const isValid = await this.flightService.validateBaggage(flightId, selections);
-    return { valid: isValid };
-  }
-
-  @Post(':id/seat-hold')
-  async createSeatHold(@Param('id') flightId: string, @Body() body: { seats: number; sessionId: string }) {
-    try {
-      const result = await this.seatHoldService.createSeatHold(flightId, body.seats, body.sessionId);
-      return new ApiResponseDto({
-        success: true,
-        message: `Seat hold created for ${body.seats} seats`,
-        data: result,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to create seat hold for flight ${flightId}: ${error.message}`);
-      throw new HttpException(error.message || 'Failed to create seat hold', HttpStatus.BAD_REQUEST);
-    }
-  }
+ 
 }

@@ -7,8 +7,8 @@ import {
   SortOrder,
   TripType,
   DepartureTimeRange,
-} from './dto/query-flight.dto';
-import { FormattedFlight } from './interfaces/flight-data.interface';
+} from '../dto/query-flight.dto';
+import { FormattedFlight } from '../interfaces/flight-data.interface';
 import { FlightFormattingService } from './flight-formatting.service';
 import { CacheService } from './cache.service';
 import { ConfigService } from '@nestjs/config';

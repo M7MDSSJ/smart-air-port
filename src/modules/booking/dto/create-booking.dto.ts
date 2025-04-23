@@ -3,7 +3,7 @@ import { IsArray, ValidateNested, IsOptional, IsString, IsNotEmpty, IsEnum, Min,
 import { ApiProperty } from '@nestjs/swagger';
 import { SeatClass } from '../types/booking.types';
 import { PaymentProvider } from '../types/booking.types';
-import { BaggageSelectionDto } from '../../../shared/dtos/baggage.dto';
+import { BaggageSelectionDto } from '../../flight/dto/baggage.dto';
 
 export class SeatSelectionDto {
   @ApiProperty({ example: 'B2', description: 'Seat number (e.g., A1, B2)' })

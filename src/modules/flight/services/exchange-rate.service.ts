@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { CacheService } from './cache.service';
-import { EXCHANGE_RATES } from './interfaces/flight-data.interface';
+import { EXCHANGE_RATES } from '../interfaces/flight-data.interface';
 
 @Injectable()
 export class ExchangeRateService {
