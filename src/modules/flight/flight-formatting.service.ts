@@ -617,6 +617,7 @@ export class FlightFormattingService {
       price: number;
       quantity: number;
     }[];
+    source: 'amadeus' | 'fallback';
   } {
     try {
       // Get the airline code
@@ -696,17 +697,42 @@ export class FlightFormattingService {
           quantity: bag.quantity || 1,
         }));
       } else {
-        // If no chargeable bags info, create default options based on the airline
-        baggageOptions = this.getDefaultBaggageOptions(airlineCode, currency, {
-          usdToEgpRate,
-          usdToSarRate,
-        });
+        // Fallback: use airline-specific policy for included/cabin baggage and purchasable options
+        const policy = AIRLINE_BAGGAGE_POLICIES[airlineCode] || DEFAULT_BAGGAGE_POLICY;
+        // Check for route-specific override
+        const routeKey = getRouteKey(departureAirport, arrivalAirport);
+        const routePolicy = policy.routeSpecificPolicies?.[routeKey];
+        // Included checked baggage
+        const includedBaggage = routePolicy?.includedBaggage || policy.includedBaggage;
+        const includedText = includedBaggage
+          ? `${includedBaggage.weightPerBag}kg checked baggage${includedBaggage.quantity > 1 ? `\n${includedBaggage.quantity} pieces` : ''}`
+          : 'No checked baggage';
+        // Cabin baggage
+        const cabinBaggage = routePolicy?.cabinBaggage || policy.cabinBaggage;
+        const cabinText = cabinBaggage?.description || (cabinBaggage ? `${cabinBaggage.weightInKg} kg cabin baggage` : '');
+        // Purchasable options
+        baggageOptions = policy.additionalBaggage.map((bag) => ({
+          type: bag.type,
+          weightInKg: bag.weightInKg,
+          price: this.convertPrice(bag.priceUSD, 'USD', currency, {
+            usdToEgpRate,
+            usdToSarRate,
+          }),
+          quantity: bag.quantity,
+        }));
+        return {
+          included: includedText,
+          cabin: cabinText,
+          options: baggageOptions,
+          source: 'fallback',
+        };
       }
 
       return {
         included: includedText,
         cabin: cabinText,
         options: baggageOptions,
+        source: Array.isArray(chargeableBags) && chargeableBags.length > 0 ? 'amadeus' : 'fallback',
       };
     } catch (error) {
       this.logger.error(`Error extracting baggage options: ${error.message}`);
@@ -737,6 +763,7 @@ export class FlightFormattingService {
             quantity: 1,
           },
         ],
+        source: 'fallback',
       };
     }
   }

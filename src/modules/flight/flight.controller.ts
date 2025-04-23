@@ -5,7 +5,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { plainToClass } from 'class-transformer';
-import { FlightResponseDto } from './dto/flight-response.dto';
+import { FlightResponseDto, BaggageOptionsDto } from './dto/flight-response.dto';
 import { I18nService } from 'nestjs-i18n';
 import { BaggageSelectionDto } from './dto/baggage-selection.dto';
 import { SeatHoldService } from './seat-hold.service';
@@ -63,15 +63,76 @@ export class FlightController {
 
     const { paginatedFlights, total } = await this.flightService.searchAvailableFlights(query);
 
-    const transformedFlights = paginatedFlights.map(flight =>
-      plainToClass(FlightResponseDto, {
-        ...flight,
-        baggageOptions: flight.baggageOptions || {
-          included: '1 personal item',
-          options: [],
-        },
-      }),
-    );
+    const transformedFlights = paginatedFlights.map(flight => {
+      const baggageOptionsRaw = (flight.baggageOptions as unknown as Partial<BaggageOptionsDto>) || {};
+      const optionsRaw = baggageOptionsRaw?.options ?? [];
+      const options = Array.isArray(optionsRaw)
+        ? optionsRaw.map((opt: any) => ({
+            type: opt?.type ?? 'CHECKED',
+            weightInKg: opt?.weightInKg ?? 0,
+            price: opt?.price ?? 0,
+            quantity: opt?.quantity ?? 1,
+          }))
+        : [];
+      const baggageOptions: BaggageOptionsDto = {
+        included: baggageOptionsRaw?.included ?? '1 personal item',
+        options,
+        source: baggageOptionsRaw?.source ?? 'fallback',
+        cabin: baggageOptionsRaw?.cabin ?? '',
+      };
+
+      // Simplified pricingDetail
+      const pricingDetail = {
+        total: flight.totalPrice ?? flight.price ?? 0,
+        currency: flight.currency ?? 'USD',
+      };
+
+      // Timeline/flight details
+      const details = {
+        from: flight.departureAirportName || flight.departureAirport,
+        to: flight.arrivalAirportName || flight.arrivalAirport,
+        departureTime: flight.departureTime,
+        arrivalTime: flight.arrivalTime,
+        departureDate: flight.departureTime ? new Date(flight.departureTime).toISOString().split('T')[0] : undefined,
+        arrivalDate: flight.arrivalTime ? new Date(flight.arrivalTime).toISOString().split('T')[0] : undefined,
+        numberOfStops: flight.numberOfStops ?? (flight.stops ? flight.stops.length : 0),
+        airline: flight.airlineName || flight.airline,
+        duration: flight.duration,
+        baggageOptions,
+        fareTypes: Array.isArray(flight.fareTypes)
+          ? flight.fareTypes.map((ft: any) => {
+              let checked = ft.baggageAllowance?.checked;
+              // Normalize checked baggage field based on description
+              if (typeof ft.description === 'string') {
+                const desc = ft.description.toLowerCase();
+                if (desc.includes('2 checked bags')) {
+                  checked = '2 checked bags (23kg each)';
+                } else if (desc.includes('checked baggage included') || desc.includes('1 checked bag')) {
+                  checked = '1 checked bag (23kg)';
+                } else if (desc.includes('no checked baggage') || desc.includes('no checked bags')) {
+                  checked = 'No checked bags';
+                }
+              }
+              return {
+                ...ft,
+                baggageAllowance: {
+                  ...ft.baggageAllowance,
+                  checked,
+                },
+              };
+            })
+          : flight.fareTypes,
+      };
+
+      // Remove original pricingDetail, baggageOptions, fareTypes from root
+      const { pricingDetail: _oldPricing, baggageOptions: _oldBaggage, fareTypes: _oldFares, ...rest } = flight;
+
+      return {
+        ...rest,
+        pricingDetail,
+        details,
+      };
+    });
 
     return new ApiResponseDto({
       success: true,
