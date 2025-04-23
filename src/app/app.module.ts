@@ -18,6 +18,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { HealthController } from './app.controller';
+import { NotificationModule } from 'src/modules/notification/notification.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -77,6 +78,7 @@ import { HealthController } from './app.controller';
     EmailModule,
     FlightModule,
     BookingModule,
+    NotificationModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [HealthController],

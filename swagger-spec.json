@@ -1190,6 +1190,34 @@
           "Payments"
         ]
       }
+    },
+    "/notification": {
+      "get": {
+        "operationId": "NotificationController_getNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/notification/count": {
+      "get": {
+        "operationId": "NotificationController_getNotificationCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notification"
+        ]
+      }
     }
   },
   "info": {
