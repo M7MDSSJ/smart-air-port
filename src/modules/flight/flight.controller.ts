@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Logger, HttpException, HttpStatus, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Logger, HttpException, HttpStatus, Param, Body, UseInterceptors } from '@nestjs/common';
 import { FlightService } from './flight.service';
 import { QueryFlightDto } from './dto/query-flight.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -7,9 +7,11 @@ import { Throttle } from '@nestjs/throttler';
 import { plainToClass } from 'class-transformer';
 import { FlightResponseDto, BaggageOptionsDto } from './dto/flight-response.dto';
 import { I18nService } from 'nestjs-i18n';
+import { QueryTransformInterceptor } from '../../common/interceptors/query-transform.interceptor';
 
 @ApiTags('Flights')
 @Controller('flights')
+@UseInterceptors(QueryTransformInterceptor)
 export class FlightController {
   private readonly logger = new Logger(FlightController.name);
 

@@ -1,0 +1,730 @@
+/flights/search/available
+tripType [oneway] roundtrip, multicities might not work
+departureAirport [CAI,JED,DXB,MED]
+arrivalAirport [CAI,JED,DXB,MED]
+departureDate [2025-05-01]
+adults [1,2,3,4]
+children[1,2,3]
+cabinClass [ECONOMY,PREMIUM_ECONOMY,BUSINESS,FIRST]
+sortBy [price,duration,stops]
+sortOrder [asc,desc]
+
+example 1
+url :http://localhost:3000/flights/search/available?departureAirport=CAI&arrivalAirport=JED&departureDate=2025-05-01&adults=1&children=&tripType=oneway&cabinClass=ECONOMY&limit=2
+{
+    "success": true,
+    "message": "Found 2 available flight offers (out of 2 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "68091efc5815daa3adf961b8",
+                "offerId": "1",
+                "airline": "SV",
+                "airlineName": "Saudia",
+                "flightNumber": "306",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T12:10:00.000Z",
+                "departureTimeLocal": "3:10:00 PM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T14:25:00.000Z",
+                "arrivalTimeLocal": "5:25:00 PM",
+                "status": "Scheduled",
+                "price": 5055.259,
+                "totalPrice": 5055.259,
+                "currency": "EGP",
+                "seatsAvailable": 2,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 15,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-24T22:04:00.561Z",
+                "pricingDetail": {
+                    "total": 5055.259,
+                    "currency": "EGP"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "King Abdulaziz International Airport",
+                    "departureTime": "2025-05-01T12:10:00.000Z",
+                    "arrivalTime": "2025-05-01T14:25:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 0,
+                    "airline": "Saudia",
+                    "duration": "2h 15m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "1 cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "NBASICE",
+                            "name": "BASIC ECO",
+                            "description": "",
+                            "price": 99.22,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "1 cabin bag",
+                                "checked": "1 checked bag"
+                            },
+                            "features": [
+                                {
+                                    "name": "BASIC SEAT",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "CHANGE FEE",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "REFUNDABLE TICKET",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "UPGRADE ELIGIBILITY",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "CHANGEABLE TICKET",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "MILES EARNED",
+                                    "included": true,
+                                    "description": "Included"
+                                },
+                                {
+                                    "name": "FREE BAG",
+                                    "included": true,
+                                    "description": "Included"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "_id": "68091efc5815daa3adf961c0",
+                "offerId": "2",
+                "airline": "NE",
+                "airlineName": "Nesma Airlines",
+                "flightNumber": "170",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T00:40:00.000Z",
+                "departureTimeLocal": "3:40:00 AM",
+                "arrivalAirport": "JED",
+                "arrivalAirportName": "King Abdulaziz International Airport",
+                "arrivalTime": "2025-05-01T02:55:00.000Z",
+                "arrivalTimeLocal": "5:55:00 AM",
+                "status": "Scheduled",
+                "price": 5116.399,
+                "totalPrice": 5116.399,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "2h 15m",
+                "durationInMinutes": 135,
+                "numberOfStops": 0,
+                "isRecommended": false,
+                "departureHour": 3,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-24T22:04:00.564Z",
+                "pricingDetail": {
+                    "total": 5116.399,
+                    "currency": "EGP"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "King Abdulaziz International Airport",
+                    "departureTime": "2025-05-01T00:40:00.000Z",
+                    "arrivalTime": "2025-05-01T02:55:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 0,
+                    "airline": "Nesma Airlines",
+                    "duration": "2h 15m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "undefined cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "NEGNEOW",
+                            "name": "Standard",
+                            "description": "",
+                            "price": 100.42,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "undefined cabin bag",
+                                "checked": "undefined checked bag"
+                            },
+                            "features": []
+                        }
+                    ]
+                }
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 2,
+            "total": 2,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
+
+example 2
+http://localhost:3000/flights/search/available?departureAirport=CAI&arrivalAirport=DXB&departureDate=2025-05-01&adults=1&children=&tripType=oneway&cabinClass=ECONOMY&limit=2
+{
+    "success": true,
+    "message": "Found 2 available flight offers (out of 2 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "68091efc5815daa3adf961b8",
+                "offerId": "1",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "546",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T08:20:00.000Z",
+                "departureTimeLocal": "11:20:00 AM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-01T14:55:00.000Z",
+                "arrivalTimeLocal": "2:55:00 PM",
+                "status": "Scheduled",
+                "price": 9394.6705,
+                "totalPrice": 9394.6705,
+                "currency": "EGP",
+                "seatsAvailable": 7,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T11:00:00.000Z",
+                        "departureTime": "2025-05-01T12:10:00.000Z",
+                        "flightNumber": "546",
+                        "carrierCode": "KU",
+                        "_id": "680ab59804b51a42bed58c17"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "6h 35m",
+                "durationInMinutes": 395,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 11,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-24T22:05:12.423Z",
+                "pricingDetail": {
+                    "total": 9394.6705,
+                    "currency": "EGP"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "DXB",
+                    "departureTime": "2025-05-01T08:20:00.000Z",
+                    "arrivalTime": "2025-05-01T14:55:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 1,
+                    "airline": "KU",
+                    "duration": "6h 35m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "1 cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "VOWEG1",
+                            "name": "Standard",
+                            "description": "",
+                            "price": 184.39,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "1 cabin bag",
+                                "checked": "1 checked bag"
+                            },
+                            "features": []
+                        }
+                    ]
+                }
+            },
+            {
+                "_id": "68091efc5815daa3adf961c0",
+                "offerId": "2",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "542",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T17:30:00.000Z",
+                "departureTimeLocal": "8:30:00 PM",
+                "arrivalAirport": "DXB",
+                "arrivalAirportName": "DXB",
+                "arrivalTime": "2025-05-02T00:30:00.000Z",
+                "arrivalTimeLocal": "12:30:00 AM",
+                "status": "Scheduled",
+                "price": 9394.6705,
+                "totalPrice": 9394.6705,
+                "currency": "EGP",
+                "seatsAvailable": 9,
+                "stops": [
+                    {
+                        "airport": "KWI",
+                        "arrivalTime": "2025-05-01T20:05:00.000Z",
+                        "departureTime": "2025-05-01T21:45:00.000Z",
+                        "flightNumber": "542",
+                        "carrierCode": "KU",
+                        "_id": "680ab59804b51a42bed58c19"
+                    }
+                ],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "7h 0m",
+                "durationInMinutes": 420,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 20,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-24T22:05:12.430Z",
+                "pricingDetail": {
+                    "total": 9394.6705,
+                    "currency": "EGP"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "DXB",
+                    "departureTime": "2025-05-01T17:30:00.000Z",
+                    "arrivalTime": "2025-05-02T00:30:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-02",
+                    "numberOfStops": 1,
+                    "airline": "KU",
+                    "duration": "7h 0m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "1 cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "VOWEG1",
+                            "name": "Standard",
+                            "description": "",
+                            "price": 184.39,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "1 cabin bag",
+                                "checked": "1 checked bag"
+                            },
+                            "features": []
+                        }
+                    ]
+                }
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 2,
+            "total": 2,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
+
+example 3
+http://localhost:3000/flights/search/available?departureAirport=CAI&arrivalAirport=KWI&departureDate=2025-05-01&adults=1&tripType=oneway&cabinClass=ECONOMY&limit=2
+{
+    "success": true,
+    "message": "Found 2 available flight offers (out of 2 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "68091efc5815daa3adf961b8",
+                "offerId": "1",
+                "airline": "NE",
+                "airlineName": "Nesma Airlines",
+                "flightNumber": "210",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T15:20:00.000Z",
+                "departureTimeLocal": "6:20:00 PM",
+                "arrivalAirport": "KWI",
+                "arrivalAirportName": "KWI",
+                "arrivalTime": "2025-05-01T17:55:00.000Z",
+                "arrivalTimeLocal": "5:55:00 PM",
+                "status": "Scheduled",
+                "price": 93.19,
+                "totalPrice": 93.19,
+                "currency": "USD",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "2h 35m",
+                "durationInMinutes": 155,
+                "numberOfStops": 0,
+                "isRecommended": true,
+                "departureHour": 18,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-25T09:29:43.811Z",
+                "pricingDetail": {
+                    "total": 93.19,
+                    "currency": "USD"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "KWI",
+                    "departureTime": "2025-05-01T15:20:00.000Z",
+                    "arrivalTime": "2025-05-01T17:55:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 0,
+                    "airline": "Nesma Airlines",
+                    "duration": "2h 35m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "undefined cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "NEGNKOW",
+                            "name": "Standard",
+                            "description": "",
+                            "price": 93.19,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "undefined cabin bag",
+                                "checked": "undefined checked bag"
+                            },
+                            "features": []
+                        }
+                    ]
+                }
+            },
+            {
+                "_id": "68091efc5815daa3adf961c0",
+                "offerId": "2",
+                "airline": "KU",
+                "airlineName": "KU",
+                "flightNumber": "542",
+                "departureAirport": "CAI",
+                "seats": [],
+                "departureAirportName": "Cairo International Airport",
+                "departureTime": "2025-05-01T17:30:00.000Z",
+                "departureTimeLocal": "8:30:00 PM",
+                "arrivalAirport": "KWI",
+                "arrivalAirportName": "KWI",
+                "arrivalTime": "2025-05-01T20:05:00.000Z",
+                "arrivalTimeLocal": "8:05:00 PM",
+                "status": "Scheduled",
+                "price": 116.19,
+                "totalPrice": 116.19,
+                "currency": "USD",
+                "seatsAvailable": 9,
+                "stops": [],
+                "lastTicketingDate": "2025-05-01",
+                "duration": "2h 35m",
+                "durationInMinutes": 155,
+                "numberOfStops": 0,
+                "isRecommended": true,
+                "departureHour": 20,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-25T09:29:43.818Z",
+                "pricingDetail": {
+                    "total": 116.19,
+                    "currency": "USD"
+                },
+                "details": {
+                    "from": "Cairo International Airport",
+                    "to": "KWI",
+                    "departureTime": "2025-05-01T17:30:00.000Z",
+                    "arrivalTime": "2025-05-01T20:05:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 0,
+                    "airline": "KU",
+                    "duration": "2h 35m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "1 cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "VOWEG1",
+                            "name": "Standard",
+                            "description": "",
+                            "price": 116.19,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "1 cabin bag",
+                                "checked": "1 checked bag"
+                            },
+                            "features": []
+                        }
+                    ]
+                }
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 2,
+            "total": 2,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
+
+example 4
+http://localhost:3000/flights/search/available?departureAirport=MAD&arrivalAirport=KWI&departureDate=2025-05-01&adults=1&tripType=oneway&cabinClass=ECONOMY&limit=2
+{
+    "success": true,
+    "message": "Found 2 available flight offers (out of 2 total)",
+    "data": {
+        "flights": [
+            {
+                "_id": "68091efc5815daa3adf961b8",
+                "offerId": "1",
+                "airline": "PC",
+                "airlineName": "PC",
+                "flightNumber": "1100",
+                "departureAirport": "MAD",
+                "seats": [],
+                "departureAirportName": "MAD",
+                "departureTime": "2025-05-01T11:55:00.000Z",
+                "departureTimeLocal": "11:55:00 AM",
+                "arrivalAirport": "KWI",
+                "arrivalAirportName": "KWI",
+                "arrivalTime": "2025-05-01T22:55:00.000Z",
+                "arrivalTimeLocal": "10:55:00 PM",
+                "status": "Scheduled",
+                "price": 191.9,
+                "totalPrice": 191.9,
+                "currency": "USD",
+                "seatsAvailable": 1,
+                "stops": [
+                    {
+                        "airport": "SAW",
+                        "arrivalTime": "2025-05-01T17:05:00.000Z",
+                        "departureTime": "2025-05-01T19:25:00.000Z",
+                        "flightNumber": "1100",
+                        "carrierCode": "PC",
+                        "_id": "680b56379137d757e099b1d6"
+                    }
+                ],
+                "lastTicketingDate": "2025-04-25",
+                "duration": "11h 0m",
+                "durationInMinutes": 660,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 14,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-25T09:30:31.160Z",
+                "pricingDetail": {
+                    "total": 191.9,
+                    "currency": "USD"
+                },
+                "details": {
+                    "from": "MAD",
+                    "to": "KWI",
+                    "departureTime": "2025-05-01T11:55:00.000Z",
+                    "arrivalTime": "2025-05-01T22:55:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-01",
+                    "numberOfStops": 1,
+                    "airline": "PC",
+                    "duration": "11h 0m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "undefined cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "BYD",
+                            "name": "BEYOND ESSENTIALS",
+                            "description": "",
+                            "price": 191.9,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "undefined cabin bag",
+                                "checked": "undefined checked bag"
+                            },
+                            "features": [
+                                {
+                                    "name": "UPTO44LB  BAGGAGE",
+                                    "included": true,
+                                    "description": "Included"
+                                },
+                                {
+                                    "name": "UPTO22LB  BAGGAGE",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "CARRY 18LB UPTO 45LI 115LCM",
+                                    "included": true,
+                                    "description": "Included"
+                                },
+                                {
+                                    "name": "PRE RESERVED SEAT ASSIGNMENT",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "2PCT MILES EARNED",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "_id": "68091efc5815daa3adf961c0",
+                "offerId": "2",
+                "airline": "PC",
+                "airlineName": "PC",
+                "flightNumber": "1100",
+                "departureAirport": "MAD",
+                "seats": [],
+                "departureAirportName": "MAD",
+                "departureTime": "2025-05-01T11:55:00.000Z",
+                "departureTimeLocal": "11:55:00 AM",
+                "arrivalAirport": "KWI",
+                "arrivalAirportName": "KWI",
+                "arrivalTime": "2025-05-02T00:50:00.000Z",
+                "arrivalTimeLocal": "12:50:00 AM",
+                "status": "Scheduled",
+                "price": 191.9,
+                "totalPrice": 191.9,
+                "currency": "USD",
+                "seatsAvailable": 1,
+                "stops": [
+                    {
+                        "airport": "SAW",
+                        "arrivalTime": "2025-05-01T17:05:00.000Z",
+                        "departureTime": "2025-05-01T21:20:00.000Z",
+                        "flightNumber": "1100",
+                        "carrierCode": "PC",
+                        "_id": "680b56379137d757e099b1d8"
+                    }
+                ],
+                "lastTicketingDate": "2025-04-25",
+                "duration": "12h 55m",
+                "durationInMinutes": 775,
+                "numberOfStops": 1,
+                "isRecommended": false,
+                "departureHour": 14,
+                "createdAt": "2025-04-23T17:10:20.464Z",
+                "updatedAt": "2025-04-25T09:30:31.170Z",
+                "pricingDetail": {
+                    "total": 191.9,
+                    "currency": "USD"
+                },
+                "details": {
+                    "from": "MAD",
+                    "to": "KWI",
+                    "departureTime": "2025-05-01T11:55:00.000Z",
+                    "arrivalTime": "2025-05-02T00:50:00.000Z",
+                    "departureDate": "2025-05-01",
+                    "arrivalDate": "2025-05-02",
+                    "numberOfStops": 1,
+                    "airline": "PC",
+                    "duration": "12h 55m",
+                    "baggageOptions": {
+                        "included": "1 checked bag",
+                        "options": [],
+                        "source": "fallback",
+                        "cabin": "undefined cabin bag"
+                    },
+                    "fareTypes": [
+                        {
+                            "code": "BYD",
+                            "name": "BEYOND ESSENTIALS",
+                            "description": "",
+                            "price": 191.9,
+                            "currency": "USD",
+                            "baggageAllowance": {
+                                "carryOn": "undefined cabin bag",
+                                "checked": "undefined checked bag"
+                            },
+                            "features": [
+                                {
+                                    "name": "UPTO44LB  BAGGAGE",
+                                    "included": true,
+                                    "description": "Included"
+                                },
+                                {
+                                    "name": "UPTO22LB  BAGGAGE",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "CARRY 18LB UPTO 45LI 115LCM",
+                                    "included": true,
+                                    "description": "Included"
+                                },
+                                {
+                                    "name": "PRE RESERVED SEAT ASSIGNMENT",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                },
+                                {
+                                    "name": "2PCT MILES EARNED",
+                                    "included": false,
+                                    "description": "Fee applies"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 2,
+            "total": 2,
+            "totalPages": 1
+        }
+    },
+    "error": null,
+    "meta": null
+}
