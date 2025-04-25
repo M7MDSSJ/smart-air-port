@@ -1,5 +1,3 @@
-
-
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
@@ -31,12 +29,38 @@ export class FlightService {
     @InjectModel('Flight') private readonly flightModel: Model<Flight>,
   ) {}
 
-  async searchAvailableFlights(query: QueryFlightDto): Promise<{ paginatedFlights: FormattedFlight[]; total: number }> {
-    const result = await this.flightSearchService.searchAvailableFlights(query);
-    return result;
+  private filterByTimeRange(flights: FormattedFlight[], timeRange: string): FormattedFlight[] {
+    if (!timeRange) return flights;
+
+    const timeRanges = {
+      morning: { start: 6, end: 12 },
+      afternoon: { start: 12, end: 18 },
+      evening: { start: 18, end: 24 },
+      night: { start: 0, end: 6 }
+    };
+
+    return flights.filter(flight => {
+      if (!flight.departureTime) return false;
+      const departureTime = new Date(flight.departureTime);
+      const hour = departureTime.getHours();
+      const range = timeRanges[timeRange.toLowerCase()];
+      return hour >= range.start && hour < range.end;
+    });
   }
 
+  async searchAvailableFlights(query: QueryFlightDto): Promise<{ paginatedFlights: FormattedFlight[]; total: number }> {
+    const result = await this.flightSearchService.searchAvailableFlights(query);
+    
+    // Apply time range filter if specified
+    const filteredFlights = query.departureTimeRange 
+      ? this.filterByTimeRange(result.paginatedFlights, query.departureTimeRange)
+      : result.paginatedFlights;
 
+    return {
+      paginatedFlights: filteredFlights,
+      total: filteredFlights.length
+    };
+  }
 
   async setCache(key: string, value: any): Promise<void> {
     await this.cacheService.set(key, value);

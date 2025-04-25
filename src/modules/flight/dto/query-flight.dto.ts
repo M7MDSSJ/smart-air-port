@@ -1,5 +1,6 @@
 // query-flight.dto.ts
 import { IsString, IsEnum, IsOptional, IsNumber, IsArray, IsDateString, Min, ValidateIf } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { IsIataCode } from 'src/common/validators/is-iata-code.validator';
 
 export enum TripType {
@@ -122,10 +123,11 @@ export class QueryFlightDto {
   @Min(0, { message: 'maxStops cannot be negative' })
   maxStops?: number;
 
- @IsOptional()
+  @IsOptional()
+  @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase() : value)
   @IsEnum(DepartureTimeRange, { message: 'departureTimeRange must be one of: morning, afternoon, evening, night' })
   departureTimeRange?: DepartureTimeRange;
-  
+
   @IsOptional()
   @IsEnum(SortBy, { message: 'sortBy must be one of: price, duration, stops, totalPrice' })
   sortBy?: SortBy;
@@ -147,6 +149,4 @@ export class QueryFlightDto {
   @IsOptional()
   @IsString()
   language?: string;
-
-  
 }
