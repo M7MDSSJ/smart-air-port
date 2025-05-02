@@ -1,0 +1,235 @@
+# booking flow 
+1-login => save jwt
+2-book flight
+
+url:POST    /booking/book-flight
+authrization bearer token => user jwt
+// Base structure (without data)
+{
+  "flightID": "",
+  "originAirportCode": "",
+  "destinationAirportCode": "",
+  "originCIty": "",
+  "destinationCIty": "",
+  "departureDate": "",
+  "arrivalDate": "",
+  "selectedBaggageOption": {},
+  "totalPrice": 0,
+  "applicationFee": 0,
+  "currency": "",
+  "idempotencyKey": "",
+  "bookingRef": "",
+  "travellersInfo": []
+}
+
+// Example request body
+{
+  "flightID": "AM12345",
+  "originAirportCode": "DXB",
+  "destinationAirportCode": "LHR",
+  "originCIty": "Dubai",
+  "destinationCIty": "London",
+  "departureDate": "2025-06-15T14:00:00Z",
+  "arrivalDate": "2025-06-15T18:30:00Z",
+  "selectedBaggageOption": {
+    "type": "standard",
+    "weight": 20,
+    "pieces": 1
+  },
+  "totalPrice": 450.99,
+  "applicationFee": 15.99,
+  "currency": "USD",
+  "idempotencyKey": "booking_1688326092123_abc123",
+  "bookingRef": "REF123456789",
+  "travellersInfo": [
+    {
+      "gender": "M",
+      "firstName": "John",
+      "middleName": "D",
+      "lastName": "Smith",
+      "birthDate": "1990-01-15",
+      "nationality": "US",
+      "passportNumber": "A1234567",
+      "issuingCountry": "US",
+      "expiryDate": "2028-01-15",
+      "contactEmail": "john.smith@example.com",
+      "contactPhone": "+1234567890"
+    }
+  ]
+}
+
+// Response
+{
+    "success": true,
+    "message": "Flight booked successfully",
+    "data": {
+        "success": true,
+        "message": "Flight booked successfully",
+        "bookingId": "6814f92e7efe2636b40caaf6",
+        "status": "pending"
+    },
+    "error": null,
+    "meta": null
+}
+
+example 2
+{
+  "flightID": "AM12345",
+  "originAirportCode": "DXB",
+  "destinationAirportCode": "LHR",
+  "originCIty": "Dubai",
+  "destinationCIty": "London",
+  "departureDate": "2025-06-15T14:00:00Z",
+  "arrivalDate": "2025-06-15T18:30:00Z",
+  "selectedBaggageOption": {
+    "type": "standard",
+    "weight": 20,
+    "pieces": 1
+  },
+  "totalPrice": 850.99,
+  "applicationFee": 31.98,
+  "currency": "USD",
+  "idempotencyKey": "booking_1688326092123_def456",
+  "bookingRef": "REF987654321",
+  "travellersInfo": [
+    {
+      "gender": "M",
+      "firstName": "John",
+      "middleName": "D",
+      "lastName": "Smith",
+      "birthDate": "1990-01-15",
+      "nationality": "US",
+      "passportNumber": "A1234567",
+      "issuingCountry": "US",
+      "expiryDate": "2028-01-15",
+      "contactEmail": "john.smith@example.com",
+      "contactPhone": "+1234567890"
+    },
+    {
+      "gender": "F",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Smith",
+      "birthDate": "1992-05-20",
+      "nationality": "US",
+      "passportNumber": "B9876543",
+      "issuingCountry": "US",
+      "expiryDate": "2028-05-20",
+      "contactEmail": "jane.smith@example.com",
+      "contactPhone": "+1234567891"
+    }
+  ]
+}
+
+another 2 urls 
+1- GET booking/my-booking
+2- GET booking/{id}
+
+http://localhost:3000/booking/my-bookings
+warning: jwt should be added in auth 
+
+//Response
+{
+    "success": true,
+    "message": "response.success",
+    "data": {
+        "success": true,
+        "bookings": [
+            {
+                "_id": "6814f9157efe2636b40caaf3",
+                "userId": "6814f8217efe2636b40caae9",
+                "flightId": "AM12345",
+                "originAirportCode": "DXB",
+                "destinationAirportCode": "LHR",
+                "originCity": "Dubai",
+                "destinationCity": "London",
+                "departureDate": "2025-06-15T14:00:00.000Z",
+                "arrivalDate": "2025-06-15T18:30:00.000Z",
+                "selectedBaggageOption": {
+                    "type": "standard",
+                    "weight": 20,
+                    "pieces": 1
+                },
+                "totalPrice": 450.99,
+                "applicationFee": 15.99,
+                "currency": "USD",
+                "travellersInfo": [
+                    {
+                        "gender": "M",
+                        "firstName": "John",
+                        "middleName": "D",
+                        "lastName": "Smith",
+                        "birthDate": "1990-01-15",
+                        "nationality": "US",
+                        "passportNumber": "A1234567",
+                        "issuingCountry": "US",
+                        "expiryDate": "2028-01-15",
+                        "contactEmail": "john.smith@example.com",
+                        "contactPhone": "+1234567890"
+                    }
+                ],
+                "idempotencyKey": "booking_1688326092123_abc123",
+                "bookingRef": "REF123456789",
+                "status": "pending",
+                "createdAt": "2025-05-02T16:55:49.139Z",
+                "updatedAt": "2025-05-02T16:55:49.139Z",
+                "__v": 0
+            },
+            {
+                "_id": "6814f92e7efe2636b40caaf6",
+                "userId": "6814f8217efe2636b40caae9",
+                "flightId": "AM12345",
+                "originAirportCode": "DXB",
+                "destinationAirportCode": "LHR",
+                "originCity": "Dubai",
+                "destinationCity": "London",
+                "departureDate": "2025-06-15T14:00:00.000Z",
+                "arrivalDate": "2025-06-15T18:30:00.000Z",
+                "selectedBaggageOption": {
+                    "type": "standard",
+                    "weight": 20,
+                    "pieces": 1
+                },
+                "totalPrice": 850.99,
+                "applicationFee": 31.98,
+                "currency": "USD",
+                "travellersInfo": [
+                    {
+                        "gender": "M",
+                        "firstName": "John",
+                        "middleName": "D",
+                        "lastName": "Smith",
+                        "birthDate": "1990-01-15",
+                        "nationality": "US",
+                        "passportNumber": "A1234567",
+                        "issuingCountry": "US",
+                        "expiryDate": "2028-01-15",
+                        "contactEmail": "john.smith@example.com",
+                        "contactPhone": "+1234567890"
+                    },
+                    {
+                        "gender": "F",
+                        "firstName": "Jane",
+                        "middleName": "",
+                        "lastName": "Smith",
+                        "birthDate": "1992-05-20",
+                        "nationality": "US",
+                        "passportNumber": "B9876543",
+                        "issuingCountry": "US",
+                        "expiryDate": "2028-05-20",
+                        "contactEmail": "jane.smith@example.com",
+                        "contactPhone": "+1234567891"
+                    }
+                ],
+                "idempotencyKey": "booking_1688326092123_def456",
+                "bookingRef": "REF987654321",
+                "status": "pending",
+                "createdAt": "2025-05-02T16:56:14.503Z",
+                "updatedAt": "2025-05-02T16:56:14.503Z",
+                "__v": 0
+            }
+        ]
+    },
+    "error": null,
+    "meta": null
+}
