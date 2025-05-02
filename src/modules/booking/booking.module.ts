@@ -1,36 +1,37 @@
-// src/modules/booking/booking.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BookingService } from './services/booking.service';
 import { BookingController } from './controllers/booking.controller';
-import { BookingSchema } from './schemas/booking.schema';
+import { Booking, BookingSchema } from './schemas/booking.schema';
 import { FlightModule } from '../flight/flight.module';
-import { PaymentService } from './services/payment.service';
-import { BOOKING_REPOSITORY } from './repositories/booking.repository.interface';
-import { BookingRepository } from './repositories/booking.repository';
-import { ExpiredBookingsScheduler } from './schedulers/expired-bookings.scheduler';
-import { EventBus } from 'src/common/event-bus.service';
 import { AuthModule } from '../auth/auth.module';
-import { PaymentController } from './controllers/payment.controller';
 import { EmailModule } from '../email/email.module';
+import { UsersModule } from '../users/users.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
+
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Booking', schema: BookingSchema }]),
+    MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),
     FlightModule,
     AuthModule,
     EmailModule,
+    UsersModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: { 
+          expiresIn: configService.get('JWT_EXPIRATION', '15m'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
-  controllers: [BookingController, PaymentController],
-  providers: [
-    BookingService,
-    PaymentService,
-    EventBus,
-    ExpiredBookingsScheduler,
-    {
-      provide: BOOKING_REPOSITORY,
-      useClass: BookingRepository,
-    },
-  ],
+  controllers: [BookingController],
+  providers: [BookingService],
   exports: [BookingService],
 })
 export class BookingModule {}

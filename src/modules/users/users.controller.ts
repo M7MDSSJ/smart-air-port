@@ -50,7 +50,7 @@ import {
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { UserDocument } from './schemas/user.schema';
-import { GetUser } from '../../common/decorators/user.decorator';
+import { User } from '../../common/decorators/user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
@@ -115,7 +115,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Put('change-password')
   async changePassword(
-    @GetUser() user: UserDocument,
+    @User() user: UserDocument,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     if (!user || !user._id) {
@@ -148,7 +148,7 @@ export class UsersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  async getProfile(@GetUser() user: UserDocument) {
+  async getProfile(@User() user: UserDocument) {
     if (!user || !user._id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
@@ -158,7 +158,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   async updateProfile(
-    @GetUser() user: UserDocument,
+    @User() user: UserDocument,
     @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<ProfileResponseDto> {
     if (!user || !user._id) {
@@ -173,7 +173,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   async logout(
-    @GetUser() user: UserDocument,
+    @User() user: UserDocument,
     @Body('refreshToken') refreshToken: string,
   ) {
     if (!user || !user._id) {
@@ -207,7 +207,7 @@ export class UsersController {
   @Patch('roles')
   async updateRoles(
     @Body() updateUserRolesDto: UpdateUserRolesDto,
-    @GetUser() currentUser: UserDocument,
+    @User() currentUser: UserDocument,
   ) {
     if (!currentUser || !currentUser._id) {
       throw new UnauthorizedException('Unauthorized');
