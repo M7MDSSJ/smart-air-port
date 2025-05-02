@@ -6,7 +6,7 @@ import {
 import { AppModule } from '../src/app/app.module';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../src/modules/users/dto/error-response.dto';
+import { ErrorResponseDto } from './common/dto/error-response.dto';
 import * as fs from 'fs';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -15,7 +15,7 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter({
       logger: {
-        level: 'debug',
+        level: 'info',
         transport: {
           target: 'pino-pretty',
           options: {

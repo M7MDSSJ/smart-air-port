@@ -81,22 +81,24 @@ export class UserManagementService {
       // Hash the password
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      // Convert birthdate to Date object (required field)
-      let birthdate: Date;
-      try {
-        birthdate = new Date(createUserDto.birthdate);
-        if (isNaN(birthdate.getTime())) {
+      // Convert birthdate to Date object (optional field)
+      let birthdate: Date | undefined;
+      if (createUserDto.birthdate) {
+        try {
+          birthdate = new Date(createUserDto.birthdate);
+          if (isNaN(birthdate.getTime())) {
+            this.logger.error(
+              `Invalid birthdate format: ${createUserDto.birthdate}`,
+            );
+            throw new BadRequestException('Invalid birthdate format');
+          }
+        } catch (error) {
           this.logger.error(
-            `Invalid birthdate format: ${createUserDto.birthdate}`,
+            `Failed to parse birthdate: ${createUserDto.birthdate}`,
+            error,
           );
           throw new BadRequestException('Invalid birthdate format');
         }
-      } catch (error) {
-        this.logger.error(
-          `Failed to parse birthdate: ${createUserDto.birthdate}`,
-          error,
-        );
-        throw new BadRequestException('Invalid birthdate format');
       }
 
       // Create the new user
@@ -107,7 +109,7 @@ export class UserManagementService {
         isVerified: false,
         verificationToken: this.generateCode(),
         verificationTokenExpiry: new Date(Date.now() + 3600000), // 1 hour expiry
-        birthdate, // Store as Date object
+        birthdate, // Store as Date object if provided
       };
 
       const savedUser = await this.userRepository.create(newUser, { session });

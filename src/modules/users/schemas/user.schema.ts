@@ -18,13 +18,13 @@ export class User {
   @Prop({ type: [String], default: ['user'] })
   roles: string[];
 
-  @Prop({ unique: true })
+  @Prop({ unique: false })
   phoneNumber?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   country?: string;
 
-  @Prop({ type: Date, required: true })
+  @Prop({ type: Date, required:false })
   birthdate?: Date;
 
   @Prop({ default: false })

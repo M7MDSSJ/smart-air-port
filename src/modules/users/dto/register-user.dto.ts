@@ -52,19 +52,15 @@ export class CreateUserDto {
 
   @ApiProperty({ example: 'Egypt' })
   @IsString()
-  @IsNotEmpty({ message: 'Country is required' })
+  @IsOptional()
   @IsValidCountry({
     message:
       'Country must be a valid country name or ISO 3166-1 alpha-2/alpha-3 code',
   })
-  country: string;
+  country?: string;
 
-  @ApiProperty({ example: '1990-01-01' })
-  @IsDateString(
-    {},
-    { message: 'Birthdate must be a valid ISO date (e.g., 1990-01-01)' },
-  )
-  @IsNotEmpty({ message: 'Birthdate is required' })
-  @IsAdult({ message: 'User must be at least 18 years old' })
-  birthdate: string;
+ 
+  @IsOptional()
+  @IsString()
+  birthdate?: string;
 }
