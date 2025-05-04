@@ -13,46 +13,49 @@ authrization bearer token => user jwt
   "destinationCIty": "",
   "departureDate": "",
   "arrivalDate": "",
-  "selectedBaggageOption": {},
+  "selectedBaggageOption": [of objects],
   "totalPrice": 0,
   "applicationFee": 0,
   "currency": "",
-  "idempotencyKey": "",
   "bookingRef": "",
   "travellersInfo": []
 }
 
 // Example request body
 {
-  "flightID": "AM12345",
-  "originAirportCode": "DXB",
-  "destinationAirportCode": "LHR",
-  "originCIty": "Dubai",
-  "destinationCIty": "London",
+  "flightID": "F9123",
+  "originAirportCode": "CAI",
+  "destinationAirportCode": "JED",
+  "originCIty": "Cairo",
+  "destinationCIty": "Jeddah",
   "departureDate": "2025-06-15T14:00:00Z",
   "arrivalDate": "2025-06-15T18:30:00Z",
-  "selectedBaggageOption": {
+  "selectedBaggageOption":[
+      {
     "type": "standard",
     "weight": 20,
-    "pieces": 1
-  },
+    "pieces": 100},
+    {
+    "type": "carry",
+    "weight": 7,
+    "pieces": 0
+    }
+  ],
   "totalPrice": 450.99,
   "applicationFee": 15.99,
   "currency": "USD",
-  "idempotencyKey": "booking_1688326092123_abc123",
-  "bookingRef": "REF123456789",
   "travellersInfo": [
     {
       "gender": "M",
-      "firstName": "John",
-      "middleName": "D",
-      "lastName": "Smith",
+      "firstName": "ahmed",
+      "middleName": "S",
+      "lastName": "Sayed",
       "birthDate": "1990-01-15",
-      "nationality": "US",
+      "nationality": "EGY",
       "passportNumber": "A1234567",
-      "issuingCountry": "US",
-      "expiryDate": "2028-01-15",
-      "contactEmail": "john.smith@example.com",
+      "issuingCountry": "EGY",
+      "expiryDate": "2027-03-05",
+      "contactEmail": "ahmedsayed@example.com",
       "contactPhone": "+1234567890"
     }
   ]
@@ -89,7 +92,6 @@ example 2
   "totalPrice": 850.99,
   "applicationFee": 31.98,
   "currency": "USD",
-  "idempotencyKey": "booking_1688326092123_def456",
   "bookingRef": "REF987654321",
   "travellersInfo": [
     {

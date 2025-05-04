@@ -6,10 +6,9 @@ admin
 
 mod
 {
-   "email": "mod1@gmail.com",
-  "password": "Mod1@mod123"
+    "email":"gtrealex7@gmail.com",
+    "password":"Password@1"
 }
-
 
 improvements
 

@@ -8,9 +8,9 @@ export type BookingDocument = Booking & Document;
 })
 export class Booking {
   @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'User' })
-  userId: string;
+  userId: MongooseSchema.Types.ObjectId;
 
-  @Prop({ required: true, type: String }) // Changed to String type for Amadeus flight IDs
+  @Prop({ required: true, type: String })
   flightId: string;
 
   @Prop({ required: true })
@@ -45,9 +45,6 @@ export class Booking {
 
   @Prop({ type: Array, required: true })
   travellersInfo: any[];
-
-  @Prop({ required: true, unique: true })
-  idempotencyKey: string;
 
   @Prop({ required: true, unique: true })
   bookingRef: string;
