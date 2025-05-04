@@ -1,7 +1,5 @@
 import {
   IsDateString,
-  IsMongoId,
-  IsNotEmpty,
   IsNumber,
   IsString,
   IsArray,
@@ -51,16 +49,13 @@ export class CreateBookingDto {
   @IsString()
   arrivalDate: string;
   @IsOptional()
-  selectedBaggageOption?: any;
+  selectedBaggageOption?: Record<string, any>;
   @IsNumber()
   totalPrice: number;
   @IsNumber()
   applicationFee: number;
   @IsString()
   currency: string;
-  @IsString()
-  @IsOptional()
-  idempotencyKey?: string;
   @IsString()
   @IsOptional()
   bookingRef?: string;

@@ -3,72 +3,92 @@ import {
   Post,
   Body,
   UseGuards,
-  Req,
   Get,
   Param,
   HttpStatus,
   HttpCode,
+  ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
-import { CreateBookingDto, TravellerInfoDto } from '../dto/create-booking.dto';
+import { CreateBookingDto } from '../dto/create-booking.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { VerifiedUserGuard } from 'src/common/guards/verifiedUser.guard';
-import { FastifyRequest } from 'fastify';
 import { User } from 'src/common/decorators/user.decorator';
+import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
 
 @Controller('booking')
 export class BookingController {
+  private readonly logger = new Logger(BookingController.name);
+
   constructor(private readonly bookingService: BookingService) {}
 
   @Post('book-flight')
   @UseGuards(JwtAuthGuard, VerifiedUserGuard)
   @HttpCode(HttpStatus.CREATED)
   async bookFlight(
-    @User() user: any,
+    @User() user: JwtUser,
     @Body() createBookingDto: CreateBookingDto,
   ) {
-    // Extract userId from the JWT payload
-    const userId = user.userId;
+    this.logger.log(`Creating booking for user: ${user.id}`);
 
     // Store booking with all details
-    const booking = await this.bookingService.createBooking(userId, createBookingDto);
+    const booking = await this.bookingService.createBooking(
+      user.id,
+      createBookingDto,
+    );
 
     return {
       success: true,
       message: 'Flight booked successfully',
-      bookingId: booking._id,
-      status: booking.status,
+      data: {
+        success: true,
+        message: 'Flight booked successfully',
+        bookingId: booking._id,
+        bookingRef: booking.bookingRef,
+        status: booking.status,
+      },
+      error: null,
+      meta: null,
     };
   }
 
   @Get('my-bookings')
   @UseGuards(JwtAuthGuard)
-  async getMyBookings(@User() user: any) {
-    const userId = user.userId;
-    const bookings = await this.bookingService.getUserBookings(userId);
+  async getMyBookings(@User() user: JwtUser) {
+    const bookings = await this.bookingService.getUserBookings(user.id);
 
     return {
       success: true,
-      bookings,
+      message: 'response.success',
+      data: {
+        success: true,
+        bookings,
+      },
+      error: null,
+      meta: null,
     };
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async getBookingDetails(@Param('id') id: string, @User() user: any) {
+  async getBookingDetails(@Param('id') id: string, @User() user: JwtUser) {
     const booking = await this.bookingService.getBookingById(id);
-
-    // Security check: ensure user can only access their own bookings
-    if (booking.userId.toString() !== user.userId) {
-      return {
-        success: false,
-        message: 'You are not authorized to view this booking',
-      };
+    if (booking.userId.toString() !== user.id) {
+      throw new ForbiddenException(
+        'You are not authorized to view this booking',
+      );
     }
 
     return {
       success: true,
-      booking,
+      message: 'response.success',
+      data: {
+        success: true,
+        booking,
+      },
+      error: null,
+      meta: null,
     };
   }
 }
