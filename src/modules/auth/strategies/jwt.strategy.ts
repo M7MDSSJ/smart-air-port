@@ -8,7 +8,6 @@ interface JwtPayload {
   sub?: string;
   userId?: string;
   email: string;
-  name?: string;
   roles?: string[];
 }
 
@@ -22,12 +21,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): Promise<JwtUser> {
-    // Map the JWT payload to match your JwtUser interface
-    return {
+  async validate(payload: JwtPayload): Promise<JwtUser> {
+    return Promise.resolve({
       id: payload.sub || payload.userId || '',
       email: payload.email,
-      name: payload.name || '',
-    };
+      roles: payload.roles || [],
+    });
   }
 }

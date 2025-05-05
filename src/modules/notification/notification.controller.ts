@@ -3,36 +3,35 @@ import { NotificationService } from './notification.service';
 import { Request } from 'express';
 import { Notification } from './schemas/notification.schema';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from '../users/schemas/user.schema';
+import { RequestUser } from 'src/common/interfaces/request-user.interface';
 import { Role } from 'src/common/enums/role.enum';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('notification')
 export class NotificationController {
+  constructor(private notificationService: NotificationService) {}
 
-    constructor(
-        private notificationService: NotificationService
-    ) { }
+  @Get('')
+  async getNotifications(@Req() req: Request): Promise<Notification[]> {
+    const user = req.user as RequestUser;
 
+    const topic =
+      Array.isArray(user.roles) && user.roles.includes(Role.Admin)
+        ? 'admin'
+        : user.id;
 
-    @Get('')
-    async getNotifications(@Req() req: Request): Promise<Notification[]> {
+    return await this.notificationService.getNotifications(topic);
+  }
 
-        const user = req.user as User;
-        const topic = user.roles.includes(Role.Admin) ? 'admin' : (user as any)._id;
+  @Get('count')
+  async getNotificationCount(@Req() req: Request): Promise<{ count: number }> {
+    const user = req.user as RequestUser;
 
-        return await this.notificationService.getNotifications(topic);
+    const topic =
+      Array.isArray(user.roles) && user.roles.includes(Role.Admin)
+        ? 'admin'
+        : user.id;
 
-    }
-
-    @Get('count')
-    async getNotificationCount(@Req() req: Request): Promise<{ count: number }> {
-
-        const user = req.user as User;
-        const topic = user.roles.includes(Role.Admin) ? 'admin' : (user as any)._id;
-        
-        return await this.notificationService.getNotificationsCount(topic);
-
-    }
-
+    return await this.notificationService.getNotificationsCount(topic);
+  }
 }

@@ -20,6 +20,7 @@ import { RefreshTokenResponseDto } from '../dto/refreshToken-response.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { UpdateRolesResponseDto } from '../dto/updateRoles-response.dto';
 import { UserResponseDto } from '../dto/register-response.dto';
+import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
 
 @Injectable()
 export class AuthenticationService {
@@ -139,7 +140,7 @@ export class AuthenticationService {
   async updateRoles(
     targetUserId: string,
     updateUserRolesDto: UpdateUserRolesDto,
-    currentUser: UserDocument,
+    currentUser: JwtUser,
   ): Promise<UpdateRolesResponseDto> {
     if (updateUserRolesDto.roles.length === 0) {
       throw new BadRequestException('User must have at least one role');
@@ -151,10 +152,10 @@ export class AuthenticationService {
     ) {
       throw new BadRequestException('Invalid role provided');
     }
-    if (!currentUser.roles.includes(Role.Admin)) {
+    if (!currentUser.roles?.includes(Role.Admin)) {
       throw new ForbiddenException('Insufficient permissions');
     }
-    if (currentUser._id.toString() === targetUserId) {
+    if (currentUser.id === targetUserId) {
       throw new BadRequestException('Admins cannot modify their own roles');
     }
 
@@ -202,6 +203,9 @@ export class AuthenticationService {
       __v,
       ...safeUser
     } = plainUser;
-    return safeUser as UserResponseDto;
+    return {
+      ...safeUser,
+      id: safeUser._id.toString(),
+    } as UserResponseDto;
   }
 }

@@ -56,7 +56,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
 import { ErrorResponseDto } from './dto/error-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
-import { Public } from '../../common/decorators/public.decorator';
+import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
 
 @Controller('users')
 export class UsersController {
@@ -74,14 +74,14 @@ export class UsersController {
     return this.userManagementService.getAllUsers();
   }
 
-  @Public()
+  
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userManagementService.register(createUserDto);
   }
 
 
-  @Public()
+  
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return this.userManagementService.verifyEmail(
@@ -90,7 +90,7 @@ export class UsersController {
     );
   }
 
-  @Public()
+  
   @Post('resend-verification')
   async resendVerificationEmail(
     @Body() resendEmailDto: ResendEmailVerificationDto,
@@ -106,7 +106,7 @@ export class UsersController {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
-  @Public()
+  
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.validateUser(loginUserDto);
@@ -127,7 +127,7 @@ export class UsersController {
     );
   }
 
-  @Public()
+  
   @Post('request-password-reset')
   async requestPasswordReset(
     @Body() requestPasswordResetDto: RequestResetPasswordDto,
@@ -137,7 +137,7 @@ export class UsersController {
     );
   }
 
-  @Public()
+  
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     if (!resetPasswordDto.code || !resetPasswordDto.newPassword) {
@@ -148,11 +148,11 @@ export class UsersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  async getProfile(@User() user: UserDocument) {
-    if (!user || !user._id) {
+  async getProfile(@User() user: JwtUser) {
+    if (!user || !user.id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
-    return this.userManagementService.getProfile(user._id.toString());
+    return this.userManagementService.getProfile(user.id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -207,9 +207,9 @@ export class UsersController {
   @Patch('roles')
   async updateRoles(
     @Body() updateUserRolesDto: UpdateUserRolesDto,
-    @User() currentUser: UserDocument,
+    @User() currentUser: JwtUser,
   ) {
-    if (!currentUser || !currentUser._id) {
+    if (!currentUser || !currentUser.id) {
       throw new UnauthorizedException('Unauthorized');
     }
     return this.authService.updateRoles(

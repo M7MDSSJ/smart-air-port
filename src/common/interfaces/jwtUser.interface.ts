@@ -1,6 +1,5 @@
 export interface JwtUser {
-  id: string; // Maps to "sub" from JWT
+  id: string;
   email: string;
-  name: string;
-  roles?: string[]; // Optional roles field
+  roles?: string[];
 }
