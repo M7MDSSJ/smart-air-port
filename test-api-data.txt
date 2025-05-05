@@ -1,14 +1,39 @@
-admin
+admin-role
 {
-"email": "admin@example.com",
-  "password": "@ASDLQW12awd"
+ "email": "gtrealex7@gmail.com",
+  "password": "Password1@"
 }
 
-mod
+user-role
 {
-    "email":"gtrealex7@gmail.com",
-    "password":"Password@1"
+ "email": "xiboma3227@firain.com",
+  "password": "Password1@"
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 improvements
 

@@ -1,24 +1,23 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtUser } from '../interfaces/jwtUser.interface';
-import { FastifyRequest } from 'fastify/types/request';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { UserManagementService } from 'src/modules/users/services/user-management.service';
+import { FastifyRequest } from 'fastify';
 
 @Injectable()
 export class VerifiedUserGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request: FastifyRequest = context.switchToHttp().getRequest();
-    const user = request.user as JwtUser;
+  constructor(private userManagementService: UserManagementService) {}
 
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request: FastifyRequest = context.switchToHttp().getRequest();
+    const user = request.user;
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    // Here you'd check if the user is verified (you might have this info in the JWT)
-    // For now, just assume all users with valid tokens are verified
+    const userDoc = await this.userManagementService.getById(user.id);
+    if (!userDoc || !userDoc.isVerified) {
+      throw new UnauthorizedException('User email not verified');
+    }
+
     return true;
   }
 }
