@@ -471,6 +471,120 @@
           "Notification"
         ]
       }
+    },
+    "/favorites": {
+      "get": {
+        "operationId": "FavoritesController_getFavorites",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
+    },
+    "/favorites/count": {
+      "get": {
+        "operationId": "FavoritesController_getFavoritesCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
+    },
+    "/favorites/add": {
+      "post": {
+        "operationId": "FavoritesController_addToFavorites",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoritDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
+    },
+    "/favorites/remove": {
+      "post": {
+        "operationId": "FavoritesController_removeFromFavorites",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoritDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
+    },
+    "/favorites/remove-all": {
+      "post": {
+        "operationId": "FavoritesController_removeAllFavorites",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
+    },
+    "/favorites/is-favorited": {
+      "post": {
+        "operationId": "FavoritesController_isFlightFavorited",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoritDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Favorites"
+        ]
+      }
     }
   },
   "info": {
@@ -646,6 +760,10 @@
         "properties": {}
       },
       "CreateBookingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "FavoritDto": {
         "type": "object",
         "properties": {}
       },
