@@ -29,17 +29,20 @@ export class FlightService {
     @InjectModel('Flight') private readonly flightModel: Model<Flight>,
   ) {}
 
-  private filterByTimeRange(flights: FormattedFlight[], timeRange: string): FormattedFlight[] {
+  private filterByTimeRange(
+    flights: FormattedFlight[],
+    timeRange: string,
+  ): FormattedFlight[] {
     if (!timeRange) return flights;
 
     const timeRanges = {
       morning: { start: 6, end: 12 },
       afternoon: { start: 12, end: 18 },
       evening: { start: 18, end: 24 },
-      night: { start: 0, end: 6 }
+      night: { start: 0, end: 6 },
     };
 
-    return flights.filter(flight => {
+    return flights.filter((flight) => {
       if (!flight.departureTime) return false;
       const departureTime = new Date(flight.departureTime);
       const hour = departureTime.getHours();
@@ -48,17 +51,22 @@ export class FlightService {
     });
   }
 
-  async searchAvailableFlights(query: QueryFlightDto): Promise<{ paginatedFlights: FormattedFlight[]; total: number }> {
+  async searchAvailableFlights(
+    query: QueryFlightDto,
+  ): Promise<{ paginatedFlights: FormattedFlight[]; total: number }> {
     const result = await this.flightSearchService.searchAvailableFlights(query);
-    
+
     // Apply time range filter if specified
-    const filteredFlights = query.departureTimeRange 
-      ? this.filterByTimeRange(result.paginatedFlights, query.departureTimeRange)
+    const filteredFlights = query.departureTimeRange
+      ? this.filterByTimeRange(
+          result.paginatedFlights,
+          query.departureTimeRange,
+        )
       : result.paginatedFlights;
 
     return {
       paginatedFlights: filteredFlights,
-      total: filteredFlights.length
+      total: filteredFlights.length,
     };
   }
 
@@ -72,7 +80,10 @@ export class FlightService {
 
   async getAvailableSeats(flightId: string): Promise<number> {
     if (!Types.ObjectId.isValid(flightId)) {
-      throw new HttpException('Invalid flight ID format', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Invalid flight ID format',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const flight = await this.flightModel
@@ -94,20 +105,31 @@ export class FlightService {
         if (flight) return flight;
       }
 
-      const flight = await this.flightModel.findOne({ offerId: id }).lean().exec();
+      const flight = await this.flightModel
+        .findOne({ offerId: id })
+        .lean()
+        .exec();
       if (!flight) {
-        throw new HttpException(`Flight with ID ${id} not found`, HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          `Flight with ID ${id} not found`,
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       return flight;
     } catch (error) {
       this.logger.error(`Error finding flight ${id}: ${error.message}`);
       if (error instanceof HttpException) throw error;
-      throw new HttpException('Error finding flight', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Error finding flight',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async getFlightPricing(flightId: string): Promise<{ basePrice: number; currency: string }> {
+  async getFlightPricing(
+    flightId: string,
+  ): Promise<{ basePrice: number; currency: string }> {
     const flight = await this.findOne(flightId);
     return {
       basePrice: Number(flight.price),
@@ -122,8 +144,13 @@ export class FlightService {
       // (You may want to cache this in production)
       return await this.amadeusService.getSeatMap(offerId);
     } catch (error) {
-      this.logger.error(`Error fetching seat map for offerId ${offerId}: ${error.message}`);
-      throw new HttpException('Failed to fetch seat map from Amadeus', HttpStatus.BAD_GATEWAY);
+      this.logger.error(
+        `Error fetching seat map for offerId ${offerId}: ${error.message}`,
+      );
+      throw new HttpException(
+        'Failed to fetch seat map from Amadeus',
+        HttpStatus.BAD_GATEWAY,
+      );
     }
   }
 }

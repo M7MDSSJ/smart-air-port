@@ -26,29 +26,6 @@ import { RefreshTokenDto } from './dto/refreshToken.dto';
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 import { UpdateProfileDto } from './dto/updateProfile.dto';
-import {
-  RegisterResponseDto,
-  UserResponseDto,
-} from './dto/register-response.dto';
-import { VerifyEmailResponseDto } from './dto/verifyEmail-response.dto';
-import { ResendVerificationResponseDto } from './dto/resendVerificationResponse.dto';
-import { RefreshTokenResponseDto } from './dto/refreshToken-response.dto';
-import { LoginResponseDto } from './dto/login-response.dto';
-import { ChangePasswordResponseDto } from './dto/changePassword-response.dto';
-import { RequestResetPasswordResponseDto } from './dto/requestResetPassword-response.dto';
-import { ResetPasswordResponseDto } from './dto/resetPassword-response.dto';
-import { LogoutResponseDto } from './dto/logout-response.dto';
-import { DashboardResponseDto } from './dto/dashboard-response.dto';
-import { FlightManagementResponseDto } from './dto/flightManagement-response.dto';
-import { UpdateRolesResponseDto } from './dto/updateRoles-response.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
-} from '@nestjs/swagger';
 import { UserDocument } from './schemas/user.schema';
 import { User } from '../../common/decorators/user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -66,7 +43,6 @@ export class UsersController {
     private readonly passwordResetService: PasswordResetService,
   ) {}
 
- 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin, Role.Mod)
   @Get('all')
@@ -74,14 +50,11 @@ export class UsersController {
     return this.userManagementService.getAllUsers();
   }
 
-  
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userManagementService.register(createUserDto);
   }
 
-
-  
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return this.userManagementService.verifyEmail(
@@ -90,7 +63,6 @@ export class UsersController {
     );
   }
 
-  
   @Post('resend-verification')
   async resendVerificationEmail(
     @Body() resendEmailDto: ResendEmailVerificationDto,
@@ -100,13 +72,12 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt')) 
+  @UseGuards(AuthGuard('jwt'))
   @Post('refresh-token')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
-  
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.validateUser(loginUserDto);
@@ -115,19 +86,18 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Put('change-password')
   async changePassword(
-    @User() user: UserDocument,
+    @User() user: JwtUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    if (!user || !user._id) {
+    if (!user || !user.id) {
       throw new UnauthorizedException('User not found');
     }
     return this.passwordResetService.changePassword(
-      user._id.toString(),
+      user.id,
       changePasswordDto,
     );
   }
 
-  
   @Post('request-password-reset')
   async requestPasswordReset(
     @Body() requestPasswordResetDto: RequestResetPasswordDto,
@@ -137,7 +107,6 @@ export class UsersController {
     );
   }
 
-  
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     if (!resetPasswordDto.code || !resetPasswordDto.newPassword) {
@@ -173,15 +142,14 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   async logout(
-    @User() user: UserDocument,
+    @User() user: JwtUser,
     @Body('refreshToken') refreshToken: string,
   ) {
-    if (!user || !user._id) {
+    if (!user || !user.id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
-    return this.userManagementService.logout(user._id.toString(), refreshToken);
+    return this.userManagementService.logout(user.id, refreshToken);
   }
-
 
   @Delete(':email')
   async deleteUserByEmail(@Param('email') email: string) {
@@ -213,7 +181,7 @@ export class UsersController {
       throw new UnauthorizedException('Unauthorized');
     }
     return this.authService.updateRoles(
-      updateUserRolesDto.userId,
+      updateUserRolesDto.email,
       updateUserRolesDto,
       currentUser,
     );

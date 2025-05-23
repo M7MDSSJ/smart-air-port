@@ -1,13 +1,11 @@
-
 export enum NotificationStates {
-    UNREAD,
-    READ,
+  UNREAD,
+  READ,
 }
 
-
 export interface NotificationData {
-    topic: string;
-    title: string;
-    body: string;
-    bookingId: string;
+  topic: string;
+  title: string;
+  body: string;
+  bookingId: string;
 }

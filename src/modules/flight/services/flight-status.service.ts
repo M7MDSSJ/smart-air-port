@@ -8,12 +8,17 @@ export class FlightStatusService {
 
   constructor(private readonly amadeusService: AmadeusService) {}
 
-  async getFlightStatus(flightNumber: string, departureTime: Date): Promise<string> {
+  async getFlightStatus(
+    flightNumber: string,
+    departureTime: Date,
+  ): Promise<string> {
     try {
       const status = await this.amadeusService.getFlightStatus(flightNumber);
       return status || 'Unknown';
     } catch (error) {
-      this.logger.error(`Failed to fetch flight status for ${flightNumber}: ${(error as Error).message}`);
+      this.logger.error(
+        `Failed to fetch flight status for ${flightNumber}: ${(error as Error).message}`,
+      );
       return 'Unknown';
     }
   }

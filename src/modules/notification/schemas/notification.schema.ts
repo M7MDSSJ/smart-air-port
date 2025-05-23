@@ -1,32 +1,32 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
-import { NotificationStates } from "../notification.model";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+import { NotificationStates } from '../notification.model';
 
+export type NotificationDocument = HydratedDocument<Notification>;
 
-export type NotificationDocument = HydratedDocument<Notification>
-
-
-@Schema({timestamps: true})
+@Schema({ timestamps: true })
 export class Notification {
-    @Prop({ type: String, required: true })
-    topic: string;
+  @Prop({ type: String, required: true })
+  topic: string;
 
-    @Prop({ type: String, required: true })
-    title: string;
+  @Prop({ type: String, required: true })
+  title: string;
 
-    @Prop({ type: String, required: true })
-    body: string;
+  @Prop({ type: String, required: true })
+  body: string;
 
-    @Prop({ type: Number, enum: NotificationStates, default: NotificationStates.UNREAD })
-    state: NotificationStates;
+  @Prop({
+    type: Number,
+    enum: NotificationStates,
+    default: NotificationStates.UNREAD,
+  })
+  state: NotificationStates;
 
-    @Prop({ type: String, ref: 'booking', required: true})
-    bookingId: string;
+  @Prop({ type: String, ref: 'booking', required: true })
+  bookingId: string;
 }
 
-
-export const NotificationSchema = SchemaFactory.createForClass(Notification)
-
+export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 NotificationSchema.index({ topic: -1 });
 NotificationSchema.index({ topic: -1, state: -1 });

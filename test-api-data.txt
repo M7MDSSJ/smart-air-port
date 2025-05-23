@@ -10,12 +10,11 @@ user-role
   "password": "Password1@"
 }
 
-
-
-
-
-
-
+user
+{
+ "email": "dohak20692@nomrista.com",
+  "password": "@ASDLQW12awd"
+}
 
 
 

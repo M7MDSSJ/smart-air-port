@@ -9,18 +9,30 @@ import { BaggageOptionDto } from '../interfaces/flight-data.interface';
 export class BaggageService {
   private readonly logger = new Logger(BaggageService.name);
 
-  constructor(@InjectModel('Flight') private readonly flightModel: Model<Flight>) {}
+  constructor(
+    @InjectModel('Flight') private readonly flightModel: Model<Flight>,
+  ) {}
 
-  async validateBaggage(flightId: string, options: BaggageSelectionDto[]): Promise<boolean> {
+  async validateBaggage(
+    flightId: string,
+    options: BaggageSelectionDto[],
+  ): Promise<boolean> {
     const flight = await this.flightModel.findById(flightId).lean();
     if (!flight || !flight.baggageOptions) {
-      this.logger.warn(`Flight not found or no baggage options for flightId: ${flightId}`);
-      throw new HttpException('Flight not found or no baggage options available', HttpStatus.NOT_FOUND);
+      this.logger.warn(
+        `Flight not found or no baggage options for flightId: ${flightId}`,
+      );
+      throw new HttpException(
+        'Flight not found or no baggage options available',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const baggageOptions = this.parseBaggageOptions(flight.baggageOptions);
-    return options.every(selected => {
-      const available = baggageOptions.find(opt => opt.type === selected.type);
+    return options.every((selected) => {
+      const available = baggageOptions.find(
+        (opt) => opt.type === selected.type,
+      );
       return available && selected.quantity <= (available.quantity || 2);
     });
   }
@@ -30,8 +42,8 @@ export class BaggageService {
     const seen = new Set();
 
     return options.options
-      .filter(opt => opt.weightInKg && opt.price)
-      .map(opt => {
+      .filter((opt) => opt.weightInKg && opt.price)
+      .map((opt) => {
         const normalizedType = this.normalizeBaggageType(opt.type);
         return {
           type: normalizedType,
@@ -41,15 +53,17 @@ export class BaggageService {
           weight: opt.weightInKg,
         };
       })
-      .filter(opt => {
+      .filter((opt) => {
         const key = `${opt.type}-${opt.price}-${opt.weight}`;
         return !seen.has(key) && seen.add(key);
       });
   }
 
-  private normalizeBaggageType(type: string | undefined): 'CARRY_ON' | 'CHECKED' | 'PERSONAL_ITEM' {
+  private normalizeBaggageType(
+    type: string | undefined,
+  ): 'CARRY_ON' | 'CHECKED' | 'PERSONAL_ITEM' {
     if (!type) return 'CHECKED';
-    
+
     const upperType = type.toUpperCase();
     switch (upperType) {
       case 'CARRY_ON':
@@ -59,7 +73,9 @@ export class BaggageService {
       case 'CHECKED':
         return 'CHECKED';
       default:
-        this.logger.warn(`Unknown baggage type "${type}" defaulting to CHECKED`);
+        this.logger.warn(
+          `Unknown baggage type "${type}" defaulting to CHECKED`,
+        );
         return 'CHECKED';
     }
   }

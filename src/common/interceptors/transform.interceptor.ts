@@ -1,4 +1,10 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { I18nService } from 'nestjs-i18n';
@@ -14,7 +20,7 @@ export class TransformInterceptor implements NestInterceptor {
     const language = request.query.language || 'en';
 
     return next.handle().pipe(
-      switchMap(async data => {
+      switchMap(async (data) => {
         // this.logger.debug(`Transforming response for ${request.method} ${request.url}: ${JSON.stringify(data)}`);
 
         // Only modify flight search responses
@@ -34,7 +40,9 @@ export class TransformInterceptor implements NestInterceptor {
 
         return {
           success: data?.success !== false,
-          message: data?.message || this.i18n.t('response.success', { lang: language }),
+          message:
+            data?.message ||
+            this.i18n.t('response.success', { lang: language }),
           data: data?.data || data,
           error: data?.error || null,
           meta: data?.meta || null,

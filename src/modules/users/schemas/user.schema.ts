@@ -24,7 +24,7 @@ export class User {
   @Prop({ required: false })
   country?: string;
 
-  @Prop({ type: Date, required:false })
+  @Prop({ type: Date, required: false })
   birthdate?: Date;
 
   @Prop({ default: false })

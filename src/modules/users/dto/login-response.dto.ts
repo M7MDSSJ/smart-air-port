@@ -9,8 +9,14 @@ export class LoginResponseDto {
     type: 'object',
     properties: {
       message: { type: 'string', example: 'User logged in successfully' },
-      accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
-      refreshToken: { type: 'string', example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4=' },
+      accessToken: {
+        type: 'string',
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+      refreshToken: {
+        type: 'string',
+        example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4=',
+      },
     },
   })
   data: {

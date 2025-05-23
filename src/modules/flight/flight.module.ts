@@ -33,9 +33,7 @@ import { PricingService } from './services/pricing.service';
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([
-      { name: 'Flight', schema: FlightSchema },
-    ]),
+    MongooseModule.forFeature([{ name: 'Flight', schema: FlightSchema }]),
   ],
   controllers: [FlightController],
   providers: [

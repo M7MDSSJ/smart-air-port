@@ -37,7 +37,11 @@ export class BaggageOptionsDto {
   options: BaggageOptionItemDto[];
 
   @Expose()
-  @ApiProperty({ enum: ['amadeus', 'fallback'], example: 'fallback', description: 'Source of baggage data' })
+  @ApiProperty({
+    enum: ['amadeus', 'fallback'],
+    example: 'fallback',
+    description: 'Source of baggage data',
+  })
   source: 'amadeus' | 'fallback';
 }
 

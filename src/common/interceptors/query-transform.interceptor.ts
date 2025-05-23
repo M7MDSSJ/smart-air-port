@@ -1,11 +1,16 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 @Injectable()
 export class QueryTransformInterceptor implements NestInterceptor {
   private readonly parameterMappings: { [key: string]: string } = {
-    'departuretimerange': 'departureTimeRange',
-    'DepartureTimeRange': 'departureTimeRange'
+    departuretimerange: 'departureTimeRange',
+    DepartureTimeRange: 'departureTimeRange',
   };
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

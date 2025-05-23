@@ -142,7 +142,9 @@ export class FlightSearchService {
     // Fetch flights
     let rawFlights: any[] = [];
     try {
-      this.logger.log(`[FLIGHT_SEARCH] About to call Amadeus API. tripType=${tripType}, departureAirport=${departureAirport}, arrivalAirport=${arrivalAirport}, departureDate=${departureDate}, returnDate=${returnDate}, adults=${adults}, children=${children}, infants=${infants}, cabinClass=${cabinClass}, limit=${limit}`);
+      this.logger.log(
+        `[FLIGHT_SEARCH] About to call Amadeus API. tripType=${tripType}, departureAirport=${departureAirport}, arrivalAirport=${arrivalAirport}, departureDate=${departureDate}, returnDate=${returnDate}, adults=${adults}, children=${children}, infants=${infants}, cabinClass=${cabinClass}, limit=${limit}`,
+      );
       if (tripType === TripType.OneWay) {
         rawFlights = await this.amadeusService.searchFlightOffers(
           departureAirport,
@@ -168,7 +170,9 @@ export class FlightSearchService {
           limit,
         );
       } else if (tripType === TripType.MultiCity) {
-        this.logger.log(`[FLIGHT_SEARCH] Calling Amadeus MultiCity API with legs: ${JSON.stringify(multiCityLegs)}`);
+        this.logger.log(
+          `[FLIGHT_SEARCH] Calling Amadeus MultiCity API with legs: ${JSON.stringify(multiCityLegs)}`,
+        );
         rawFlights = await this.amadeusService.searchMultiCityFlights(
           multiCityLegs!.map((leg) => ({
             origin: leg.departureAirport,
@@ -182,19 +186,27 @@ export class FlightSearchService {
           limit,
         );
       }
-      this.logger.log(`[FLIGHT_SEARCH] Amadeus API returned ${rawFlights.length} flights for tripType=${tripType}`);
+      this.logger.log(
+        `[FLIGHT_SEARCH] Amadeus API returned ${rawFlights.length} flights for tripType=${tripType}`,
+      );
     } catch (error) {
-      this.logger.error(`[FLIGHT_SEARCH] Error fetching flights from Amadeus: ${error.message || 'Unknown error'}`);
+      this.logger.error(
+        `[FLIGHT_SEARCH] Error fetching flights from Amadeus: ${error.message || 'Unknown error'}`,
+      );
 
       // Check if we have mock data to use in case of API failure
       const useMockData =
         this.configService.get<string>('USE_MOCK_DATA') === 'true';
       if (useMockData) {
-        this.logger.warn('[FLIGHT_SEARCH] Using mock flight data due to API failure (USE_MOCK_DATA=true)');
+        this.logger.warn(
+          '[FLIGHT_SEARCH] Using mock flight data due to API failure (USE_MOCK_DATA=true)',
+        );
         // In a real app, you might have mock data here or in a separate file
         // For simplicity, we'll just return empty results
       } else {
-        this.logger.warn('[FLIGHT_SEARCH] Not using mock data, returning error to client.');
+        this.logger.warn(
+          '[FLIGHT_SEARCH] Not using mock data, returning error to client.',
+        );
       }
 
       throw new HttpException(
