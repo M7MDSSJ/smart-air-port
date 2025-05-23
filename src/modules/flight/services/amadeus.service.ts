@@ -38,9 +38,13 @@ export class AmadeusService {
     const axiosInstance = await this.getAxiosInstance(); // Add 'await'
 
     try {
-      const response = await axiosInstance.post(`${this.baseUrl}/v1/security/oauth2/token`, body.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
+      const response = await axiosInstance.post(
+        `${this.baseUrl}/v1/security/oauth2/token`,
+        body.toString(),
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        },
+      );
       // this.logger.log('Fetched Amadeus access token');
       return response.data.access_token;
     } catch (error) {
@@ -78,11 +82,15 @@ export class AmadeusService {
       // this.logger.log(`Fetched ${response.data.data.length} flight offers from Amadeus`);
       return response.data.data;
     } catch (error) {
-      this.logger.error(`Flight search error: ${JSON.stringify(error.response?.data || error.message)}`);
+      this.logger.error(
+        `Flight search error: ${JSON.stringify(error.response?.data || error.message)}`,
+      );
       throw new HttpException(
         {
           status: error.response?.status || 500,
-          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch flight offers',
+          message:
+            error.response?.data?.errors?.[0]?.detail ||
+            'Failed to fetch flight offers',
           details: error.response?.data,
         },
         error.response?.status || 500,
@@ -127,11 +135,15 @@ export class AmadeusService {
       });
       return response.data.data;
     } catch (error) {
-      this.logger.error(`Multi-city search error: ${JSON.stringify(error.response?.data || error.message)}`);
+      this.logger.error(
+        `Multi-city search error: ${JSON.stringify(error.response?.data || error.message)}`,
+      );
       throw new HttpException(
         {
           status: error.response?.status || 500,
-          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch multi-city offers',
+          message:
+            error.response?.data?.errors?.[0]?.detail ||
+            'Failed to fetch multi-city offers',
           details: error.response?.data,
         },
         error.response?.status || 500,
@@ -154,11 +166,15 @@ export class AmadeusService {
       });
       return response.data.data;
     } catch (error) {
-      this.logger.error(`Flight offer fetch error: ${JSON.stringify(error.response?.data || error.message)}`);
+      this.logger.error(
+        `Flight offer fetch error: ${JSON.stringify(error.response?.data || error.message)}`,
+      );
       throw new HttpException(
         {
           status: error.response?.status || 500,
-          message: error.response?.data?.errors?.[0]?.detail || 'Failed to fetch flight offer',
+          message:
+            error.response?.data?.errors?.[0]?.detail ||
+            'Failed to fetch flight offer',
           details: error.response?.data,
         },
         error.response?.status || 500,
@@ -174,7 +190,7 @@ export class AmadeusService {
     try {
       // Fetch the full flight offer object
       this.logger.log(`Requesting seat map for Amadeus offerId: ${offerId}`);
-    const offer = await this.getFlightOffer(offerId);
+      const offer = await this.getFlightOffer(offerId);
       // Send the full offer object in the seat map request
       const response = await axiosInstance.post(
         url,
@@ -191,11 +207,16 @@ export class AmadeusService {
       );
       return response.data;
     } catch (error) {
-      this.logger.error(`Seat map fetch error for offerId ${offerId}: ${JSON.stringify(error.response?.data || error.message)}`);
+      this.logger.error(
+        `Seat map fetch error for offerId ${offerId}: ${JSON.stringify(error.response?.data || error.message)}`,
+      );
       throw new HttpException(
         {
           status: error.response?.status || 500,
-          message: (error.response?.data?.errors?.[0]?.detail || 'Failed to fetch seat map') + '. The offer may have expired or is not available for seat maps.',
+          message:
+            (error.response?.data?.errors?.[0]?.detail ||
+              'Failed to fetch seat map') +
+            '. The offer may have expired or is not available for seat maps.',
           details: error.response?.data,
         },
         error.response?.status || 500,
@@ -205,7 +226,9 @@ export class AmadeusService {
 
   async getFlightStatus(flightNumber: string): Promise<string> {
     // TODO: Integrate with a real flight status API (e.g., FlightAware, AviationStack)
-    this.logger.warn(`Flight status for ${flightNumber} is mocked; returning 'Scheduled'`);
+    this.logger.warn(
+      `Flight status for ${flightNumber} is mocked; returning 'Scheduled'`,
+    );
     return 'Scheduled';
   }
 }

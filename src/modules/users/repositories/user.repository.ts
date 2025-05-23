@@ -194,7 +194,7 @@ export class UserRepository implements IUserRepository {
   ): Promise<UserDocument | null> {
     return this.userModel
       .findOne({ resetCode: code })
-      .select('+password')  // Explicitly include the password field
+      .select('+password') // Explicitly include the password field
       .session(options?.session ?? null)
       .exec();
   }

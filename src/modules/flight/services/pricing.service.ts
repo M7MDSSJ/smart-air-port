@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PricingService {
-  calculateTotalPrice(flight: any, passengers: {
-    adults: number;
-    children?: number;
-    infants?: number;
-  }) {
+  calculateTotalPrice(
+    flight: any,
+    passengers: {
+      adults: number;
+      children?: number;
+      infants?: number;
+    },
+  ) {
     // Ensure valid flight data or return an error or default values
     if (!flight || typeof flight.price !== 'number' || flight.price <= 0) {
       throw new Error('Invalid flight data or price.');
@@ -31,8 +34,8 @@ export class PricingService {
         type: 'ADT',
         count: validAdults,
         priceEach: basePrice * pricingRules.adultMultiplier,
-        description: 'Adult'
-      }
+        description: 'Adult',
+      },
     ];
 
     if (validChildren > 0) {
@@ -40,7 +43,7 @@ export class PricingService {
         type: 'CHD',
         count: validChildren,
         priceEach: basePrice * pricingRules.childMultiplier,
-        description: 'Child (2-11 years)'
+        description: 'Child (2-11 years)',
       });
     }
 
@@ -49,23 +52,24 @@ export class PricingService {
         type: 'INF',
         count: validInfants,
         priceEach: basePrice * pricingRules.infantMultiplier,
-        description: 'Infant (under 2)'
+        description: 'Infant (under 2)',
       });
     }
 
     const passengersSubtotal = passengerBreakdown.reduce(
-      (sum, p) => sum + (p.priceEach * p.count), 0
+      (sum, p) => sum + p.priceEach * p.count,
+      0,
     );
 
     const fees = [
       {
         name: 'Taxes',
-        amount: passengersSubtotal * pricingRules.taxPercentage
+        amount: passengersSubtotal * pricingRules.taxPercentage,
       },
       {
         name: 'Service Fee',
-        amount: pricingRules.serviceFee
-      }
+        amount: pricingRules.serviceFee,
+      },
     ];
 
     const feesTotal = fees.reduce((sum, fee) => sum + fee.amount, 0);
@@ -74,19 +78,21 @@ export class PricingService {
       summary: {
         totalPrice: this.roundCurrency(passengersSubtotal + feesTotal),
         currency,
-        priceGuaranteedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hrs
+        priceGuaranteedUntil: new Date(
+          Date.now() + 24 * 60 * 60 * 1000,
+        ).toISOString(), // 24 hrs
       },
       breakdown: {
-        passengers: passengerBreakdown.map(p => ({
+        passengers: passengerBreakdown.map((p) => ({
           ...p,
           priceEach: this.roundCurrency(p.priceEach),
-          subtotal: this.roundCurrency(p.priceEach * p.count)
+          subtotal: this.roundCurrency(p.priceEach * p.count),
         })),
-        fees: fees.map(f => ({
+        fees: fees.map((f) => ({
           ...f,
-          amount: this.roundCurrency(f.amount)
-        }))
-      }
+          amount: this.roundCurrency(f.amount),
+        })),
+      },
     };
   }
 
@@ -96,11 +102,12 @@ export class PricingService {
       childMultiplier: 0.8,
       infantMultiplier: 0.2,
       taxPercentage: 0.15,
-      serviceFee: 50.00
+      serviceFee: 50.0,
     };
 
     // Add airline-specific overrides if needed
-    if (airline === 'SV') { // Saudia
+    if (airline === 'SV') {
+      // Saudia
       rules.childMultiplier = 0.75;
     }
     // Add more airline-specific rules as needed

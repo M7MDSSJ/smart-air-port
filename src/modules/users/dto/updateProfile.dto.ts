@@ -6,7 +6,11 @@ import {
   IsEnum,
   IsBoolean,
 } from 'class-validator';
-enum CabinClass { Economy = 'Economy', Business = 'Business', First = 'First' }
+enum CabinClass {
+  Economy = 'Economy',
+  Business = 'Business',
+  First = 'First',
+}
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()

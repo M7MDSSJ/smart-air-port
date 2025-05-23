@@ -1,5 +1,14 @@
 // query-flight.dto.ts
-import { IsString, IsEnum, IsOptional, IsNumber, IsArray, IsDateString, Min, ValidateIf } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsDateString,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsIataCode } from 'src/common/validators/is-iata-code.validator';
 
@@ -95,7 +104,10 @@ export class QueryFlightDto {
   @Min(0, { message: 'infants cannot be negative' })
   infants?: number;
 
-  @IsEnum(CabinClass, { message: 'cabinClass must be one of: ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST' })
+  @IsEnum(CabinClass, {
+    message:
+      'cabinClass must be one of: ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST',
+  })
   cabinClass: CabinClass;
 
   @IsOptional()
@@ -124,12 +136,19 @@ export class QueryFlightDto {
   maxStops?: number;
 
   @IsOptional()
-  @Transform(({ value }) => typeof value === 'string' ? value.toLowerCase() : value)
-  @IsEnum(DepartureTimeRange, { message: 'departureTimeRange must be one of: morning, afternoon, evening, night' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() : value,
+  )
+  @IsEnum(DepartureTimeRange, {
+    message:
+      'departureTimeRange must be one of: morning, afternoon, evening, night',
+  })
   departureTimeRange?: DepartureTimeRange;
 
   @IsOptional()
-  @IsEnum(SortBy, { message: 'sortBy must be one of: price, duration, stops, totalPrice' })
+  @IsEnum(SortBy, {
+    message: 'sortBy must be one of: price, duration, stops, totalPrice',
+  })
   sortBy?: SortBy;
 
   @IsOptional()

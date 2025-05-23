@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 export class DashboardResponseDto {
-    @ApiProperty({ example: 'Admin-only content' })
-    message: string;
-  }
+  @ApiProperty({ example: 'Admin-only content' })
+  message: string;
+}

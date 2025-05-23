@@ -42,7 +42,10 @@ export class FlightFormattingService {
     const totalPassengers = adults + children + infants;
 
     if (flights.length > 0) {
-      this.logger.warn('[DEBUG] First Amadeus flight object:', JSON.stringify(flights[0], null, 2));
+      this.logger.warn(
+        '[DEBUG] First Amadeus flight object:',
+        JSON.stringify(flights[0], null, 2),
+      );
     }
 
     const filteredFlights = flights.filter((flight) => {
@@ -126,7 +129,9 @@ export class FlightFormattingService {
               })
             : [];
 
-        const baggageOptions = this.extractBaggageOptions(flight.travelerPricings || []);
+        const baggageOptions = this.extractBaggageOptions(
+          flight.travelerPricings || [],
+        );
         const fareTypes = this.extractFareTypes(flight.travelerPricings || []);
 
         const resolvedOfferId = flight.id;
@@ -163,13 +168,13 @@ export class FlightFormattingService {
               fareTypes,
             },
           },
-          { upsert: true }
+          { upsert: true },
         );
 
         const dbFlight = await this.flightModel.findOneAndUpdate(
           { offerId: resolvedOfferId },
           { $set: { lastChecked: new Date() } },
-          { new: true, lean: true }
+          { new: true, lean: true },
         );
 
         return this.formatFlight(
@@ -377,7 +382,9 @@ export class FlightFormattingService {
             .replace(/\d+KG/i, '')
             .trim();
 
-          if (!fareTypes.get(fareKey).features.some((f) => f.name === featureName)) {
+          if (
+            !fareTypes.get(fareKey).features.some((f) => f.name === featureName)
+          ) {
             fareTypes.get(fareKey).features.push({
               name: featureName,
               included: !amenity.isChargeable,

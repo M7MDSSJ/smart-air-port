@@ -1,8 +1,16 @@
-import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, registerDecorator, ValidationOptions } from 'class-validator';
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+  registerDecorator,
+  ValidationOptions,
+} from 'class-validator';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 
 @ValidatorConstraint({ name: 'isValidPhoneNumber', async: false })
-export class IsValidPhoneNumberConstraint implements ValidatorConstraintInterface {
+export class IsValidPhoneNumberConstraint
+  implements ValidatorConstraintInterface
+{
   validate(phoneNumber: string, args: ValidationArguments) {
     if (!phoneNumber) return true;
     return isValidPhoneNumber(phoneNumber);

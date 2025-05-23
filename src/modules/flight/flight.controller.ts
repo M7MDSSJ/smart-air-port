@@ -1,11 +1,25 @@
-import { Controller, Get, Post, Query, Logger, HttpException, HttpStatus, Param, Body, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Logger,
+  HttpException,
+  HttpStatus,
+  Param,
+  Body,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FlightService } from './flight.service';
 import { QueryFlightDto } from './dto/query-flight.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { plainToClass } from 'class-transformer';
-import { FlightResponseDto, BaggageOptionsDto } from './dto/flight-response.dto';
+import {
+  FlightResponseDto,
+  BaggageOptionsDto,
+} from './dto/flight-response.dto';
 import { I18nService } from 'nestjs-i18n';
 import { QueryTransformInterceptor } from '../../common/interceptors/query-transform.interceptor';
 
@@ -27,29 +41,52 @@ export class FlightController {
     const limit = Math.min(query.limit || 10, 50);
 
     if (!Number.isInteger(page) || page < 1) {
-      throw new HttpException('Page must be a positive integer', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Page must be a positive integer',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-     if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
-    throw new HttpException('Limit must be a positive integer between 1 and 50', HttpStatus.BAD_REQUEST);
-  }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      throw new HttpException(
+        'Limit must be a positive integer between 1 and 50',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const departureDate = new Date(query.departureDate);
     const currentDate = new Date();
     if (isNaN(departureDate.getTime())) {
-      throw new HttpException('departureDate must be a valid date in YYYY-MM-DD format', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'departureDate must be a valid date in YYYY-MM-DD format',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    const departureDateOnly = new Date(departureDate.getFullYear(), departureDate.getMonth(), departureDate.getDate());
-    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    const departureDateOnly = new Date(
+      departureDate.getFullYear(),
+      departureDate.getMonth(),
+      departureDate.getDate(),
+    );
+    const currentDateOnly = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+    );
     if (departureDateOnly < currentDateOnly) {
-      throw new HttpException('departureDate must be a future date', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'departureDate must be a future date',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const { adults, children = 0, infants = 0, language = 'en' } = query;
     const totalPassengers = adults + children + infants;
     if (totalPassengers > 9) {
       throw new HttpException(
-        await this.i18n.t('errors.tooManyPassengers', { lang: language, args: { max: 9 } }),
+        await this.i18n.t('errors.tooManyPassengers', {
+          lang: language,
+          args: { max: 9 },
+        }),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -60,10 +97,12 @@ export class FlightController {
       );
     }
 
-    const { paginatedFlights, total } = await this.flightService.searchAvailableFlights(query);
+    const { paginatedFlights, total } =
+      await this.flightService.searchAvailableFlights(query);
 
-    const transformedFlights = paginatedFlights.map(flight => {
-      const baggageOptionsRaw = (flight.baggageOptions as unknown as Partial<BaggageOptionsDto>) || {};
+    const transformedFlights = paginatedFlights.map((flight) => {
+      const baggageOptionsRaw =
+        (flight.baggageOptions as unknown as Partial<BaggageOptionsDto>) || {};
       const optionsRaw = baggageOptionsRaw?.options ?? [];
       const options = Array.isArray(optionsRaw)
         ? optionsRaw.map((opt: any) => ({
@@ -92,9 +131,14 @@ export class FlightController {
         to: flight.arrivalAirportName || flight.arrivalAirport,
         departureTime: flight.departureTime,
         arrivalTime: flight.arrivalTime,
-        departureDate: flight.departureTime ? new Date(flight.departureTime).toISOString().split('T')[0] : undefined,
-        arrivalDate: flight.arrivalTime ? new Date(flight.arrivalTime).toISOString().split('T')[0] : undefined,
-        numberOfStops: flight.numberOfStops ?? (flight.stops ? flight.stops.length : 0),
+        departureDate: flight.departureTime
+          ? new Date(flight.departureTime).toISOString().split('T')[0]
+          : undefined,
+        arrivalDate: flight.arrivalTime
+          ? new Date(flight.arrivalTime).toISOString().split('T')[0]
+          : undefined,
+        numberOfStops:
+          flight.numberOfStops ?? (flight.stops ? flight.stops.length : 0),
         airline: flight.airlineName || flight.airline,
         duration: flight.duration,
         baggageOptions,
@@ -106,9 +150,15 @@ export class FlightController {
                 const desc = ft.description.toLowerCase();
                 if (desc.includes('2 checked bags')) {
                   checked = '2 checked bags (23kg each)';
-                } else if (desc.includes('checked baggage included') || desc.includes('1 checked bag')) {
+                } else if (
+                  desc.includes('checked baggage included') ||
+                  desc.includes('1 checked bag')
+                ) {
                   checked = '1 checked bag (23kg)';
-                } else if (desc.includes('no checked baggage') || desc.includes('no checked bags')) {
+                } else if (
+                  desc.includes('no checked baggage') ||
+                  desc.includes('no checked bags')
+                ) {
                   checked = 'No checked bags';
                 }
               }
@@ -124,7 +174,12 @@ export class FlightController {
       };
 
       // Remove original pricingDetail, baggageOptions, fareTypes from root
-      const { pricingDetail: _oldPricing, baggageOptions: _oldBaggage, fareTypes: _oldFares, ...rest } = flight;
+      const {
+        pricingDetail: _oldPricing,
+        baggageOptions: _oldBaggage,
+        fareTypes: _oldFares,
+        ...rest
+      } = flight;
 
       return {
         ...rest,
@@ -157,17 +212,26 @@ export class FlightController {
       // Find the flight in the database
       const flight = await this.flightService.findOne(flightId);
       if (!flight?.offerId) {
-        throw new HttpException('Flight offerId not found', HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          'Flight offerId not found',
+          HttpStatus.NOT_FOUND,
+        );
       }
       // Call Amadeus SeatMap API
-      const seatMap = await this.flightService.getSeatMapForFlight(flight.offerId);
+      const seatMap = await this.flightService.getSeatMapForFlight(
+        flight.offerId,
+      );
       return { success: true, seatMap };
     } catch (error) {
       // Log and return a safe error response
-      this.logger.error(`Seat map error for flight ${flightId}: ${error.message}`);
+      this.logger.error(
+        `Seat map error for flight ${flightId}: ${error.message}`,
+      );
       if (error instanceof HttpException) throw error;
-      throw new HttpException('Failed to fetch seat map', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to fetch seat map',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
-

@@ -9,7 +9,11 @@ export class CacheService {
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
-  async set<T>(key: string, value: T, ttl: number = this.CACHE_TTL): Promise<void> {
+  async set<T>(
+    key: string,
+    value: T,
+    ttl: number = this.CACHE_TTL,
+  ): Promise<void> {
     await this.cacheManager.set(key, value, ttl);
   }
 
