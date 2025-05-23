@@ -25,6 +25,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { HealthController } from './app.controller';
 import { NotificationModule } from 'src/modules/notification/notification.module';
+import { FavoritesModule } from 'src/modules/favorites/favorites.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -85,6 +86,7 @@ import { NotificationModule } from 'src/modules/notification/notification.module
     FlightModule,
     BookingModule,
     NotificationModule,
+    FavoritesModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [HealthController],
