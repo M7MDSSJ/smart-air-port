@@ -26,6 +26,7 @@ import { redisStore } from 'cache-manager-redis-store';
 import { HealthController } from './app.controller';
 import { NotificationModule } from 'src/modules/notification/notification.module';
 import { FavoritesModule } from 'src/modules/favorites/favorites.module';
+import { PaymentModule } from 'src/modules/payment/payment.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -85,6 +86,7 @@ import { FavoritesModule } from 'src/modules/favorites/favorites.module';
     EmailModule,
     FlightModule,
     BookingModule,
+    PaymentModule,
     NotificationModule,
     FavoritesModule,
     ScheduleModule.forRoot(),
