@@ -6,13 +6,17 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { EmailTemplateService, BookingEmailData } from './services/email-template.service';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
 
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private emailTemplateService: EmailTemplateService,
+  ) {}
 
   async onModuleInit() {
     await this.initializeTransporter();
@@ -144,6 +148,34 @@ export class EmailService implements OnModuleInit {
       html,
       from: `"Important Notification" <${this.config.get('MAIL_FROM')}>`,
     });
+  }
+
+  /**
+   * Send booking confirmation email with QR code
+   */
+  async sendBookingConfirmationEmail(bookingData: BookingEmailData): Promise<void> {
+    try {
+      this.logger.log(`Generating booking confirmation email for ${bookingData.bookingRef}`);
+
+      const html = await this.emailTemplateService.generateBookingConfirmationEmail(bookingData);
+
+      const subject = `✈️ Booking Confirmed - ${bookingData.bookingRef} | ${bookingData.originAirportCode} → ${bookingData.destinationAirportCode}`;
+
+      await this.sendEmail({
+        to: bookingData.contactDetails.email,
+        subject,
+        html,
+        from: `"Smart Airport" <${this.config.get('MAIL_FROM')}>`,
+      });
+
+      this.logger.log(`Booking confirmation email sent successfully to ${bookingData.contactDetails.email} for booking ${bookingData.bookingRef}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send booking confirmation email for booking ${bookingData.bookingRef}:`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw new BadRequestException('Failed to send booking confirmation email');
+    }
   }
 
   private async sendEmail(options: {

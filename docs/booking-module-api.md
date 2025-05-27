@@ -67,7 +67,7 @@ Create a new flight booking with passenger information and contact details.
       "lastName": "Ahmed",
       "birthDate": "1995-05-15",
       "travelerType": "adult",
-      "nationality": "Egypt",
+      "nationality": "Egypt", // or EG  "Egyptain" don`t work
       "passportNumber": "B87654321",
       "issuingCountry": "Egypt",
       "expiryDate": "2029-05-15"

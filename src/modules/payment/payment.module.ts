@@ -8,6 +8,7 @@ import { PaymentController } from './controllers/payment.controller';
 import { Booking, BookingSchema } from '../booking/schemas/booking.schema';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UsersModule } from '../users/users.module';
     MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),
     AuthModule,
     UsersModule,
+    EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
