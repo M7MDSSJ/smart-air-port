@@ -6,6 +6,8 @@ import Stripe from 'stripe';
 import { Booking, BookingDocument } from '../../booking/schemas/booking.schema';
 import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
+import { EmailService } from '../../email/email.service';
+import { BookingEmailData } from '../../email/services/email-template.service';
 
 @Injectable()
 export class PaymentService {
@@ -15,6 +17,7 @@ export class PaymentService {
   constructor(
     private configService: ConfigService,
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
+    private emailService: EmailService,
   ) {
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
@@ -149,6 +152,9 @@ export class PaymentService {
 
         this.logger.log(`Payment confirmed for booking: ${bookingId}`);
 
+        // Send booking confirmation email
+        await this.sendBookingConfirmationEmail(updatedBooking);
+
         return {
           success: true,
           paymentStatus: 'completed',
@@ -213,11 +219,20 @@ export class PaymentService {
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (bookingId) {
-      await this.bookingModel.findByIdAndUpdate(bookingId, {
-        paymentStatus: 'completed',
-        status: 'confirmed',
-        paymentCompletedAt: new Date(),
-      });
+      const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+        bookingId,
+        {
+          paymentStatus: 'completed',
+          status: 'confirmed',
+          paymentCompletedAt: new Date(),
+        },
+        { new: true }
+      );
+
+      if (updatedBooking) {
+        // Send booking confirmation email
+        await this.sendBookingConfirmationEmail(updatedBooking);
+      }
 
       this.logger.log(`Payment succeeded for booking: ${bookingId}`);
     }
@@ -232,6 +247,48 @@ export class PaymentService {
       });
 
       this.logger.log(`Payment failed for booking: ${bookingId}`);
+    }
+  }
+
+  /**
+   * Convert booking document to email data format
+   */
+  private convertBookingToEmailData(booking: BookingDocument): BookingEmailData {
+    return {
+      bookingRef: booking.bookingRef,
+      flightId: booking.flightId,
+      originAirportCode: booking.originAirportCode,
+      destinationAirportCode: booking.destinationAirportCode,
+      originCity: booking.originCity,
+      destinationCity: booking.destinationCity,
+      departureDate: booking.departureDate,
+      arrivalDate: booking.arrivalDate,
+      totalPrice: booking.totalPrice,
+      currency: booking.currency,
+      travellersInfo: booking.travellersInfo.map(traveler => ({
+        firstName: traveler.firstName,
+        lastName: traveler.lastName,
+        travelerType: traveler.travelerType,
+      })),
+      contactDetails: booking.contactDetails,
+      selectedBaggageOption: booking.selectedBaggageOption,
+    };
+  }
+
+  /**
+   * Send booking confirmation email after successful payment
+   */
+  private async sendBookingConfirmationEmail(booking: BookingDocument): Promise<void> {
+    try {
+      const emailData = this.convertBookingToEmailData(booking);
+      await this.emailService.sendBookingConfirmationEmail(emailData);
+      this.logger.log(`Booking confirmation email sent for booking: ${booking.bookingRef}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send booking confirmation email for booking ${booking.bookingRef}:`,
+        error instanceof Error ? error.stack : error,
+      );
+      // Don't throw error here - email failure shouldn't fail the payment
     }
   }
 
@@ -329,6 +386,9 @@ export class PaymentService {
         );
 
         this.logger.log(`Card payment test successful for booking: ${bookingId}`);
+
+        // Send booking confirmation email
+        await this.sendBookingConfirmationEmail(updatedBooking);
 
         return {
           success: true,

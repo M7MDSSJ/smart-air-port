@@ -346,6 +346,52 @@
         ]
       }
     },
+    "/email-test/qr-code": {
+      "get": {
+        "operationId": "EmailTestController_testQRCode",
+        "parameters": [
+          {
+            "name": "bookingRef",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EmailTest"
+        ]
+      }
+    },
+    "/email-test/email-preview": {
+      "get": {
+        "operationId": "EmailTestController_previewEmail",
+        "parameters": [
+          {
+            "name": "bookingRef",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EmailTest"
+        ]
+      }
+    },
     "/flights/search/available": {
       "get": {
         "operationId": "FlightController_searchAvailableFlights",
