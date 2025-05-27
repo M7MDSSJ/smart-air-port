@@ -9,6 +9,7 @@ import {
   HttpCode,
   ForbiddenException,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
@@ -86,6 +87,33 @@ export class BookingController {
       data: {
         success: true,
         booking,
+      },
+      error: null,
+      meta: null,
+    };
+  }
+
+  @Get('calculate-fee')
+  async calculateApplicationFee(@Query('basePrice') basePrice: string) {
+    const price = parseFloat(basePrice);
+
+    if (isNaN(price) || price <= 0) {
+      return {
+        success: false,
+        message: 'Invalid base price provided',
+        error: 'Bad Request',
+        statusCode: 400,
+      };
+    }
+
+    const calculation = this.bookingService.calculateTotalWithFee(price);
+
+    return {
+      success: true,
+      message: 'Application fee calculated successfully',
+      data: {
+        success: true,
+        calculation,
       },
       error: null,
       meta: null,

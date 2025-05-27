@@ -444,6 +444,29 @@
         ]
       }
     },
+    "/booking/calculate-fee": {
+      "get": {
+        "operationId": "BookingController_calculateApplicationFee",
+        "parameters": [
+          {
+            "name": "basePrice",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Booking"
+        ]
+      }
+    },
     "/payment/create-payment-intent": {
       "post": {
         "operationId": "PaymentController_createPaymentIntent",
@@ -867,9 +890,177 @@
         "type": "object",
         "properties": {}
       },
+      "TravellerInfoDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "Ahmed",
+            "description": "Traveler first name"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Mohamed",
+            "description": "Traveler last name"
+          },
+          "birthDate": {
+            "type": "string",
+            "example": "2000-02-01",
+            "description": "Traveler birth date in YYYY-MM-DD format"
+          },
+          "travelerType": {
+            "type": "string",
+            "enum": [
+              "adult",
+              "child",
+              "infant"
+            ],
+            "example": "adult",
+            "description": "Type of traveler"
+          },
+          "nationality": {
+            "type": "string",
+            "example": "Egyptian",
+            "description": "Traveler nationality"
+          },
+          "passportNumber": {
+            "type": "string",
+            "example": "A12345678",
+            "description": "Passport number"
+          },
+          "issuingCountry": {
+            "type": "string",
+            "example": "Egypt",
+            "description": "Passport issuing country"
+          },
+          "expiryDate": {
+            "type": "string",
+            "example": "2030-02-01",
+            "description": "Passport expiry date in YYYY-MM-DD format"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "birthDate",
+          "travelerType",
+          "nationality",
+          "passportNumber",
+          "issuingCountry",
+          "expiryDate"
+        ]
+      },
+      "ContactDetailsDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com",
+            "description": "Contact email for booking notifications"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201234567890",
+            "description": "Contact phone number in international format"
+          }
+        },
+        "required": [
+          "email",
+          "phone"
+        ]
+      },
       "CreateBookingDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "flightID": {
+            "type": "string",
+            "example": "FL123456",
+            "description": "Unique flight identifier"
+          },
+          "originAirportCode": {
+            "type": "string",
+            "example": "LGA",
+            "description": "Origin airport IATA code"
+          },
+          "destinationAirportCode": {
+            "type": "string",
+            "example": "DAD",
+            "description": "Destination airport IATA code"
+          },
+          "originCIty": {
+            "type": "string",
+            "example": "New York",
+            "description": "Origin city name"
+          },
+          "destinationCIty": {
+            "type": "string",
+            "example": "Da Nang",
+            "description": "Destination city name"
+          },
+          "departureDate": {
+            "type": "string",
+            "example": "2024-08-28",
+            "description": "Departure date in YYYY-MM-DD format"
+          },
+          "arrivalDate": {
+            "type": "string",
+            "example": "2024-08-28",
+            "description": "Arrival date in YYYY-MM-DD format"
+          },
+          "selectedBaggageOption": {
+            "type": "object",
+            "example": {
+              "type": "checked",
+              "weight": "23kg",
+              "price": 50,
+              "currency": "USD"
+            },
+            "description": "Selected baggage option details"
+          },
+          "totalPrice": {
+            "type": "number",
+            "example": 1500,
+            "description": "Total price including all fees and taxes"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD",
+            "description": "Currency code (ISO 4217)"
+          },
+          "travellersInfo": {
+            "description": "Array of traveler information",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TravellerInfoDto"
+            }
+          },
+          "contactDetails": {
+            "description": "Contact details for booking notifications",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContactDetailsDto"
+              }
+            ]
+          },
+          "bookingRef": {
+            "type": "string",
+            "example": "BK123456",
+            "description": "Booking reference (auto-generated if not provided)"
+          }
+        },
+        "required": [
+          "flightID",
+          "originAirportCode",
+          "destinationAirportCode",
+          "originCIty",
+          "destinationCIty",
+          "departureDate",
+          "arrivalDate",
+          "totalPrice",
+          "currency",
+          "travellersInfo",
+          "contactDetails"
+        ]
       },
       "CreatePaymentIntentDto": {
         "type": "object",

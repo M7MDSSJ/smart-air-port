@@ -33,6 +33,13 @@ export class BookingService {
       bookingRef = `${prefix}${numbers}`;
     }
 
+    // Use the provided total price as the final amount
+    // The frontend/mobile app should calculate and include the application fee
+    // before sending the request
+    const finalTotalPrice = createBookingDto.totalPrice;
+
+    this.logger.log(`Creating booking with total price: ${finalTotalPrice} ${createBookingDto.currency}`);
+
     // Create booking object
     const newBooking = new this.bookingModel({
       userId: new Types.ObjectId(userId),
@@ -44,10 +51,10 @@ export class BookingService {
       departureDate: new Date(createBookingDto.departureDate),
       arrivalDate: new Date(createBookingDto.arrivalDate),
       selectedBaggageOption: createBookingDto.selectedBaggageOption || null,
-      totalPrice: createBookingDto.totalPrice,
-      applicationFee: createBookingDto.applicationFee,
+      totalPrice: finalTotalPrice, // Use the provided total price as-is
       currency: createBookingDto.currency,
       travellersInfo: createBookingDto.travellersInfo,
+      contactDetails: createBookingDto.contactDetails,
       status: 'pending',
       bookingRef,
     });
@@ -92,5 +99,42 @@ export class BookingService {
     }
 
     return booking;
+  }
+
+  /**
+   * Calculate application fee based on base price
+   * This is a public method that can be used by frontend/mobile to calculate the fee
+   * You can customize this logic based on your business requirements
+   */
+  public calculateApplicationFee(basePrice: number): number {
+    // Example: 2.5% application fee with minimum $5 and maximum $50
+    const feePercentage = 0.025; // 2.5%
+    const minFee = 5;
+    const maxFee = 50;
+
+    let fee = basePrice * feePercentage;
+    fee = Math.max(fee, minFee); // Ensure minimum fee
+    fee = Math.min(fee, maxFee); // Ensure maximum fee
+
+    return Math.round(fee * 100) / 100; // Round to 2 decimal places
+  }
+
+  /**
+   * Calculate total price including application fee
+   * This method can be used by frontend/mobile to get the final total
+   */
+  public calculateTotalWithFee(basePrice: number): {
+    basePrice: number;
+    applicationFee: number;
+    totalPrice: number;
+  } {
+    const applicationFee = this.calculateApplicationFee(basePrice);
+    const totalPrice = basePrice + applicationFee;
+
+    return {
+      basePrice: Math.round(basePrice * 100) / 100,
+      applicationFee,
+      totalPrice: Math.round(totalPrice * 100) / 100,
+    };
   }
 }

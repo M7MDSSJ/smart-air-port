@@ -37,14 +37,17 @@ export class Booking {
   @Prop({ required: true, type: Number })
   totalPrice: number;
 
-  @Prop({ required: true, type: Number })
-  applicationFee: number;
-
   @Prop({ required: true })
   currency: string;
 
   @Prop({ type: Array, required: true })
   travellersInfo: any[];
+
+  @Prop({ type: Object, required: true })
+  contactDetails: {
+    email: string;
+    phone: string;
+  };
 
   @Prop({ required: true, unique: true })
   bookingRef: string;
