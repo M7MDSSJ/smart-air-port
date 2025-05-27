@@ -1,25 +1,10 @@
-admin-role
+admin
 {
- "email": "gtrealex7@gmail.com",
-  "password": "Password1@"
-}
-
-user-role
-{
- "email": "xiboma3227@firain.com",
-  "password": "Password1@"
+  "email": "gtrealex7@gmail.com",
+  "password": "Password123!@"
 }
 
 user
-{
- "email": "dohak20692@nomrista.com",
-  "password": "@ASDLQW12awd"
-}
-
-
-
-
-
 
 
 
