@@ -97,7 +97,7 @@ export class PaymentService {
   }
 
   async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
-    const { paymentIntentId, bookingId } = confirmPaymentDto;
+    const { paymentIntentId, bookingId, userEmail } = confirmPaymentDto;
 
     try {
       // Retrieve payment intent from Stripe
@@ -152,8 +152,8 @@ export class PaymentService {
 
         this.logger.log(`Payment confirmed for booking: ${bookingId}`);
 
-        // Send booking confirmation email
-        await this.sendBookingConfirmationEmail(updatedBooking);
+        // Send booking confirmation email to both contact and JWT user
+        await this.sendBookingConfirmationEmail(updatedBooking, userEmail);
 
         return {
           success: true,
@@ -278,12 +278,17 @@ export class PaymentService {
   /**
    * Send booking confirmation email after successful payment
    */
-  private async sendBookingConfirmationEmail(booking: BookingDocument): Promise<void> {
+  private async sendBookingConfirmationEmail(booking: BookingDocument, jwtUserEmail?: string): Promise<void> {
     try {
       const emailData = this.convertBookingToEmailData(booking);
+      // Send to contact email
       await this.emailService.sendBookingConfirmationEmail(emailData);
       this.logger.log(`Booking confirmation email sent for booking: ${booking.bookingRef}`);
-
+      // Send to JWT user if different
+      if (jwtUserEmail && jwtUserEmail !== emailData.contactDetails.email) {
+        await this.emailService.sendBookingConfirmationEmail({ ...emailData, contactDetails: { ...emailData.contactDetails, email: jwtUserEmail } });
+        this.logger.log(`Booking confirmation email also sent to JWT user: ${jwtUserEmail}`);
+      }
       // Also display QR code in terminal for debugging/verification
       try {
         await this.emailService.displayQRCodeInTerminal(booking.bookingRef);

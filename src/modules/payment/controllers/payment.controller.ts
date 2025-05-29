@@ -58,6 +58,9 @@ export class PaymentController {
   ) {
     this.logger.log(`Confirming payment for user: ${user.id}`);
 
+    // Attach the JWT user's email to the DTO
+    confirmPaymentDto.userEmail = user.email;
+
     const result = await this.paymentService.confirmPayment(confirmPaymentDto);
 
     // Use the message from the service if available, otherwise use default
