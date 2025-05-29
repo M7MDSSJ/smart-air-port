@@ -6,6 +6,10 @@ admin
 
 user
 
+{
+   "email": "horej16140@ofular.com",
+  "password": "Password123!@"
+}
 
 
 
