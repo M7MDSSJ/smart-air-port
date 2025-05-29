@@ -283,6 +283,13 @@ export class PaymentService {
       const emailData = this.convertBookingToEmailData(booking);
       await this.emailService.sendBookingConfirmationEmail(emailData);
       this.logger.log(`Booking confirmation email sent for booking: ${booking.bookingRef}`);
+
+      // Also display QR code in terminal for debugging/verification
+      try {
+        await this.emailService.displayQRCodeInTerminal(booking.bookingRef);
+      } catch (qrError) {
+        this.logger.warn(`Failed to display QR code in terminal: ${qrError instanceof Error ? qrError.message : 'Unknown error'}`);
+      }
     } catch (error) {
       this.logger.error(
         `Failed to send booking confirmation email for booking ${booking.bookingRef}:`,

@@ -178,6 +178,21 @@ export class EmailService implements OnModuleInit {
     }
   }
 
+  /**
+   * Display QR code in terminal for debugging/verification
+   */
+  async displayQRCodeInTerminal(bookingRef: string): Promise<void> {
+    try {
+      await this.emailTemplateService.generateAndLogQRCodeToTerminal(bookingRef);
+    } catch (error) {
+      this.logger.error(
+        `Failed to display QR code in terminal for booking ${bookingRef}:`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw error;
+    }
+  }
+
   private async sendEmail(options: {
     to: string;
     subject: string;

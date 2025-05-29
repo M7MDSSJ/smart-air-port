@@ -453,4 +453,58 @@ export class EmailTemplateService {
       };
     }
   }
+
+  /**
+   * Generate QR code and display it in terminal
+   */
+  async generateAndLogQRCodeToTerminal(bookingRef: string): Promise<void> {
+    try {
+      this.logger.log(`🎯 Generating QR code for booking: ${bookingRef}`);
+
+      // Create QR code data
+      const qrCodeData = `BOOKING:${bookingRef}`;
+      this.logger.log(`📝 QR Code Data: ${qrCodeData}`);
+
+      // Generate QR code as terminal string (ASCII)
+      const qrCodeTerminal = await QRCode.toString(qrCodeData, {
+        type: 'terminal',
+        small: true,
+        errorCorrectionLevel: 'M',
+      });
+
+      // Also generate data URL for verification
+      const qrCodeDataURL = await this.generateBookingQRCode(bookingRef);
+
+      console.log('\n' + '='.repeat(50));
+      console.log('🎫 BOOKING QR CODE - TERMINAL DISPLAY');
+      console.log('='.repeat(50));
+      console.log(`📋 Booking Reference: ${bookingRef}`);
+      console.log(`📊 QR Data: ${qrCodeData}`);
+      console.log('='.repeat(50));
+      console.log('\n📱 QR CODE (Scan with your phone):');
+      console.log(qrCodeTerminal);
+      console.log('='.repeat(50));
+
+      if (qrCodeDataURL) {
+        console.log(`✅ Data URL Generated: ${qrCodeDataURL.substring(0, 50)}...`);
+        console.log(`📏 Data URL Length: ${qrCodeDataURL.length} characters`);
+      }
+
+      console.log('='.repeat(50));
+      console.log('✨ QR Code generation completed successfully!');
+      console.log('📱 You can scan this QR code with your phone camera');
+      console.log('🔍 It should show: ' + qrCodeData);
+      console.log('='.repeat(50) + '\n');
+
+      this.logger.log(`✅ QR code displayed in terminal for booking: ${bookingRef}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to generate terminal QR code for booking ${bookingRef}:`, error);
+      console.log('\n' + '='.repeat(50));
+      console.log('❌ QR CODE GENERATION FAILED');
+      console.log('='.repeat(50));
+      console.log(`📋 Booking Reference: ${bookingRef}`);
+      console.log(`🚨 Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log('='.repeat(50) + '\n');
+    }
+  }
 }

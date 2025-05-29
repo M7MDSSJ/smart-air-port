@@ -8,11 +8,27 @@ export class EmailTestController {
   @Get('qr-code')
   async testQRCode(@Query('bookingRef') bookingRef: string = 'TEST123') {
     const result = await this.emailTemplateService.testQRCodeGeneration(bookingRef);
-    
+
     return {
       success: true,
       message: 'QR code test completed',
       data: result,
+    };
+  }
+
+  @Get('qr-code-terminal')
+  async testQRCodeTerminal(@Query('bookingRef') bookingRef: string = 'AB123456') {
+    // This will display the QR code in the server terminal
+    await this.emailTemplateService.generateAndLogQRCodeToTerminal(bookingRef);
+
+    return {
+      success: true,
+      message: `QR code for booking ${bookingRef} has been displayed in the server terminal`,
+      data: {
+        bookingRef,
+        qrData: `BOOKING:${bookingRef}`,
+        instructions: 'Check your server terminal/console to see the QR code display'
+      },
     };
   }
 
@@ -55,7 +71,7 @@ export class EmailTestController {
 
     try {
       const html = await this.emailTemplateService.generateBookingConfirmationEmail(testBookingData);
-      
+
       return {
         success: true,
         message: 'Email preview generated',

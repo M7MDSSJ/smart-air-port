@@ -369,6 +369,29 @@
         ]
       }
     },
+    "/email-test/qr-code-terminal": {
+      "get": {
+        "operationId": "EmailTestController_testQRCodeTerminal",
+        "parameters": [
+          {
+            "name": "bookingRef",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "EmailTest"
+        ]
+      }
+    },
     "/email-test/email-preview": {
       "get": {
         "operationId": "EmailTestController_previewEmail",
