@@ -103,116 +103,6 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
 ```
 
-### **Complete Payment Flow**
-
-```javascript
-// 1. Initialize Stripe
-import { loadStripe } from '@stripe/stripe-js';
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-// 2. Payment Function
-const processPayment = async (bookingId, amount, cardElement) => {
-  try {
-    // Step 1: Create payment intent
-    const response = await fetch(`${API_BASE_URL}/payment/create-payment-intent`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${userToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        bookingId: bookingId,
-        amount: amount,
-        currency: 'USD'
-      })
-    });
-
-    const { data } = await response.json();
-    const { clientSecret, paymentIntentId } = data;
-
-    // Step 2: Confirm payment with Stripe.js
-    const stripe = await stripePromise;
-    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: {
-          name: 'Customer Name',
-          email: 'customer@email.com'
-        }
-      }
-    });
-
-    // Step 3: Handle result
-    if (error) {
-      console.error('Payment failed:', error);
-      return { success: false, error: error.message };
-    }
-
-    if (paymentIntent.status === 'succeeded') {
-      // Step 4: Optional - Update booking status
-      await fetch(`${API_BASE_URL}/payment/confirm-payment`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          paymentIntentId: paymentIntent.id,
-          bookingId: bookingId
-        })
-      });
-
-      return { success: true, paymentIntent };
-    }
-
-    return { success: false, error: 'Payment not completed' };
-
-  } catch (error) {
-    console.error('Payment error:', error);
-    return { success: false, error: error.message };
-  }
-};
-```
-
-### **HTML Payment Form**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
-  <form id="payment-form">
-    <div id="card-element">
-      <!-- Stripe Elements will create form elements here -->
-    </div>
-    <button id="submit-payment">Pay $450.99</button>
-  </form>
-
-  <script>
-    const stripe = Stripe('pk_test_your_publishable_key');
-    const elements = stripe.elements();
-    const cardElement = elements.create('card');
-    cardElement.mount('#card-element');
-
-    document.getElementById('payment-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      
-      // Use the processPayment function from above
-      const result = await processPayment('booking_id', 450.99, cardElement);
-      
-      if (result.success) {
-        window.location.href = '/success';
-      } else {
-        alert('Payment failed: ' + result.error);
-      }
-    });
-  </script>
-</body>
-</html>
-```
-
-## 🔐 **Security Configuration**
 
 ### **Environment Variables (Backend)**
 ```env
@@ -264,15 +154,7 @@ Insufficient Funds: 4000000000009995
 
 ## 🚨 **Error Handling**
 
-### **Common Errors**
-```javascript
-// Handle these scenarios:
-- Card declined
-- Insufficient funds
-- Network errors
-- Invalid payment intent
-- Webhook failures
-```
+
 
 ### **Error Response Format**
 ```json
@@ -286,25 +168,8 @@ Insufficient Funds: 4000000000009995
 }
 ```
 
-## 🎯 **Production Checklist**
-
-- [ ] Replace test keys with live keys
-- [ ] Configure webhook endpoint
-- [ ] Test with real cards (small amounts)
-- [ ] Implement proper error handling
-- [ ] Add payment logging
-- [ ] Set up monitoring
-- [ ] Configure HTTPS
-- [ ] Test webhook delivery
-- [ ] Implement refund functionality
-- [ ] Add payment analytics
 
 ## 📱 **Mobile Integration**
-
-### **React Native**
-```bash
-npm install @stripe/stripe-react-native
-```
 
 ### **Flutter**
 ```yaml
@@ -317,9 +182,3 @@ dependencies:
 Your backend automatically handles:
 - `payment_intent.succeeded` → Updates booking to confirmed
 - `payment_intent.payment_failed` → Updates payment status to failed
-
-## 📞 **Support**
-
-- **Stripe Documentation**: https://stripe.com/docs
-- **Test Cards**: https://stripe.com/docs/testing
-- **Webhook Testing**: https://stripe.com/docs/webhooks/test
