@@ -164,7 +164,62 @@ Authorization: Bearer YOUR_JWT_TOKEN
   "meta": null
 }
 ```
+**5. WEBHOOK**
+```json
+POST /payments/webhook
+Headers{
+Stripe-Signature: <stripe-signature-header>
+Content-Type: application/json
+}
+Body{
+{
+  "id": "evt_1ABC...",
+  "object": "event",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_1DEF...",
+      "object": "payment_intent",
+      "status": "succeeded",
+      "amount": 12000,
+      "currency": "usd",
+      "metadata": {
+        "bookingId": "6642ff2e46ba34124a9f26b1",
+        "bookingRef": "FBX123456"
+      }
+    }
+  }
+}
+}
+Response {
+  "received": true
+}
+Error Response{
+  "statusCode": 404,
+  "message": "Booking not found"
+}
 
+
+```
+**6. payment-status%**
+```json
+GET /payments/status/:bookingId
+
+ Response Example{
+  "bookingId": "6642ff2e46ba34124a9f26b1",
+  "paymentStatus": "completed",
+  "bookingStatus": "confirmed",
+  "paymentIntentId": "pi_1DEF...",
+  "stripeStatus": "succeeded",
+  "paymentCompletedAt": "2025-06-04T14:23:00.123Z"
+}
+Error Response
+{
+  "statusCode": 404,
+  "message": "Booking not found"
+}
+
+```
 ## Testing Flow
 
 ### Step 1: Login and Get JWT Token
