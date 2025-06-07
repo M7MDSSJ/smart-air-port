@@ -25,7 +25,7 @@ export enum TravelerType {
 export class ContactDetailsDto {
   @ApiProperty({
     example: 'john.doe@example.com',
-    description: 'Contact email for booking notifications'
+    description: 'Contact email for booking notifications',
   })
   @IsEmail({}, { message: 'Invalid email format' })
   @IsNotEmpty({ message: 'Email is required' })
@@ -33,12 +33,13 @@ export class ContactDetailsDto {
 
   @ApiProperty({
     example: '+201234567890',
-    description: 'Contact phone number in international format'
+    description: 'Contact phone number in international format',
   })
   @IsString()
   @IsNotEmpty({ message: 'Phone number is required' })
   @IsValidPhoneNumber({
-    message: 'Phone number must be a valid international phone number (e.g., +201234567890)',
+    message:
+      'Phone number must be a valid international phone number (e.g., +201234567890)',
   })
   phone: string;
 }
@@ -46,7 +47,7 @@ export class ContactDetailsDto {
 export class TravellerInfoDto {
   @ApiProperty({
     example: 'Ahmed',
-    description: 'Traveler first name'
+    description: 'Traveler first name',
   })
   @IsString()
   @IsNotEmpty({ message: 'First name is required' })
@@ -55,7 +56,7 @@ export class TravellerInfoDto {
 
   @ApiProperty({
     example: 'Mohamed',
-    description: 'Traveler last name'
+    description: 'Traveler last name',
   })
   @IsString()
   @IsNotEmpty({ message: 'Last name is required' })
@@ -64,22 +65,27 @@ export class TravellerInfoDto {
 
   @ApiProperty({
     example: '2000-02-01',
-    description: 'Traveler birth date in YYYY-MM-DD format'
+    description: 'Traveler birth date in YYYY-MM-DD format',
   })
-  @IsDateString({}, { message: 'Birth date must be a valid date in YYYY-MM-DD format' })
+  @IsDateString(
+    {},
+    { message: 'Birth date must be a valid date in YYYY-MM-DD format' },
+  )
   birthDate: string;
 
   @ApiProperty({
     enum: TravelerType,
     example: TravelerType.ADULT,
-    description: 'Type of traveler'
+    description: 'Type of traveler',
   })
-  @IsEnum(TravelerType, { message: 'Traveler type must be adult, child, or infant' })
+  @IsEnum(TravelerType, {
+    message: 'Traveler type must be adult, child, or infant',
+  })
   travelerType: TravelerType;
 
   @ApiProperty({
     example: 'Egyptian',
-    description: 'Traveler nationality'
+    description: 'Traveler nationality',
   })
   @IsString()
   @IsNotEmpty({ message: 'Nationality is required' })
@@ -90,7 +96,7 @@ export class TravellerInfoDto {
 
   @ApiProperty({
     example: 'A12345678',
-    description: 'Passport number'
+    description: 'Passport number',
   })
   @IsString()
   @IsNotEmpty({ message: 'Passport number is required' })
@@ -99,7 +105,7 @@ export class TravellerInfoDto {
 
   @ApiProperty({
     example: 'Egypt',
-    description: 'Passport issuing country'
+    description: 'Passport issuing country',
   })
   @IsString()
   @IsNotEmpty({ message: 'Issuing country is required' })
@@ -110,16 +116,19 @@ export class TravellerInfoDto {
 
   @ApiProperty({
     example: '2030-02-01',
-    description: 'Passport expiry date in YYYY-MM-DD format'
+    description: 'Passport expiry date in YYYY-MM-DD format',
   })
-  @IsDateString({}, { message: 'Expiry date must be a valid date in YYYY-MM-DD format' })
+  @IsDateString(
+    {},
+    { message: 'Expiry date must be a valid date in YYYY-MM-DD format' },
+  )
   expiryDate: string;
 }
 
 export class CreateBookingDto {
   @ApiProperty({
     example: 'FL123456',
-    description: 'Unique flight identifier'
+    description: 'Unique flight identifier',
   })
   @IsString()
   @IsNotEmpty({ message: 'Flight ID is required' })
@@ -127,7 +136,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: 'LGA',
-    description: 'Origin airport IATA code'
+    description: 'Origin airport IATA code',
   })
   @IsString()
   @IsNotEmpty({ message: 'Origin airport code is required' })
@@ -136,7 +145,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: 'DAD',
-    description: 'Destination airport IATA code'
+    description: 'Destination airport IATA code',
   })
   @IsString()
   @IsNotEmpty({ message: 'Destination airport code is required' })
@@ -145,7 +154,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: 'New York',
-    description: 'Origin city name'
+    description: 'Origin city name',
   })
   @IsString()
   @IsNotEmpty({ message: 'Origin city is required' })
@@ -153,7 +162,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: 'Da Nang',
-    description: 'Destination city name'
+    description: 'Destination city name',
   })
   @IsString()
   @IsNotEmpty({ message: 'Destination city is required' })
@@ -161,16 +170,22 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: '2024-08-28',
-    description: 'Departure date in YYYY-MM-DD format'
+    description: 'Departure date in YYYY-MM-DD format',
   })
-  @IsDateString({}, { message: 'Departure date must be a valid date in YYYY-MM-DD format' })
+  @IsDateString(
+    {},
+    { message: 'Departure date must be a valid date in YYYY-MM-DD format' },
+  )
   departureDate: string;
 
   @ApiProperty({
     example: '2024-08-28',
-    description: 'Arrival date in YYYY-MM-DD format'
+    description: 'Arrival date in YYYY-MM-DD format',
   })
-  @IsDateString({}, { message: 'Arrival date must be a valid date in YYYY-MM-DD format' })
+  @IsDateString(
+    {},
+    { message: 'Arrival date must be a valid date in YYYY-MM-DD format' },
+  )
   arrivalDate: string;
 
   @ApiProperty({
@@ -178,17 +193,17 @@ export class CreateBookingDto {
       type: 'checked',
       weight: '23kg',
       price: 50,
-      currency: 'USD'
+      currency: 'USD',
     },
     description: 'Selected baggage option details',
-    required: false
+    required: false,
   })
   @IsOptional()
   selectedBaggageOption?: Record<string, any>;
 
   @ApiProperty({
-    example: 1500.00,
-    description: 'Total price including all fees and taxes'
+    example: 1500.0,
+    description: 'Total price including all fees and taxes',
   })
   @IsNumber({}, { message: 'Total price must be a valid number' })
   @Min(0, { message: 'Total price must be positive' })
@@ -196,7 +211,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     example: 'USD',
-    description: 'Currency code (ISO 4217)'
+    description: 'Currency code (ISO 4217)',
   })
   @IsString()
   @IsNotEmpty({ message: 'Currency is required' })
@@ -205,7 +220,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     type: [TravellerInfoDto],
-    description: 'Array of traveler information'
+    description: 'Array of traveler information',
   })
   @IsArray()
   @ValidateNested({ each: true })
@@ -214,7 +229,7 @@ export class CreateBookingDto {
 
   @ApiProperty({
     type: ContactDetailsDto,
-    description: 'Contact details for booking notifications'
+    description: 'Contact details for booking notifications',
   })
   @ValidateNested()
   @Type(() => ContactDetailsDto)
@@ -223,7 +238,7 @@ export class CreateBookingDto {
   @ApiProperty({
     example: 'BK123456',
     description: 'Booking reference (auto-generated if not provided)',
-    required: false
+    required: false,
   })
   @IsString()
   @IsOptional()

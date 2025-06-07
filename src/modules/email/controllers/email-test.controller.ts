@@ -7,7 +7,8 @@ export class EmailTestController {
 
   @Get('qr-code')
   async testQRCode(@Query('bookingRef') bookingRef: string = 'TEST123') {
-    const result = await this.emailTemplateService.testQRCodeGeneration(bookingRef);
+    const result =
+      await this.emailTemplateService.testQRCodeGeneration(bookingRef);
 
     return {
       success: true,
@@ -17,7 +18,9 @@ export class EmailTestController {
   }
 
   @Get('qr-code-terminal')
-  async testQRCodeTerminal(@Query('bookingRef') bookingRef: string = 'AB123456') {
+  async testQRCodeTerminal(
+    @Query('bookingRef') bookingRef: string = 'AB123456',
+  ) {
     // This will display the QR code in the server terminal
     await this.emailTemplateService.generateAndLogQRCodeToTerminal(bookingRef);
 
@@ -27,7 +30,8 @@ export class EmailTestController {
       data: {
         bookingRef,
         qrData: `BOOKING:${bookingRef}`,
-        instructions: 'Check your server terminal/console to see the QR code display'
+        instructions:
+          'Check your server terminal/console to see the QR code display',
       },
     };
   }
@@ -43,7 +47,7 @@ export class EmailTestController {
       destinationCity: 'Da Nang',
       departureDate: new Date('2024-08-28T14:00:00Z'),
       arrivalDate: new Date('2024-08-28T18:00:00Z'),
-      totalPrice: 900.00,
+      totalPrice: 900.0,
       currency: 'USD',
       travellersInfo: [
         {
@@ -70,7 +74,10 @@ export class EmailTestController {
     };
 
     try {
-      const html = await this.emailTemplateService.generateBookingConfirmationEmail(testBookingData);
+      const html =
+        await this.emailTemplateService.generateBookingConfirmationEmail(
+          testBookingData,
+        );
 
       return {
         success: true,

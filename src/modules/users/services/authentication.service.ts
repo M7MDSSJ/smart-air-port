@@ -137,58 +137,58 @@ export class AuthenticationService {
     }
   }
 
- async updateRoles(
-  email: string,
-  updateUserRolesDto: UpdateUserRolesDto,
-  currentUser: JwtUser,
-): Promise<UpdateRolesResponseDto> {
-  if (updateUserRolesDto.roles.length === 0) {
-    throw new BadRequestException('User must have at least one role');
-  }
-  if (
-    updateUserRolesDto.roles.some(
-      (role) => !Object.values(Role).includes(role),
-    )
-  ) {
-    throw new BadRequestException('Invalid role provided');
-  }
-  if (!currentUser.roles?.includes(Role.Admin)) {
-    throw new ForbiddenException('Insufficient permissions');
-  }
+  async updateRoles(
+    email: string,
+    updateUserRolesDto: UpdateUserRolesDto,
+    currentUser: JwtUser,
+  ): Promise<UpdateRolesResponseDto> {
+    if (updateUserRolesDto.roles.length === 0) {
+      throw new BadRequestException('User must have at least one role');
+    }
+    if (
+      updateUserRolesDto.roles.some(
+        (role) => !Object.values(Role).includes(role),
+      )
+    ) {
+      throw new BadRequestException('Invalid role provided');
+    }
+    if (!currentUser.roles?.includes(Role.Admin)) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
 
-  // Find user by email
-  const user = await this.userRepository.findByEmail(email);
-  if (!user) {
-    throw new NotFoundException('User not found');
-  }
-  if (currentUser.id === user._id.toString()) {
-    throw new BadRequestException('Admins cannot modify their own roles');
-  }
-
-  this.logger.log(
-    `Admin ${currentUser.email} updating roles for user ${user._id}`,
-  );
-
-  return this.userRepository.withTransaction(async (session) => {
-    const updatedUser = await this.userRepository.updateRoles(
-      user.id,
-      updateUserRolesDto.roles,
-      { session },
-    );
+    // Find user by email
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (currentUser.id === user._id.toString()) {
+      throw new BadRequestException('Admins cannot modify their own roles');
+    }
 
     this.logger.log(
-      `Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`,
+      `Admin ${currentUser.email} updating roles for user ${user._id}`,
     );
 
-    return {
-      success: true,
-      data: {
-        message: 'User roles updated successfully',
-        user: this.excludeSensitiveFields(updatedUser!),
-      },
-    };
-  });
-}
+    return this.userRepository.withTransaction(async (session) => {
+      const updatedUser = await this.userRepository.updateRoles(
+        user.id,
+        updateUserRolesDto.roles,
+        { session },
+      );
+
+      this.logger.log(
+        `Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`,
+      );
+
+      return {
+        success: true,
+        data: {
+          message: 'User roles updated successfully',
+          user: this.excludeSensitiveFields(updatedUser!),
+        },
+      };
+    });
+  }
 
   private excludeSensitiveFields(user: UserDocument): UserResponseDto {
     const plainUser = user.toObject();

@@ -3,9 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { HttpModule } from '@nestjs/axios';
 import { PaymentService } from './services/payment.service';
+import { PaymobService } from './services/paymob.service';
+import { PaymentTransactionService } from './services/payment-transaction.service';
 import { PaymentController } from './controllers/payment.controller';
 import { Booking, BookingSchema } from '../booking/schemas/booking.schema';
+import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
@@ -13,7 +17,11 @@ import { EmailModule } from '../email/email.module';
 @Module({
   imports: [
     ConfigModule,
-    MongooseModule.forFeature([{ name: Booking.name, schema: BookingSchema }]),
+    HttpModule,
+    MongooseModule.forFeature([
+      { name: Booking.name, schema: BookingSchema },
+      { name: Payment.name, schema: PaymentSchema },
+    ]),
     AuthModule,
     UsersModule,
     EmailModule,
@@ -30,7 +38,7 @@ import { EmailModule } from '../email/email.module';
     }),
   ],
   controllers: [PaymentController],
-  providers: [PaymentService],
-  exports: [PaymentService],
+  providers: [PaymentService, PaymobService, PaymentTransactionService],
+  exports: [PaymentService, PaymobService, PaymentTransactionService],
 })
 export class PaymentModule {}
