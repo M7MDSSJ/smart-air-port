@@ -31,8 +31,8 @@ export class AmadeusService {
     const clientSecret = this.configService.get<string>('AMADEUS_API_SECRET');
     const body = new URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: clientId!,
-      client_secret: clientSecret!,
+      client_id: clientId,
+      client_secret: clientSecret,
     });
 
     const axiosInstance = await this.getAxiosInstance(); // Add 'await'

@@ -184,7 +184,7 @@ export class AuthenticationService {
         success: true,
         data: {
           message: 'User roles updated successfully',
-          user: this.excludeSensitiveFields(updatedUser!),
+          user: this.excludeSensitiveFields(updatedUser),
         },
       };
     });

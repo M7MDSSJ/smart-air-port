@@ -8,8 +8,10 @@ import {
   IsObject,
   IsBoolean,
 } from 'class-validator';
-import { PaymentMethod, PaymentProvider } from '../schemas/payment.schema';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentProvider } from '../enums/payment-provider.enum';
 import { Type } from 'class-transformer';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 export class CreatePaymentDto {
   @IsMongoId()
@@ -38,11 +40,19 @@ export class CreatePaymentDto {
 
   @IsString()
   @IsOptional()
+  transactionId?: string;
+
+  @IsString()
+  @IsOptional()
   paymentKey?: string;
 
   @IsObject()
   @IsOptional()
   metadata?: Record<string, any>;
+
+  @IsEnum(PaymentStatus)
+  @IsOptional()
+  status?: PaymentStatus;
 
   @IsBoolean()
   @IsOptional()

@@ -1,12 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {
-  Payment,
-  PaymentDocument,
-  PaymentProvider,
-  PaymentStatus,
-} from '../schemas/payment.schema';
+import { Payment, PaymentDocument } from '../schemas/payment.schema';
+import { PaymentProvider } from '../enums/payment-provider.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { UpdatePaymentStatusDto } from '../dto/update-payment-status.dto';
 
@@ -21,11 +18,13 @@ export class PaymentTransactionService {
   /**
    * Create a new payment record
    */
-  async createPayment(createPaymentDto: CreatePaymentDto): Promise<Payment> {
+  async createPayment(
+    createPaymentDto: CreatePaymentDto,
+  ): Promise<PaymentDocument> {
     try {
       const payment = new this.paymentModel({
         ...createPaymentDto,
-        status: PaymentStatus.PENDING,
+        status: createPaymentDto.status || PaymentStatus.PENDING,
       });
 
       const savedPayment = await payment.save();
@@ -45,7 +44,7 @@ export class PaymentTransactionService {
   async updatePaymentStatus(
     paymentId: string,
     updateData: UpdatePaymentStatusDto,
-  ): Promise<Payment | null> {
+  ): Promise<PaymentDocument | null> {
     try {
       const payment = await this.paymentModel.findByIdAndUpdate(
         paymentId,
@@ -81,21 +80,21 @@ export class PaymentTransactionService {
   /**
    * Find payment by ID
    */
-  async findById(paymentId: string): Promise<Payment | null> {
+  async findById(paymentId: string): Promise<PaymentDocument | null> {
     return this.paymentModel.findById(paymentId).exec();
   }
 
   /**
    * Find payment by transaction ID
    */
-  async findByTransactionId(transactionId: string): Promise<Payment | null> {
+  async findByTransactionId(transactionId: string): Promise<PaymentDocument | null> {
     return this.paymentModel.findOne({ transactionId }).exec();
   }
 
   /**
    * Find payment by booking ID
    */
-  async findByBookingId(bookingId: string): Promise<Payment | null> {
+  async findByBookingId(bookingId: string): Promise<PaymentDocument | null> {
     return this.paymentModel.findOne({ bookingId }).exec();
   }
 
@@ -110,7 +109,7 @@ export class PaymentTransactionService {
       status?: PaymentStatus;
       provider?: PaymentProvider;
     } = {},
-  ): Promise<{ payments: Payment[]; total: number }> {
+  ): Promise<{ payments: PaymentDocument[]; total: number }> {
     const { limit = 10, page = 1, status, provider } = options;
     const skip = (page - 1) * limit;
 
@@ -139,7 +138,7 @@ export class PaymentTransactionService {
     amount: number,
     reason: string,
     metadata: Record<string, any> = {},
-  ): Promise<Payment | null> {
+  ): Promise<PaymentDocument | null> {
     try {
       const payment = await this.paymentModel.findById(paymentId);
 

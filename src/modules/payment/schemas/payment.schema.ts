@@ -1,35 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentProvider } from '../enums/payment-provider.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 export type PaymentDocument = Payment & Document;
-
-export enum PaymentProvider {
-  PAYMOB = 'paymob',
-  STRIPE = 'stripe',
-  CASH = 'cash',
-  OTHER = 'other',
-}
-
-export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  DECLINED = 'declined',
-  REFUNDED = 'refunded',
-  PARTIALLY_REFUNDED = 'partially_refunded',
-  CANCELLED = 'cancelled',
-  EXPIRED = 'expired',
-}
-
-export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  WALLET = 'wallet',
-  BANK_TRANSFER = 'bank_transfer',
-  CASH_ON_DELIVERY = 'cash_on_delivery',
-  OTHER = 'other',
-}
 
 @Schema({
   timestamps: true,

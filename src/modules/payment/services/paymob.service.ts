@@ -8,6 +8,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Booking, BookingDocument } from '../../booking/schemas/booking.schema';
 import { EmailService } from '../../email/email.service';
 import { BookingEmailData } from '../../email/services/email-template.service';
+import { PaymentTransactionService } from './payment-transaction.service';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentProvider } from '../enums/payment-provider.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
 
 // Types for Paymob API responses
 interface PaymobAuthResponse {
@@ -70,6 +75,7 @@ export class PaymobService {
     @InjectModel(Booking.name)
     private readonly bookingModel: Model<BookingDocument>,
     private readonly emailService: EmailService,
+    private readonly paymentTransactionService: PaymentTransactionService,
   ) {
     this.paymobApiKey = this.configService.get<string>('PAYMOB_API_KEY');
     this.paymobMerchantId =
@@ -132,6 +138,36 @@ export class PaymobService {
       this.logger.error(`Failed to fetch transaction ${transactionId}`, error);
       throw new HttpException(
         `Failed to fetch transaction: ${error.message}`,
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  /**
+   * Get order details from Paymob
+   */
+  async getOrder(orderId: string | number, token: string): Promise<any> {
+    const url = `https://accept.paymob.com/api/ecommerce/orders/${orderId}`;
+    this.logger.debug(`Fetching order ${orderId} from Paymob`);
+
+    try {
+      const response = await this.makeRequest({
+        method: 'GET',
+        url,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      this.logger.debug(
+        `Paymob getOrder response for order ${orderId}:`,
+        JSON.stringify(response.data, null, 2),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Failed to fetch order ${orderId}`, error);
+      throw new HttpException(
+        `Failed to fetch order: ${error.message}`,
         HttpStatus.BAD_GATEWAY,
       );
     }
@@ -260,11 +296,8 @@ export class PaymobService {
   /**
    * Verify Paymob webhook signature
    */
-  /**
-   * Verify Paymob webhook signature
-   */
   verifyWebhookSignature(
-    payload: Record<string, any>,
+    payload: PaymobWebhookData,
     receivedHmac: string,
   ): boolean {
     if (!this.paymobHmacSecret) {
@@ -275,21 +308,33 @@ export class PaymobService {
     }
 
     try {
-      // Create a copy of the payload to avoid mutating the original
-      const payloadCopy = { ...payload };
+      const { obj: transaction } = payload;
 
-      // Remove the hmac field if present
-      delete payloadCopy.hmac;
-
-      // Convert all values to strings and sort the keys
-      const sorted = Object.entries(payloadCopy)
-        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-        .map(([key, value]) => `${key}=${value}`)
-        .join('');
+      // The data to be hashed is the concatenation of specific values from the transaction object
+      // in a predefined order as per Paymob documentation.
+      const concatenatedString = [
+        transaction.amount_cents,
+        transaction.created_at,
+        transaction.currency,
+        transaction.error_occured,
+        transaction.has_parent_transaction,
+        transaction.id,
+        transaction.integration_id,
+        transaction.is_3d_secure,
+        transaction.is_auth,
+        transaction.is_capture,
+        transaction.is_refunded,
+        transaction.is_standalone_payment,
+        transaction.is_voided,
+        transaction.order.id,
+        transaction.owner,
+        transaction.pending,
+        transaction.success,
+      ].join('');
 
       // Create HMAC signature
       const hash = createHmac('sha512', this.paymobHmacSecret)
-        .update(sorted)
+        .update(concatenatedString)
         .digest('hex');
 
       // Compare the signatures
@@ -299,7 +344,7 @@ export class PaymobService {
         this.logger.warn('Webhook signature verification failed', {
           expected: hash,
           received: receivedHmac,
-          payload: JSON.stringify(payloadCopy, null, 2),
+          payload: JSON.stringify(payload, null, 2),
         });
       }
 
@@ -574,7 +619,9 @@ export class PaymobService {
       });
 
       // Log the full webhook payload for debugging
-      this.logger.warn('Paymob webhook payload', { payload: JSON.stringify(payload, null, 2) });
+      this.logger.warn('Paymob webhook payload', {
+        payload: JSON.stringify(payload, null, 2),
+      });
 
       // Extract merchant order ID (booking ID) from the transaction
       let merchantOrderId = payload?.obj?.order?.merchant_order_id;
@@ -582,10 +629,14 @@ export class PaymobService {
         // Fallback: Try to find booking by Paymob order ID
         const paymobOrderId = payload?.obj?.order?.id;
         if (paymobOrderId) {
-          const booking = await this.bookingModel.findOne({ 'payment.paymobOrderId': paymobOrderId });
+          const booking = await this.bookingModel.findOne({
+            'payment.paymobOrderId': paymobOrderId,
+          });
           if (booking) {
             merchantOrderId = booking._id.toString();
-            this.logger.warn(`Fallback: Matched booking by Paymob order id: ${paymobOrderId} → bookingId: ${merchantOrderId}`);
+            this.logger.warn(
+              `Fallback: Matched booking by Paymob order id: ${paymobOrderId} → bookingId: ${merchantOrderId}`,
+            );
           }
         }
       }
@@ -625,6 +676,47 @@ export class PaymobService {
           { new: true },
         );
 
+        // Create or update payment record
+        const existingPayment =
+          await this.paymentTransactionService.findByBookingId(merchantOrderId);
+
+        if (existingPayment) {
+          // Update existing payment record
+          await this.paymentTransactionService.updatePaymentStatus(
+            existingPayment._id.toString(),
+            {
+              status: PaymentStatus.COMPLETED,
+              transactionId: result.transactionId.toString(),
+              providerResponse: result.data,
+            },
+          );
+          this.logger.log(
+            `Updated existing payment record ${existingPayment._id.toString()} for booking ${merchantOrderId}`,
+          );
+        } else {
+          // Create new payment record
+          const paymentData: CreatePaymentDto = {
+            userId: booking.userId.toString(),
+            bookingId: booking._id.toString(),
+            amount: result.amount,
+            currency: 'EGP',
+            provider: PaymentProvider.PAYMOB,
+            method: PaymentMethod.CREDIT_CARD, // Default to credit card, can be refined based on actual data
+            transactionId: result.transactionId.toString(),
+            metadata: {
+              paymobOrderId: result.orderId,
+              transactionDetails: result.data,
+            },
+            isTest: process.env.NODE_ENV !== 'production',
+          };
+
+          const payment =
+            await this.paymentTransactionService.createPayment(paymentData);
+          this.logger.log(
+            `Created new payment record ${payment._id} for booking ${merchantOrderId}`,
+          );
+        }
+
         // Send confirmation email
         const emailData = this.convertBookingToEmailData(booking);
         await this.emailService.sendBookingConfirmationEmail(emailData);
@@ -638,6 +730,47 @@ export class PaymobService {
           updatedAt: new Date(),
         });
 
+        // Create or update payment record for pending payment
+        const existingPayment =
+          await this.paymentTransactionService.findByBookingId(merchantOrderId);
+
+        if (existingPayment) {
+          // Update existing payment record
+          await this.paymentTransactionService.updatePaymentStatus(
+            existingPayment._id.toString(),
+            {
+              status: PaymentStatus.PROCESSING, // Use PROCESSING for pending payments
+              transactionId: result.transactionId.toString(),
+              providerResponse: result.data,
+            },
+          );
+          this.logger.log(
+            `Updated existing payment record ${existingPayment._id.toString()} to pending for booking ${merchantOrderId}`,
+          );
+        } else {
+          // Create new payment record
+          const paymentData: CreatePaymentDto = {
+            userId: booking.userId.toString(),
+            bookingId: booking._id.toString(),
+            amount: result.amount,
+            currency: 'EGP',
+            provider: PaymentProvider.PAYMOB,
+            method: PaymentMethod.CREDIT_CARD, // Default to credit card, can be refined based on actual data
+            transactionId: result.transactionId.toString(),
+            metadata: {
+              paymobOrderId: result.orderId,
+              transactionDetails: result.data,
+            },
+            isTest: process.env.NODE_ENV !== 'production',
+          };
+
+          const payment =
+            await this.paymentTransactionService.createPayment(paymentData);
+          this.logger.log(
+            `Created new payment record ${payment._id} with pending status for booking ${merchantOrderId}`,
+          );
+        }
+
         this.logger.log(`Payment pending for booking ${merchantOrderId}`);
       } else if (result.isError) {
         // Payment failed
@@ -647,6 +780,57 @@ export class PaymobService {
           'payment.lastError': JSON.stringify(result.data),
           updatedAt: new Date(),
         });
+
+        // Create or update payment record for failed payment
+        const existingPayment =
+          await this.paymentTransactionService.findByBookingId(merchantOrderId);
+
+        if (existingPayment) {
+          // Update existing payment record
+          await this.paymentTransactionService.updatePaymentStatus(
+            existingPayment._id.toString(),
+            {
+              status: PaymentStatus.FAILED,
+              transactionId: result.transactionId.toString(),
+              providerResponse: result.data,
+              failureMessage: JSON.stringify(result.data),
+            },
+          );
+          this.logger.log(
+            `Updated existing payment record ${existingPayment._id.toString()} to failed for booking ${merchantOrderId}`,
+          );
+        } else {
+          // Create new payment record
+          const paymentData: CreatePaymentDto = {
+            userId: booking.userId.toString(),
+            bookingId: booking._id.toString(),
+            amount: result.amount,
+            currency: 'EGP',
+            provider: PaymentProvider.PAYMOB,
+            method: PaymentMethod.CREDIT_CARD, // Default to credit card, can be refined based on actual data
+            transactionId: result.transactionId.toString(),
+            metadata: {
+              paymobOrderId: result.orderId,
+              transactionDetails: result.data,
+              error: true,
+            },
+            isTest: process.env.NODE_ENV !== 'production',
+          };
+
+          const payment =
+            await this.paymentTransactionService.createPayment(paymentData);
+          // Update the status to FAILED since createPayment sets it to PENDING by default
+          await this.paymentTransactionService.updatePaymentStatus(
+            payment._id.toString(),
+            {
+              status: PaymentStatus.FAILED,
+              failureMessage: JSON.stringify(result.data),
+            },
+          );
+          this.logger.log(
+            `Created new payment record ${payment._id} with failed status for booking ${merchantOrderId}`,
+          );
+        }
 
         this.logger.warn(`Payment failed for booking ${merchantOrderId}`);
       }

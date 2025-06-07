@@ -44,9 +44,8 @@ async function bootstrap() {
         },
       },
     }),
-    { rawBody: true } // <-- This enables rawBody for all requests in NestJS Fastify
+    { rawBody: true }, // <-- This enables rawBody for all requests in NestJS Fastify
   );
-
 
   app.useGlobalPipes(
     new ValidationPipe({

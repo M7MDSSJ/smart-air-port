@@ -13,6 +13,12 @@ import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
 import { ConfirmPaymentDto } from '../dto/confirm-payment.dto';
 import { EmailService } from '../../email/email.service';
 import { BookingEmailData } from '../../email/services/email-template.service';
+import { PaymobService } from './paymob.service';
+import { PaymentTransactionService } from './payment-transaction.service';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentProvider } from '../enums/payment-provider.enum';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 @Injectable()
 export class PaymentService {
@@ -23,6 +29,8 @@ export class PaymentService {
     private configService: ConfigService,
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
     private emailService: EmailService,
+    private paymobService: PaymobService,
+    private paymentTransactionService: PaymentTransactionService,
   ) {
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
@@ -122,7 +130,7 @@ export class PaymentService {
 
     try {
       // Retrieve payment intent from Stripe
-      let paymentIntent =
+      const paymentIntent =
         await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
       // In production, payment confirmation happens after frontend uses Stripe.js
@@ -235,14 +243,10 @@ export class PaymentService {
 
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await this.handlePaymentSucceeded(
-            event.data.object as Stripe.PaymentIntent,
-          );
+          await this.handlePaymentSucceeded(event.data.object);
           break;
         case 'payment_intent.payment_failed':
-          await this.handlePaymentFailed(
-            event.data.object as Stripe.PaymentIntent,
-          );
+          await this.handlePaymentFailed(event.data.object);
           break;
         default:
           this.logger.log(`Unhandled event type: ${event.type}`);
@@ -364,17 +368,66 @@ export class PaymentService {
       throw new NotFoundException('Booking not found');
     }
 
-    let stripeStatus = null;
-    if (booking.paymentIntentId) {
-      try {
-        const paymentIntent = await this.stripe.paymentIntents.retrieve(
-          booking.paymentIntentId,
+    if (booking.paymentStatus === 'pending') {
+      const payment = await this.paymentTransactionService.findByBookingId(
+        bookingId,
+      );
+
+      if (
+        payment &&
+        payment.provider === 'paymob' &&
+        payment.metadata?.paymobOrderId
+      ) {
+        this.logger.log(
+          `Pending payment for booking ${bookingId}, checking status with Paymob...`,
         );
-        stripeStatus = paymentIntent.status;
-      } catch (error) {
-        this.logger.error(
-          `Failed to retrieve payment intent: ${error.message}`,
-        );
+        try {
+          const authToken = await this.paymobService.authenticate();
+          const order = await this.paymobService.getOrder(
+            payment.metadata.paymobOrderId,
+            authToken,
+          );
+
+          if (order && order.payment_status === 'PAID') {
+            this.logger.log(
+              `Paymob transaction for booking ${bookingId} is successful, updating status.`,
+            );
+            const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+              bookingId,
+              {
+                paymentStatus: 'completed',
+                status: 'confirmed',
+                paymentCompletedAt: new Date(),
+              },
+              { new: true },
+            );
+
+            // Update payment record
+            if (payment) {
+              await this.paymentTransactionService.updatePaymentStatus(
+                payment._id.toString(),
+                {
+                  status: 'completed' as any,
+                  transactionId: order.id,
+                  providerResponse: order,
+                },
+              );
+            }
+
+            return {
+              bookingId,
+              paymentStatus: updatedBooking.paymentStatus,
+              bookingStatus: updatedBooking.status,
+              stripeStatus: null, // Not a Stripe payment
+            };
+          }
+        } catch (error) {
+          this.logger.error(
+            `Failed to get Paymob transaction status for booking ${bookingId}`,
+            error,
+          );
+          // Do not throw error, just return current status
+        }
       }
     }
 
@@ -382,9 +435,10 @@ export class PaymentService {
       bookingId,
       paymentStatus: booking.paymentStatus,
       bookingStatus: booking.status,
-      paymentIntentId: booking.paymentIntentId,
-      stripeStatus,
-      paymentCompletedAt: booking.paymentCompletedAt,
+      stripeStatus: booking.paymentIntentId
+        ? (await this.stripe.paymentIntents.retrieve(booking.paymentIntentId))
+            .status
+        : null,
     };
   }
 
@@ -463,6 +517,24 @@ export class PaymentService {
 
         this.logger.log(
           `Card payment test successful for booking: ${bookingId}`,
+        );
+
+        // Create a payment record for the successful test payment
+        const paymentData: CreatePaymentDto = {
+          userId: updatedBooking.userId.toString(),
+          bookingId: updatedBooking._id.toString(),
+          amount: updatedBooking.totalPrice,
+          currency: updatedBooking.currency,
+          provider: PaymentProvider.STRIPE,
+          method: PaymentMethod.CREDIT_CARD, // Assuming card for this test
+          transactionId: paymentIntent.id,
+          metadata: paymentIntent,
+          isTest: true,
+          status: PaymentStatus.COMPLETED,
+        };
+        await this.paymentTransactionService.createPayment(paymentData);
+        this.logger.log(
+          `Created payment record for successful test payment of booking: ${bookingId}`,
         );
 
         // Send booking confirmation email

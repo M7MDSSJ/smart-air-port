@@ -118,7 +118,7 @@ export class UserManagementService {
       try {
         await this.emailService.sendVerificationEmail(
           savedUser.email,
-          savedUser.verificationToken as string,
+          savedUser.verificationToken,
         );
       } catch (error) {
         this.logger.error(
@@ -361,8 +361,8 @@ export class UserManagementService {
 
       if (updateProfileDto.email && updateProfileDto.email !== user.email) {
         await this.emailService.sendVerificationEmail(
-          updateData.email!,
-          updateData.verificationToken!,
+          updateData.email,
+          updateData.verificationToken,
         );
       }
 
