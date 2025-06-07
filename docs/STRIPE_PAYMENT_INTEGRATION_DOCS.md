@@ -66,6 +66,93 @@ Authorization: Bearer YOUR_JWT_TOKEN
   "meta": null
 }
 ```
+**5. WEBHOOK**
+```json
+POST /payments/webhook
+Headers{
+Stripe-Signature: <stripe-signature-header>
+Content-Type: application/json
+}
+Body{
+{
+  "id": "evt_1ABC...",
+  "object": "event",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_1DEF...",
+      "object": "payment_intent",
+      "status": "succeeded",
+      "amount": 12000,
+      "currency": "usd",
+      "metadata": {
+        "bookingId": "6642ff2e46ba34124a9f26b1",
+        "bookingRef": "FBX123456"
+      }
+    }
+  }
+}
+}
+Response {
+  "received": true
+}
+Error Response{
+  "statusCode": 404,
+  "message": "Booking not found"
+}
+
+
+```
+**6. payment-status%**
+```json
+GET /payments/status/:bookingId
+
+ Response Example{
+  "bookingId": "6642ff2e46ba34124a9f26b1",
+  "paymentStatus": "completed",
+  "bookingStatus": "confirmed",
+  "paymentIntentId": "pi_1DEF...",
+  "stripeStatus": "succeeded",
+  "paymentCompletedAt": "2025-06-04T14:23:00.123Z"
+}
+Error Response
+{
+  "statusCode": 404,
+  "message": "Booking not found"
+}
+
+```
+## Testing Flow
+
+### Step 1: Login and Get JWT Token
+1. Use your existing login endpoint to get a JWT token
+2. Save this token for use in subsequent requests
+
+### Step 2: Create a Booking
+1. Use the booking endpoint to create a new booking
+2. Note the `bookingId` from the response
+3. Verify the booking status is "pending" and paymentStatus is "pending"
+
+### Step 3: Create Payment Intent
+1. Use the `bookingId` from Step 2
+2. Ensure the `amount` matches the `totalPrice` from the booking
+3. Note the `paymentIntentId` and `clientSecret` from the response
+
+### Step 4: Simulate Payment Completion
+Since this is a test environment, you can use Stripe's test payment methods:
+- **Success**: Use payment method `pm_card_visa`
+- **Decline**: Use payment method `pm_card_visa_debit`
+
+### Step 5: Confirm Payment
+1. Use the `paymentIntentId` from Step 3
+2. Use the same `bookingId` from Step 2
+3. Check if the response shows success
+
+### Step 6: Verify Payment Status
+1. Use the payment status endpoint with the `bookingId`
+2. Verify the payment and booking statuses are updated correctly
+
+
 
 ## Stripe Test Cards
 For testing purposes, you can use these test card numbers:
