@@ -174,7 +174,7 @@ export class FlightSearchService {
           `[FLIGHT_SEARCH] Calling Amadeus MultiCity API with legs: ${JSON.stringify(multiCityLegs)}`,
         );
         rawFlights = await this.amadeusService.searchMultiCityFlights(
-          multiCityLegs!.map((leg) => ({
+          multiCityLegs.map((leg) => ({
             origin: leg.departureAirport,
             destination: leg.arrivalAirport,
             departureDate: leg.departureDate,
@@ -225,7 +225,7 @@ export class FlightSearchService {
       rawFlights,
       query,
     );
-    let filteredFlights = formattedFlights.filter((flight) => {
+    const filteredFlights = formattedFlights.filter((flight) => {
       if (minPrice !== undefined && flight.price < minPrice) return false;
       if (maxPrice !== undefined && flight.price > maxPrice) return false;
       if (airline && flight.airline !== airline) return false;

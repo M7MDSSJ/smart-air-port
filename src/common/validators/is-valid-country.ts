@@ -25,7 +25,7 @@ export class IsValidCountryConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsValidCountry(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isValidCountry',
       target: object.constructor,

@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { PaymentStatus } from '../schemas/payment.schema';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 export class UpdatePaymentStatusDto {
   @IsEnum(PaymentStatus)

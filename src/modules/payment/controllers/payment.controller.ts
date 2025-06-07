@@ -26,6 +26,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PaymobService } from '../services/paymob.service';
+import { PaymentTransactionService } from '../services/payment-transaction.service';
+import { PaymentMethod } from '../enums/payment-method.enum';
+import { PaymentProvider } from '../enums/payment-provider.enum';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
 import {
   CreatePaymobPaymentDto,
   PaymobPaymentResponseDto,
@@ -38,6 +42,7 @@ export class PaymentController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly paymobService: PaymobService,
+    private readonly paymentTransactionService: PaymentTransactionService,
   ) {}
 
   @Post('create-payment-intent')
@@ -121,7 +126,9 @@ export class PaymentController {
     @Headers('x-provider') provider: string,
     @Req() req: RawBodyRequest<Request>,
   ) {
-    this.logger.debug(`Webhook received: provider=${provider}, paymobSignature=${paymobSignature}`);
+    this.logger.debug(
+      `Webhook received: provider=${provider}, paymobSignature=${paymobSignature}`,
+    );
     if (provider === 'paymob') {
       this.logger.log('Received Paymob webhook');
       return this.paymobService.handleWebhook(paymobSignature, req.rawBody);
@@ -234,6 +241,30 @@ export class PaymentController {
       orderId,
       billingData,
       'EGP', // Force EGP for Paymob
+    );
+
+    // Create a payment record with PENDING status
+    const paymentData: CreatePaymentDto = {
+      userId: user.id,
+      bookingId: createPaymobPaymentDto.bookingId,
+      amount: booking.totalPrice,
+      currency: 'EGP',
+      provider: PaymentProvider.PAYMOB,
+      method: PaymentMethod.CREDIT_CARD,
+      paymentKey: paymentKey.paymentKey,
+      metadata: {
+        paymobOrderId: orderId,
+        integrationId: this.paymobService.getCardIntegrationId(),
+      },
+      isTest: process.env.NODE_ENV !== 'production',
+    };
+    const payment = await this.paymentTransactionService.createPayment(
+      paymentData,
+    );
+    this.logger.log(
+      `Created initial payment record ${payment._id.toString()} with pending status for booking ${
+        createPaymobPaymentDto.bookingId
+      }`,
     );
 
     // Build the full payment URL for the iframe

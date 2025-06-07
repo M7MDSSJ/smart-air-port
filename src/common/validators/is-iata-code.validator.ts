@@ -19,7 +19,7 @@ export class IsIataCodeConstraint implements ValidatorConstraintInterface {
 
 // This is the actual decorator
 export function IsIataCode(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName,
