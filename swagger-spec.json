@@ -618,6 +618,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-paymob-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-provider",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -636,6 +652,30 @@
         "parameters": [],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/payment/paymob/create-payment-key": {
+      "post": {
+        "operationId": "PaymentController_createPaymobPaymentKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymobPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -1136,6 +1176,10 @@
         "properties": {}
       },
       "ConfirmPaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePaymobPaymentDto": {
         "type": "object",
         "properties": {}
       },

@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -29,8 +34,18 @@ export class PaymentService {
     });
   }
 
+  /**
+   * Get a booking by ID
+   * @param bookingId The ID of the booking to retrieve
+   * @returns The booking document
+   */
+  async getBookingById(bookingId: string) {
+    return this.bookingModel.findById(bookingId).exec();
+  }
+
   async createPaymentIntent(createPaymentIntentDto: CreatePaymentIntentDto) {
-    const { bookingId, amount, currency, paymentMethodId, customerId } = createPaymentIntentDto;
+    const { bookingId, amount, currency, paymentMethodId, customerId } =
+      createPaymentIntentDto;
 
     try {
       // Find the booking
@@ -45,7 +60,7 @@ export class PaymentService {
 
       if (expectedAmount !== providedAmount) {
         throw new BadRequestException(
-          `Amount mismatch. Expected: ${expectedAmount/100}, Provided: ${amount}`
+          `Amount mismatch. Expected: ${expectedAmount / 100}, Provided: ${amount}`,
         );
       }
 
@@ -72,7 +87,8 @@ export class PaymentService {
         paymentIntentParams.confirm = true;
       }
 
-      const paymentIntent = await this.stripe.paymentIntents.create(paymentIntentParams);
+      const paymentIntent =
+        await this.stripe.paymentIntents.create(paymentIntentParams);
 
       // Update booking with payment intent ID and set payment status to processing
       await this.bookingModel.findByIdAndUpdate(bookingId, {
@@ -81,7 +97,9 @@ export class PaymentService {
         stripeCustomerId: customerId,
       });
 
-      this.logger.log(`Payment intent created: ${paymentIntent.id} for booking: ${bookingId}`);
+      this.logger.log(
+        `Payment intent created: ${paymentIntent.id} for booking: ${bookingId}`,
+      );
 
       return {
         paymentIntentId: paymentIntent.id,
@@ -91,7 +109,10 @@ export class PaymentService {
         currency: paymentIntent.currency,
       };
     } catch (error) {
-      this.logger.error(`Failed to create payment intent: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to create payment intent: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -101,18 +122,22 @@ export class PaymentService {
 
     try {
       // Retrieve payment intent from Stripe
-      let paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      let paymentIntent =
+        await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
       // In production, payment confirmation happens after frontend uses Stripe.js
       // to collect payment method and confirm the payment
       if (paymentIntent.status === 'requires_payment_method') {
-        this.logger.warn(`Payment intent ${paymentIntentId} still requires payment method. Frontend should handle payment confirmation with Stripe.js`);
+        this.logger.warn(
+          `Payment intent ${paymentIntentId} still requires payment method. Frontend should handle payment confirmation with Stripe.js`,
+        );
 
         return {
           success: false,
           paymentStatus: 'requires_payment_method',
           stripeStatus: paymentIntent.status,
-          message: 'Payment requires payment method. Use Stripe.js on frontend to complete payment.',
+          message:
+            'Payment requires payment method. Use Stripe.js on frontend to complete payment.',
           clientSecret: paymentIntent.client_secret,
         };
       }
@@ -122,7 +147,9 @@ export class PaymentService {
         const existingBooking = await this.bookingModel.findById(bookingId);
 
         if (existingBooking && existingBooking.paymentStatus === 'completed') {
-          this.logger.log(`Payment already completed for booking: ${bookingId}`);
+          this.logger.log(
+            `Payment already completed for booking: ${bookingId}`,
+          );
 
           return {
             success: true,
@@ -143,7 +170,7 @@ export class PaymentService {
             status: 'confirmed',
             paymentCompletedAt: new Date(),
           },
-          { new: true }
+          { new: true },
         );
 
         if (!updatedBooking) {
@@ -178,7 +205,10 @@ export class PaymentService {
         };
       }
     } catch (error) {
-      this.logger.error(`Failed to confirm payment: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to confirm payment: ${error.message}`,
+        error.stack,
+      );
 
       // Update payment status to failed
       await this.bookingModel.findByIdAndUpdate(bookingId, {
@@ -190,19 +220,29 @@ export class PaymentService {
   }
 
   async handleWebhook(signature: string, payload: Buffer) {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
 
     try {
-      const event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+      const event = this.stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        webhookSecret,
+      );
 
       this.logger.log(`Received webhook event: ${event.type}`);
 
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await this.handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentSucceeded(
+            event.data.object as Stripe.PaymentIntent,
+          );
           break;
         case 'payment_intent.payment_failed':
-          await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentFailed(
+            event.data.object as Stripe.PaymentIntent,
+          );
           break;
         default:
           this.logger.log(`Unhandled event type: ${event.type}`);
@@ -226,7 +266,7 @@ export class PaymentService {
           status: 'confirmed',
           paymentCompletedAt: new Date(),
         },
-        { new: true }
+        { new: true },
       );
 
       if (updatedBooking) {
@@ -253,7 +293,9 @@ export class PaymentService {
   /**
    * Convert booking document to email data format
    */
-  private convertBookingToEmailData(booking: BookingDocument): BookingEmailData {
+  private convertBookingToEmailData(
+    booking: BookingDocument,
+  ): BookingEmailData {
     return {
       bookingRef: booking.bookingRef,
       flightId: booking.flightId,
@@ -265,7 +307,7 @@ export class PaymentService {
       arrivalDate: booking.arrivalDate,
       totalPrice: booking.totalPrice,
       currency: booking.currency,
-      travellersInfo: booking.travellersInfo.map(traveler => ({
+      travellersInfo: booking.travellersInfo.map((traveler) => ({
         firstName: traveler.firstName,
         lastName: traveler.lastName,
         travelerType: traveler.travelerType,
@@ -278,22 +320,34 @@ export class PaymentService {
   /**
    * Send booking confirmation email after successful payment
    */
-  private async sendBookingConfirmationEmail(booking: BookingDocument, jwtUserEmail?: string): Promise<void> {
+  private async sendBookingConfirmationEmail(
+    booking: BookingDocument,
+    jwtUserEmail?: string,
+  ): Promise<void> {
     try {
       const emailData = this.convertBookingToEmailData(booking);
       // Send to contact email
       await this.emailService.sendBookingConfirmationEmail(emailData);
-      this.logger.log(`Booking confirmation email sent for booking: ${booking.bookingRef}`);
+      this.logger.log(
+        `Booking confirmation email sent for booking: ${booking.bookingRef}`,
+      );
       // Send to JWT user if different
       if (jwtUserEmail && jwtUserEmail !== emailData.contactDetails.email) {
-        await this.emailService.sendBookingConfirmationEmail({ ...emailData, contactDetails: { ...emailData.contactDetails, email: jwtUserEmail } });
-        this.logger.log(`Booking confirmation email also sent to JWT user: ${jwtUserEmail}`);
+        await this.emailService.sendBookingConfirmationEmail({
+          ...emailData,
+          contactDetails: { ...emailData.contactDetails, email: jwtUserEmail },
+        });
+        this.logger.log(
+          `Booking confirmation email also sent to JWT user: ${jwtUserEmail}`,
+        );
       }
       // Also display QR code in terminal for debugging/verification
       try {
         await this.emailService.displayQRCodeInTerminal(booking.bookingRef);
       } catch (qrError) {
-        this.logger.warn(`Failed to display QR code in terminal: ${qrError instanceof Error ? qrError.message : 'Unknown error'}`);
+        this.logger.warn(
+          `Failed to display QR code in terminal: ${qrError instanceof Error ? qrError.message : 'Unknown error'}`,
+        );
       }
     } catch (error) {
       this.logger.error(
@@ -313,10 +367,14 @@ export class PaymentService {
     let stripeStatus = null;
     if (booking.paymentIntentId) {
       try {
-        const paymentIntent = await this.stripe.paymentIntents.retrieve(booking.paymentIntentId);
+        const paymentIntent = await this.stripe.paymentIntents.retrieve(
+          booking.paymentIntentId,
+        );
         stripeStatus = paymentIntent.status;
       } catch (error) {
-        this.logger.error(`Failed to retrieve payment intent: ${error.message}`);
+        this.logger.error(
+          `Failed to retrieve payment intent: ${error.message}`,
+        );
       }
     }
 
@@ -334,7 +392,7 @@ export class PaymentService {
     bookingId: string,
     amount: number,
     currency: string,
-    testPaymentMethod: string = 'pm_card_visa'
+    testPaymentMethod: string = 'pm_card_visa',
   ) {
     try {
       // Find the booking
@@ -344,14 +402,18 @@ export class PaymentService {
       }
 
       // Check if booking is already confirmed/paid
-      if (booking.paymentStatus === 'completed' || booking.status === 'confirmed') {
+      if (
+        booking.paymentStatus === 'completed' ||
+        booking.status === 'confirmed'
+      ) {
         this.logger.log(`Payment already completed for booking: ${bookingId}`);
 
         return {
           success: false,
           paymentStatus: 'already_completed',
           bookingStatus: booking.status,
-          message: 'This booking has already been confirmed and payment has been successful. No additional payment needed.',
+          message:
+            'This booking has already been confirmed and payment has been successful. No additional payment needed.',
           booking: booking,
           alreadyPaid: true,
         };
@@ -363,7 +425,7 @@ export class PaymentService {
 
       if (expectedAmount !== providedAmount) {
         throw new BadRequestException(
-          `Amount mismatch. Expected: ${expectedAmount/100}, Provided: ${amount}`
+          `Amount mismatch. Expected: ${expectedAmount / 100}, Provided: ${amount}`,
         );
       }
 
@@ -382,7 +444,9 @@ export class PaymentService {
         description: `Test payment for flight booking ${booking.bookingRef}`,
       });
 
-      this.logger.log(`Payment intent created and confirmed: ${paymentIntent.id} for booking: ${bookingId}`);
+      this.logger.log(
+        `Payment intent created and confirmed: ${paymentIntent.id} for booking: ${bookingId}`,
+      );
 
       if (paymentIntent.status === 'succeeded') {
         // Update booking status
@@ -394,10 +458,12 @@ export class PaymentService {
             paymentIntentId: paymentIntent.id,
             paymentCompletedAt: new Date(),
           },
-          { new: true }
+          { new: true },
         );
 
-        this.logger.log(`Card payment test successful for booking: ${bookingId}`);
+        this.logger.log(
+          `Card payment test successful for booking: ${bookingId}`,
+        );
 
         // Send booking confirmation email
         await this.sendBookingConfirmationEmail(updatedBooking);
@@ -428,7 +494,10 @@ export class PaymentService {
         };
       }
     } catch (error) {
-      this.logger.error(`Failed to process card payment: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to process card payment: ${error.message}`,
+        error.stack,
+      );
 
       // Update payment status to failed
       await this.bookingModel.findByIdAndUpdate(bookingId, {

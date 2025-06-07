@@ -38,7 +38,9 @@ export class BookingService {
     // before sending the request
     const finalTotalPrice = createBookingDto.totalPrice;
 
-    this.logger.log(`Creating booking with total price: ${finalTotalPrice} ${createBookingDto.currency}`);
+    this.logger.log(
+      `Creating booking with total price: ${finalTotalPrice} ${createBookingDto.currency}`,
+    );
 
     // Create booking object
     const newBooking = new this.bookingModel({

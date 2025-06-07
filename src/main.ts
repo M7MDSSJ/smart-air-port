@@ -9,8 +9,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ErrorResponseDto } from './common/dto/error-response.dto';
 import * as fs from 'fs';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
+  // Add raw body parser for Stripe webhooks (must be before Fastify/Nest setup)
+  // Fastify does not use Express middleware, so this is for reference if you switch to Express.
+  // For Fastify, you need to use the 'rawBody' option in NestFactory and Fastify's built-in hooks.
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
@@ -39,27 +44,9 @@ async function bootstrap() {
         },
       },
     }),
+    { rawBody: true } // <-- This enables rawBody for all requests in NestJS Fastify
   );
-  const config = new DocumentBuilder()
-    .setTitle('Smart Airport API')
-    .setDescription('API documentation for the Smart Airport application')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'bearer',
-    )
-    .build();
 
-  const document = SwaggerModule.createDocument(app, config, {
-    extraModels: [ErrorResponseDto],
-  });
-
-  fs.writeFileSync('./swagger-spec.json', JSON.stringify(document, null, 2));
-  SwaggerModule.setup('docs', app, document);
 
   app.useGlobalPipes(
     new ValidationPipe({

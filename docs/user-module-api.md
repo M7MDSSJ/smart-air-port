@@ -1,28 +1,3 @@
-# User Module API Documentation
-
-## Overview
-The User Module provides comprehensive user management functionality including authentication, registration, profile management, and role-based access control.
-
-## Base URL
-```
-https://your-api-domain.com/users
-```
-
-## Authentication
-Most endpoints require JWT authentication. Include the access token in the Authorization header:
-```
-Authorization: Bearer <access_token>
-```
-
-## Table of Contents
-1. [Authentication Endpoints](#authentication-endpoints)
-2. [User Management Endpoints](#user-management-endpoints)
-3. [Profile Management](#profile-management)
-4. [Admin Endpoints](#admin-endpoints)
-5. [Data Models](#data-models)
-6. [Error Handling](#error-handling)
-
----
 
 ## Authentication Endpoints
 
@@ -465,74 +440,7 @@ Access flight management dashboard (admin/moderator access only).
 }
 ```
 
----
 
-## Data Models
-
-### User Object
-```typescript
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string;
-  country?: string;
-  birthdate?: string;
-  isVerified: boolean;
-  roles: string[];
-  gender?: string;
-  preferredLanguage?: string;
-  preferredAirlines?: string[];
-  deviceType?: string;
-  loyaltyProgram?: {
-    status: string;
-    points: number;
-  };
-  bookingHistory?: Array<{
-    airline: string;
-    date: Date;
-    cabinClass: string;
-  }>;
-  preferredCabinClass?: string;
-  useRecommendationSystem?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
----
-
-## Error Handling
-
-### Standard Error Response
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "error": "Error type",
-  "statusCode": 400,
-  "timestamp": "2025-02-27T09:05:47.193Z",
-  "path": "/users/register",
-  "errors": {
-    "email": "Invalid email format",
-    "password": "Password must contain: 1 uppercase, 1 lowercase, 1 number, 1 symbol"
-  }
-}
-```
-
-### Common Error Codes
-
-| Status Code | Error Type | Description |
-|-------------|------------|-------------|
-| 400 | Bad Request | Invalid request data or validation errors |
-| 401 | Unauthorized | Missing or invalid authentication token |
-| 403 | Forbidden | Insufficient permissions for the requested action |
-| 404 | Not Found | Requested resource not found |
-| 409 | Conflict | Resource already exists (e.g., email already registered) |
-| 422 | Unprocessable Entity | Request data is valid but cannot be processed |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server-side error |
 
 ### Validation Error Examples
 
@@ -594,22 +502,4 @@ When rate limit is exceeded:
 
 ---
 
-## Security Notes
 
-1. **Password Requirements**: Minimum 10 characters with uppercase, lowercase, number, and symbol
-2. **JWT Tokens**: Access tokens expire in 15 minutes, refresh tokens in 7 days
-3. **Email Verification**: Required before accessing protected features
-4. **Role-Based Access**: Admin and moderator roles have additional permissions
-5. **Input Validation**: All inputs are validated and sanitized
-6. **Rate Limiting**: Prevents brute force attacks and API abuse
-
----
-
-## Mobile/Frontend Integration Tips
-
-1. **Token Management**: Store tokens securely and implement automatic refresh
-2. **Error Handling**: Implement proper error handling for all status codes
-3. **Validation**: Implement client-side validation matching server requirements
-4. **User Experience**: Show appropriate loading states and error messages
-5. **Offline Support**: Cache user profile data for offline access
-6. **Security**: Never store passwords or sensitive data in plain text

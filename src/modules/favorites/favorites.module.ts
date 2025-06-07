@@ -6,9 +6,9 @@ import { Favorit, FavoritSchema } from './schemas/favorite.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([ { name: Favorit.name, schema: FavoritSchema } ]),
+    MongooseModule.forFeature([{ name: Favorit.name, schema: FavoritSchema }]),
   ],
   controllers: [FavoritesController],
-  providers: [FavoritesService]
+  providers: [FavoritesService],
 })
 export class FavoritesModule {}

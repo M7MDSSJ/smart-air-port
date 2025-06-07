@@ -92,10 +92,7 @@ export class UsersController {
     if (!user || !user.id) {
       throw new UnauthorizedException('User not found');
     }
-    return this.passwordResetService.changePassword(
-      user.id,
-      changePasswordDto,
-    );
+    return this.passwordResetService.changePassword(user.id, changePasswordDto);
   }
 
   @Post('request-password-reset')

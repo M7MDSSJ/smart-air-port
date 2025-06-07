@@ -51,10 +51,15 @@ export class EmailTemplateService {
         },
       });
 
-      this.logger.log(`QR code generated successfully for booking: ${bookingRef}`);
+      this.logger.log(
+        `QR code generated successfully for booking: ${bookingRef}`,
+      );
       return qrCodeDataURL;
     } catch (error) {
-      this.logger.error(`Failed to generate QR code for booking ${bookingRef}:`, error);
+      this.logger.error(
+        `Failed to generate QR code for booking ${bookingRef}:`,
+        error,
+      );
       return '';
     }
   }
@@ -95,22 +100,35 @@ export class EmailTemplateService {
   /**
    * Generate booking confirmation email HTML
    */
-  async generateBookingConfirmationEmail(bookingData: BookingEmailData): Promise<string> {
-    this.logger.log(`Generating email template for booking: ${bookingData.bookingRef}`);
+  async generateBookingConfirmationEmail(
+    bookingData: BookingEmailData,
+  ): Promise<string> {
+    this.logger.log(
+      `Generating email template for booking: ${bookingData.bookingRef}`,
+    );
 
-    const qrCodeDataURL = await this.generateBookingQRCode(bookingData.bookingRef);
+    const qrCodeDataURL = await this.generateBookingQRCode(
+      bookingData.bookingRef,
+    );
 
     if (qrCodeDataURL) {
-      this.logger.log(`QR code generated successfully, data URL length: ${qrCodeDataURL.length}`);
+      this.logger.log(
+        `QR code generated successfully, data URL length: ${qrCodeDataURL.length}`,
+      );
     } else {
-      this.logger.warn(`QR code generation failed for booking: ${bookingData.bookingRef}`);
+      this.logger.warn(
+        `QR code generation failed for booking: ${bookingData.bookingRef}`,
+      );
     }
 
     const departureDate = this.formatDate(bookingData.departureDate);
     const departureTime = this.formatTime(bookingData.departureDate);
     const arrivalDate = this.formatDate(bookingData.arrivalDate);
     const arrivalTime = this.formatTime(bookingData.arrivalDate);
-    const totalPrice = this.formatCurrency(bookingData.totalPrice, bookingData.currency);
+    const totalPrice = this.formatCurrency(
+      bookingData.totalPrice,
+      bookingData.currency,
+    );
 
     const passengersHtml = bookingData.travellersInfo
       .map(
@@ -134,11 +152,15 @@ export class EmailTemplateService {
           <p style="margin: 5px 0; color: #666;">
             <strong>Type:</strong> ${bookingData.selectedBaggageOption.type || 'Standard'}
           </p>
-          ${bookingData.selectedBaggageOption.weight ? `
+          ${
+            bookingData.selectedBaggageOption.weight
+              ? `
             <p style="margin: 5px 0; color: #666;">
               <strong>Weight:</strong> ${bookingData.selectedBaggageOption.weight}
             </p>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       `
       : '';
@@ -366,14 +388,17 @@ export class EmailTemplateService {
 
             <div class="qr-section">
                 <h3 style="margin: 0 0 15px 0; color: #333;">Mobile Boarding Pass</h3>
-                ${qrCodeDataURL && qrCodeDataURL.startsWith('data:image') ? `
+                ${
+                  qrCodeDataURL && qrCodeDataURL.startsWith('data:image')
+                    ? `
                     <div style="text-align: center; margin: 20px 0;">
                         <img src="${qrCodeDataURL}" alt="Booking QR Code - ${bookingData.bookingRef}" class="qr-code-img" />
                     </div>
                     <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
                         Scan this QR code at the airport for quick check-in
                     </p>
-                ` : `
+                `
+                    : `
                     <div class="qr-fallback">
                         <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">
                             📱 ${bookingData.bookingRef}
@@ -385,7 +410,8 @@ export class EmailTemplateService {
                             QR code will be available in your mobile app
                         </p>
                     </div>
-                `}
+                `
+                }
             </div>
 
             <div class="next-steps">
@@ -486,7 +512,9 @@ export class EmailTemplateService {
       console.log('='.repeat(50));
 
       if (qrCodeDataURL) {
-        console.log(`✅ Data URL Generated: ${qrCodeDataURL.substring(0, 50)}...`);
+        console.log(
+          `✅ Data URL Generated: ${qrCodeDataURL.substring(0, 50)}...`,
+        );
         console.log(`📏 Data URL Length: ${qrCodeDataURL.length} characters`);
       }
 
@@ -496,14 +524,21 @@ export class EmailTemplateService {
       console.log('🔍 It should show: ' + qrCodeData);
       console.log('='.repeat(50) + '\n');
 
-      this.logger.log(`✅ QR code displayed in terminal for booking: ${bookingRef}`);
+      this.logger.log(
+        `✅ QR code displayed in terminal for booking: ${bookingRef}`,
+      );
     } catch (error) {
-      this.logger.error(`❌ Failed to generate terminal QR code for booking ${bookingRef}:`, error);
+      this.logger.error(
+        `❌ Failed to generate terminal QR code for booking ${bookingRef}:`,
+        error,
+      );
       console.log('\n' + '='.repeat(50));
       console.log('❌ QR CODE GENERATION FAILED');
       console.log('='.repeat(50));
       console.log(`📋 Booking Reference: ${bookingRef}`);
-      console.log(`🚨 Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log(
+        `🚨 Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       console.log('='.repeat(50) + '\n');
     }
   }
