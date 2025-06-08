@@ -11,7 +11,8 @@ Content-Type: application/json
 {
   "bookingId": "BOOKING_ID_FROM_STEP_1",
   "amount": 450.99,
-  "currency": "USD"
+  "currency": "USD",
+ "testCard": "pm_card_visa"
 }
 ```
 
