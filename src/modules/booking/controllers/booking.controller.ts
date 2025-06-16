@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
+import { CancelBookingDto } from '../dto/cancel-booking.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { VerifiedUserGuard } from 'src/common/guards/verifiedUser.guard';
 import { User } from 'src/common/decorators/user.decorator';
@@ -117,6 +118,37 @@ export class BookingController {
       },
       error: null,
       meta: null,
+    };
+  }
+
+  @Post(':id/cancel')
+  @UseGuards(JwtAuthGuard, VerifiedUserGuard)
+  @HttpCode(HttpStatus.OK)
+  async cancelBooking(
+    @Param('id') bookingId: string,
+    @User() user: JwtUser,
+    @Body() cancelBookingDto: CancelBookingDto
+  ) {
+    this.logger.log(`Cancelling booking ${bookingId} for user ${user.id}`);
+
+    const cancelledBooking = await this.bookingService.cancelBooking(
+      bookingId,
+      user.id,
+      cancelBookingDto.reason
+    );
+
+    return {
+      success: true,
+      message: 'Booking cancelled successfully',
+      data: {
+        bookingId: cancelledBooking._id,
+        bookingRef: cancelledBooking.bookingRef,
+        status: cancelledBooking.status,
+        cancelledAt: cancelledBooking.cancelledAt,
+        cancellationReason: cancelledBooking.cancellationReason
+      },
+      error: null,
+      meta: null
     };
   }
 }

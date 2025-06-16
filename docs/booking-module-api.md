@@ -204,3 +204,85 @@ Get detailed information about a specific booking.
   "meta": null
 }
 ```
+
+### 4. Cancel Booking
+**POST** `/booking/:id/cancel`
+**Authentication:** Required (Verified users only)
+
+Cancel an existing booking. The booking must be in 'confirmed' status to be cancelled.
+
+**Parameters:**
+- `id`: Booking ID
+
+**Request Body:**
+```json
+{
+  "reason": "Change of plans"  // Optional
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Booking cancelled successfully",
+  "data": {
+    "bookingId": "507f1f77bcf86cd799439011",
+    "bookingRef": "AB123456",
+    "status": "cancelled",
+    "cancelledAt": "2024-02-27T10:15:30.000Z",
+    "cancellationReason": "Change of plans"
+  },
+  "error": null,
+  "meta": null
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Booking not found
+- `403 Forbidden`: User not authorized to cancel this booking
+- `400 Bad Request`: Booking is already cancelled or cannot be cancelled
+
+## Booking Status and Timeout
+
+### Booking Status Flow
+```
+pending -> confirmed -> cancelled
+paymentStatus: pending -> completed -> failed
+```
+
+### Payment Timeout
+- All new bookings start with `status: pending` and `paymentStatus: pending`
+- If payment is not completed within 5 minutes (configurable via `BOOKING_TIMEOUT_MINUTES` environment variable), the booking will be automatically cancelled
+- Cancelled bookings will have:
+  - `status: cancelled`
+  - `paymentStatus: failed`
+  - `cancelledAt`: Timestamp of cancellation
+- Users will receive an email notification when their booking is cancelled due to payment timeout
+
+### Cancellation Rules
+1. Only confirmed bookings can be cancelled
+2. Users can only cancel their own bookings
+3. Cancellation requires user verification
+4. Cancellation reason is optional but recommended
+5. Cancellation will trigger an email notification to the user
+
+### Email Notifications
+Users will receive email notifications for:
+- Booking cancellation (manual or timeout)
+- Cancellation reason (if provided)
+- Next steps (if applicable)
+
+### Environment Variables
+```
+BOOKING_TIMEOUT_MINUTES=5  # Time in minutes before pending bookings are cancelled
+```
+
+### Best Practices
+1. Always check booking status before attempting cancellation
+2. Include cancellation reason for better tracking
+3. Monitor email delivery status
+4. Keep track of cancellation patterns
+5. Implement proper error handling
+6. Use appropriate HTTP status codes
+7. Maintain audit trail of cancellations
