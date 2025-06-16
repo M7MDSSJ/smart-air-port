@@ -1,5 +1,9 @@
 admin
- 
+ {
+  "email": "gtrealex7@gmail.com",
+  "password": "Password123!@"
+}
+
 user
 
 {
