@@ -67,7 +67,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
   "meta": null
 }
 ```
-**5. WEBHOOK**
+**WEBHOOK**
 ```json
 POST /payments/webhook
 Headers{
@@ -104,7 +104,7 @@ Error Response{
 
 
 ```
-**6. payment-status%**
+**payment-status**
 ```json
 GET /payments/status/:bookingId
 
@@ -122,6 +122,53 @@ Error Response
   "message": "Booking not found"
 }
 
+###Test Card Payment (Development Only)
+**Endpoint**: `POST /payment/test-card-payment`
+**Headers**:
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "bookingId": "68501080b59da4cdf4293e53",
+  "amount": 1500,
+  "currency": "USD",
+  "testCard": "pm_card_visa"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Test payment processed successfully",
+  "data": {
+    "paymentStatus": "completed",
+    "bookingStatus": "confirmed",
+    "stripeStatus": "succeeded",
+    "booking": {
+      "_id": "68501080b59da4cdf4293e53",
+      "paymentStatus": "completed",
+      "status": "confirmed"
+      // ... other booking fields
+    }
+  },
+  "error": null,
+  "meta": null
+}
+```
+
+**Available Test Cards**:
+| Test Card ID | Description | Result |
+|--------------|-------------|---------|
+| `pm_card_visa` | Regular Visa | Always succeeds |
+| `pm_card_visa_chargeDeclined` | Declined Visa | Always fails |
+| `pm_card_visa_authenticationRequired` | 3D Secure Visa | Requires authentication |
+
+**Note**: This endpoint is only available in development/sandbox environments and should not be exposed in production.
 ```
 ## Testing Flow
 
@@ -162,40 +209,4 @@ For testing purposes, you can use these test card numbers:
 - **Mastercard**: 5555555555554444
 - **American Express**: 378282246310005
 - **Declined**: 4000000000000002
-
-## Webhook Security & Configuration
-
-### Setting the Stripe Webhook Secret
-To securely process Stripe webhook events, you **must** set the `STRIPE_WEBHOOK_SECRET` in your `.env` file. This secret is provided by Stripe when you create a webhook endpoint in the Stripe Dashboard.
-
-Example `.env` entry:
-```
-STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-### Why the Webhook Secret Matters
-The backend uses the `STRIPE_WEBHOOK_SECRET` to verify the signature of incoming webhook requests from Stripe. This ensures that only legitimate events from Stripe are processed, protecting your application from spoofed or malicious requests.
-
-- **Never share your webhook secret publicly.**
-- If you rotate or change your webhook secret in Stripe, update your `.env` file accordingly and restart the backend.
-
-### How the Backend Uses the Secret
-The backend reads `STRIPE_WEBHOOK_SECRET` from the environment and uses it to verify the `Stripe-Signature` header on all incoming webhook requests to `/payment/webhook`. If the signature is invalid, the request is rejected and not processed.
-
-### Testing Webhooks
-You can test webhook delivery and signature verification using the Stripe CLI or the Stripe Dashboard. Make sure your backend is running and accessible to receive webhook events during testing.
-
-## Fastify Note for Stripe Webhooks
-
-If you are using Fastify (as in this project), you **must** enable raw body support for Stripe webhook signature verification to work. In your `main.ts`, pass `{ rawBody: true }` as the third argument to `NestFactory.create`:
-
-```typescript
-const app = await NestFactory.create<NestFastifyApplication>(
-  AppModule,
-  new FastifyAdapter({ /* ... */ }),
-  { rawBody: true } // <-- Required for Stripe webhooks
-);
-```
-
-This ensures that Stripe's signature verification receives the unparsed request body. Without this, webhook requests will fail with signature errors or missing payload errors.
 
