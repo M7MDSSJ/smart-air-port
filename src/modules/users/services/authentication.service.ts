@@ -47,7 +47,7 @@ export class AuthenticationService {
     return this.userRepository.withTransaction(async (session) => {
       const accessToken = this.jwtService.sign(
         { sub: user._id.toString(), email: user.email, roles: user.roles },
-        { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
+        { secret: this.config.get('JWT_SECRET'), expiresIn: '1d' },
       );
 
       const refreshToken = this.jwtService.sign(
@@ -79,7 +79,7 @@ export class AuthenticationService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, email, roles },
-      { secret: this.config.get('JWT_SECRET'), expiresIn: '15m' },
+      { secret: this.config.get('JWT_SECRET'), expiresIn: '1d' },
     );
     const refreshToken = await this.jwtService.signAsync(
       { sub: userId, email, roles },

@@ -69,6 +69,12 @@ export class Booking {
 
   @Prop({ type: Date })
   paymentCompletedAt?: Date;
+
+  @Prop({ type: String })
+  cancellationReason?: string;
+
+  @Prop({ type: Date })
+  cancelledAt?: Date;
 }
 
 export const BookingSchema = SchemaFactory.createForClass(Booking);

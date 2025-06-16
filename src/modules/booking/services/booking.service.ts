@@ -1,20 +1,27 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Booking, BookingDocument } from '../schemas/booking.schema';
 import { CreateBookingDto } from '../dto/create-booking.dto';
 import { FlightService } from 'src/modules/flight/flight.service';
 import { EmailService } from 'src/modules/email/email.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BookingService {
   private readonly logger = new Logger(BookingService.name);
+  private readonly bookingTimeoutMinutes: number;
 
   constructor(
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
     private readonly flightService: FlightService,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.bookingTimeoutMinutes = this.configService.get<number>('BOOKING_TIMEOUT_MINUTES', 5);
+    this.logger.log(`Booking timeout set to ${this.bookingTimeoutMinutes} minutes`);
+  }
 
   async createBooking(
     userId: string,
@@ -138,5 +145,132 @@ export class BookingService {
       applicationFee,
       totalPrice: Math.round(totalPrice * 100) / 100,
     };
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async handlePendingBookingsTimeout() {
+    const timeoutDate = new Date(Date.now() - this.bookingTimeoutMinutes * 60 * 1000);
+
+    try {
+      const result = await this.bookingModel.updateMany(
+        {
+          status: 'pending',
+          paymentStatus: 'pending',
+          createdAt: { $lt: timeoutDate }
+        },
+        {
+          $set: {
+            status: 'cancelled',
+            paymentStatus: 'failed'
+          }
+        }
+      );
+
+      if (result.modifiedCount > 0) {
+        this.logger.log(`Cancelled ${result.modifiedCount} pending bookings due to timeout`);
+        
+        // Get the cancelled bookings to send notifications
+        const cancelledBookings = await this.bookingModel.find({
+          status: 'cancelled',
+          paymentStatus: 'failed',
+          updatedAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // Last 5 minutes
+        });
+
+        // Send notifications for each cancelled booking
+        for (const booking of cancelledBookings) {
+          try {
+            const html = `
+              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Booking Cancelled - Payment Timeout</h2>
+                <p>Your booking (${booking.bookingRef}) has been cancelled due to payment timeout.</p>
+                <p>Please try booking again if you still wish to proceed.</p>
+                <p style="margin-top: 20px; color: #666;">
+                  Best regards,<br>
+                  The Airport Team
+                </p>
+              </div>
+            `;
+
+            await this.emailService.sendImportantEmail(
+              booking.contactDetails.email,
+              'Booking Cancelled - Payment Timeout',
+              html
+            );
+          } catch (emailError) {
+            this.logger.error(`Failed to send cancellation email for booking ${booking.bookingRef}:`, emailError);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error handling pending bookings timeout:', error);
+    }
+  }
+
+  async cancelBooking(
+    bookingId: string,
+    userId: string,
+    reason?: string
+  ): Promise<BookingDocument> {
+    this.logger.log(`Attempting to cancel booking ${bookingId} for user ${userId}`);
+
+    // 1. Find and validate booking
+    const booking = await this.bookingModel.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    // 2. Verify ownership
+    if (booking.userId.toString() !== userId) {
+      throw new ForbiddenException('You are not authorized to cancel this booking');
+    }
+
+    // 3. Check if booking is already cancelled
+    if (booking.status === 'cancelled') {
+      throw new BadRequestException('Booking is already cancelled');
+    }
+
+    // 4. Check if booking is in a cancellable state
+    if (booking.status !== 'confirmed') {
+      throw new BadRequestException('This booking cannot be cancelled');
+    }
+
+    // 5. Update booking status
+    const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          status: 'cancelled',
+          cancellationReason: reason,
+          cancelledAt: new Date()
+        }
+      },
+      { new: true }
+    );
+
+    // 6. Send cancellation notification
+    try {
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Booking Cancelled</h2>
+          <p>Your booking (${booking.bookingRef}) has been cancelled.</p>
+          ${reason ? `<p>Cancellation reason: ${reason}</p>` : ''}
+          <p style="margin-top: 20px; color: #666;">
+            Best regards,<br>
+            The Airport Team
+          </p>
+        </div>
+      `;
+
+      await this.emailService.sendImportantEmail(
+        booking.contactDetails.email,
+        'Booking Cancelled',
+        html
+      );
+    } catch (emailError) {
+      this.logger.error(`Failed to send cancellation email for booking ${booking.bookingRef}:`, emailError);
+    }
+
+    this.logger.log(`Booking ${bookingId} cancelled successfully`);
+    return updatedBooking;
   }
 }
