@@ -47,6 +47,8 @@ async function bootstrap() {
     { rawBody: true }, // <-- This enables rawBody for all requests in NestJS Fastify
   );
 
+
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -68,6 +70,12 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // CORS removed for production - configure at reverse proxy level
+  // app.enableCors({
+  //   origin: ['http://localhost:3001', 'http://localhost:3000'],
+  //   credentials: true,
+  // });
 
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');

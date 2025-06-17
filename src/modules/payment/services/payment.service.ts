@@ -80,6 +80,8 @@ export class PaymentService {
 
       // Verify the amount matches the booking total price
       const expectedAmount = Math.round(booking.totalPrice * 100); // Convert to cents
+
+      // Verify the amount matches the booking total price
       const providedAmount = Math.round(amount * 100);
 
       if (expectedAmount !== providedAmount) {
@@ -149,6 +151,27 @@ export class PaymentService {
         `Failed to create payment intent: ${error.message}`,
         error.stack,
       );
+
+      // Handle specific Stripe errors
+      if (error.type) {
+        switch (error.type) {
+          case 'StripeCardError':
+            throw new BadRequestException(`Card error: ${error.message}`);
+          case 'StripeRateLimitError':
+            throw new BadRequestException('Too many requests. Please try again later.');
+          case 'StripeInvalidRequestError':
+            throw new BadRequestException(`Invalid request: ${error.message}`);
+          case 'StripeAPIError':
+            throw new BadRequestException('Payment service temporarily unavailable. Please try again.');
+          case 'StripeConnectionError':
+            throw new BadRequestException('Network error. Please check your connection and try again.');
+          case 'StripeAuthenticationError':
+            throw new BadRequestException('Payment configuration error. Please contact support.');
+          default:
+            throw new BadRequestException(`Payment error: ${error.message}`);
+        }
+      }
+
       throw error;
     }
   }
@@ -470,6 +493,36 @@ export class PaymentService {
     };
   }
 
+  /**
+   * Get test payment methods for different scenarios
+   */
+  getTestPaymentMethods() {
+    return {
+      // Successful cards
+      visa: 'pm_card_visa',
+      visa_debit: 'pm_card_visa_debit',
+      mastercard: 'pm_card_mastercard',
+      amex: 'pm_card_amex',
+
+      // Declined cards
+      declined_generic: 'pm_card_chargeDeclined',
+      declined_insufficient_funds: 'pm_card_chargeDeclinedInsufficientFunds',
+      declined_lost_card: 'pm_card_chargeDeclinedLostCard',
+      declined_stolen_card: 'pm_card_chargeDeclinedStolenCard',
+      declined_expired_card: 'pm_card_chargeDeclinedExpiredCard',
+      declined_incorrect_cvc: 'pm_card_chargeDeclinedIncorrectCvc',
+      declined_processing_error: 'pm_card_chargeDeclinedProcessingError',
+
+      // 3D Secure cards
+      threeds_required: 'pm_card_threeDSecure2Required',
+      threeds_optional: 'pm_card_threeDSecureOptional',
+
+      // Special cases
+      risk_level_elevated: 'pm_card_riskLevelElevated',
+      always_authenticate: 'pm_card_authenticationRequired',
+    };
+  }
+
   async testCardPaymentFromBackend(
     bookingId: string,
     amount: number,
@@ -484,10 +537,8 @@ export class PaymentService {
       }
 
       // Check if booking is already confirmed/paid
-      if (
-        booking.paymentStatus === 'completed' ||
-        booking.status === 'confirmed'
-      ) {
+      if (booking.paymentStatus === 'completed' ||
+        booking.status === 'confirmed') {
         this.logger.log(`Payment already completed for booking: ${bookingId}`);
 
         return {
@@ -547,22 +598,22 @@ export class PaymentService {
           `Card payment test successful for booking: ${bookingId}`,
         );
 
-        // Create a payment record for the successful test payment
+        // Create a payment record for the successful payment
         const paymentData: CreatePaymentDto = {
           userId: updatedBooking.userId.toString(),
           bookingId: updatedBooking._id.toString(),
           amount: updatedBooking.totalPrice,
           currency: updatedBooking.currency,
           provider: PaymentProvider.STRIPE,
-          method: PaymentMethod.CREDIT_CARD, // Assuming card for this test
+          method: PaymentMethod.CREDIT_CARD,
           transactionId: paymentIntent.id,
           metadata: paymentIntent,
-          isTest: true,
+          isTest: process.env.NODE_ENV !== 'production',
           status: PaymentStatus.COMPLETED,
         };
         await this.paymentTransactionService.createPayment(paymentData);
         this.logger.log(
-          `Created payment record for successful test payment of booking: ${bookingId}`,
+          `Created payment record for successful payment of booking: ${bookingId}`,
         );
 
         // Send booking confirmation email
@@ -609,6 +660,164 @@ export class PaymentService {
         paymentStatus: 'failed',
         message: `Card payment failed: ${error.message}`,
       };
+    }
+  }
+
+  /**
+   * Handle Stripe webhook events
+   * @param rawBody The raw request body
+   * @param signature The Stripe signature header
+   */
+  async handleStripeWebhook(rawBody: Buffer, signature: string) {
+    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+
+    if (!webhookSecret) {
+      this.logger.error('Stripe webhook secret not configured');
+      throw new BadRequestException('Webhook secret not configured');
+    }
+
+    let event: Stripe.Event;
+
+    try {
+      // Verify the webhook signature
+      event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      this.logger.log(`Received Stripe webhook event: ${event.type}`);
+    } catch (error) {
+      this.logger.error(`Webhook signature verification failed: ${error.message}`);
+      throw new BadRequestException('Invalid webhook signature');
+    }
+
+    try {
+      // Handle different event types
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+          break;
+        case 'payment_intent.payment_failed':
+          await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+        case 'payment_intent.canceled':
+          await this.handlePaymentIntentCanceled(event.data.object as Stripe.PaymentIntent);
+          break;
+        default:
+          this.logger.log(`Unhandled webhook event type: ${event.type}`);
+      }
+
+      return { received: true };
+    } catch (error) {
+      this.logger.error(`Error processing webhook event: ${error.message}`);
+      throw new BadRequestException('Error processing webhook');
+    }
+  }
+
+  /**
+   * Handle successful payment intent
+   */
+  private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    const bookingId = paymentIntent.metadata.bookingId;
+
+    if (!bookingId) {
+      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      return;
+    }
+
+    this.logger.log(`Processing successful payment for booking: ${bookingId}`);
+
+    try {
+      // Find and update the booking
+      const booking = await this.bookingModel.findById(bookingId);
+      if (!booking) {
+        this.logger.error(`Booking not found: ${bookingId}`);
+        return;
+      }
+
+      // Update booking status
+      const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+        bookingId,
+        {
+          paymentStatus: 'completed',
+          status: 'confirmed',
+          paymentIntentId: paymentIntent.id,
+          paymentCompletedAt: new Date(),
+        },
+        { new: true },
+      );
+
+      // Create payment record
+      const paymentData: CreatePaymentDto = {
+        userId: updatedBooking.userId.toString(),
+        bookingId: updatedBooking._id.toString(),
+        amount: paymentIntent.amount / 100, // Convert from cents
+        currency: paymentIntent.currency.toUpperCase(),
+        provider: PaymentProvider.STRIPE,
+        method: PaymentMethod.CREDIT_CARD,
+        transactionId: paymentIntent.id,
+        metadata: paymentIntent,
+        isTest: paymentIntent.livemode === false,
+        status: PaymentStatus.COMPLETED,
+      };
+
+      await this.paymentTransactionService.createPayment(paymentData);
+      this.logger.log(`Created payment record for webhook payment: ${paymentIntent.id}`);
+
+      // Send confirmation email
+      await this.sendBookingConfirmationEmail(updatedBooking);
+      this.logger.log(`Sent confirmation email for booking: ${bookingId}`);
+
+    } catch (error) {
+      this.logger.error(`Error processing successful payment webhook: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle failed payment intent
+   */
+  private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+    const bookingId = paymentIntent.metadata.bookingId;
+
+    if (!bookingId) {
+      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      return;
+    }
+
+    this.logger.log(`Processing failed payment for booking: ${bookingId}`);
+
+    try {
+      // Update booking status
+      await this.bookingModel.findByIdAndUpdate(bookingId, {
+        paymentStatus: 'failed',
+        paymentIntentId: paymentIntent.id,
+      });
+
+      this.logger.log(`Updated booking ${bookingId} status to failed`);
+    } catch (error) {
+      this.logger.error(`Error processing failed payment webhook: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle canceled payment intent
+   */
+  private async handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) {
+    const bookingId = paymentIntent.metadata.bookingId;
+
+    if (!bookingId) {
+      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      return;
+    }
+
+    this.logger.log(`Processing canceled payment for booking: ${bookingId}`);
+
+    try {
+      // Update booking status
+      await this.bookingModel.findByIdAndUpdate(bookingId, {
+        paymentStatus: 'canceled',
+        paymentIntentId: paymentIntent.id,
+      });
+
+      this.logger.log(`Updated booking ${bookingId} status to canceled`);
+    } catch (error) {
+      this.logger.error(`Error processing canceled payment webhook: ${error.message}`);
     }
   }
 }
