@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-06-17T14:54:32.722Z",
+  "summary": {
+    "totalTests": 5,
+    "passedTests": 5,
+    "failedTests": 0
+  },
+  "results": [
+    {
+      "name": "Stripe Configuration Check",
+      "status": "PASSED",
+      "result": {
+        "publicKey": "pk_test_51QuhXLPxWTngOvfGxTBKx...",
+        "secretKeyPrefix": "sk_test_51Qu...",
+        "keysMatch": false,
+        "keyType": "test"
+      }
+    },
+    {
+      "name": "User Authentication",
+      "status": "PASSED",
+      "result": {
+        "userId": "existing-user-id",
+        "email": "gtrealex7@gmail.com",
+        "authenticated": true
+      }
+    },
+    {
+      "name": "Create Test Booking",
+      "status": "PASSED",
+      "result": {
+        "bookingId": "685181a626def0c79dbd086c",
+        "bookingRef": "HV436929",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "Create Payment Intent",
+      "status": "PASSED",
+      "result": {
+        "paymentIntentId": "pi_3Rb0uBPxWTngOvfG2LjZ9yOu",
+        "clientSecretPrefix": "pi_3Rb0uBPxWTngOvfG2...",
+        "amount": 299.99,
+        "currency": "usd"
+      }
+    },
+    {
+      "name": "Check Payment Status",
+      "status": "PASSED",
+      "result": {
+        "bookingId": "685181a626def0c79dbd086c",
+        "paymentStatus": "processing",
+        "bookingStatus": "pending",
+        "stripeStatus": "requires_payment_method"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "issue": "Stripe keys mismatch",
+      "description": "Frontend and backend are using different Stripe accounts",
+      "solution": "Update frontend .env VITE_STRIPE_PUBLISHABLE_KEY to: pk_test_51QuhXLPxWTngOvfGxTBKx...",
+      "priority": "HIGH"
+    }
+  ]
+}
