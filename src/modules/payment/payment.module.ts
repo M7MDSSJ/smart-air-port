@@ -13,6 +13,7 @@ import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { BookingModule } from '../booking/booking.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EmailModule } from '../email/email.module';
     AuthModule,
     UsersModule,
     EmailModule,
+    BookingModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

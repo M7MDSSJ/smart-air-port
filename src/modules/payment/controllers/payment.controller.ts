@@ -35,6 +35,7 @@ import {
   CreatePaymobPaymentDto,
   PaymobPaymentResponseDto,
 } from '../dto/paymob-payment.dto';
+import { BookingService } from '../../booking/services/booking.service';
 
 @Controller('payment')
 export class PaymentController {
@@ -45,6 +46,7 @@ export class PaymentController {
     private readonly paymobService: PaymobService,
     private readonly paymentTransactionService: PaymentTransactionService,
     private readonly configService: ConfigService,
+    private readonly bookingService: BookingService,
   ) {}
 
   @Post('create-payment-intent')
@@ -54,7 +56,7 @@ export class PaymentController {
     @User() user: JwtUser,
     @Body() createPaymentIntentDto: CreatePaymentIntentDto,
   ) {
-    this.logger.log(`Creating payment intent for user: ${user.id}`);
+    this.logger.log(`Creating payment intent for testing`);
 
     const paymentIntent = await this.paymentService.createPaymentIntent(
       createPaymentIntentDto,
@@ -153,7 +155,7 @@ export class PaymentController {
       currency: string;
     },
   ) {
-    this.logger.log(`Testing card payment for user: ${user.id}`);
+    this.logger.log(`Testing card payment`);
 
     const result = await this.paymentService.testCardPaymentFromBackend(
       body.bookingId,
@@ -173,6 +175,16 @@ export class PaymentController {
     };
   }
 
+  @Post('stripe/webhook')
+  @HttpCode(HttpStatus.OK)
+  async handleStripeWebhook(
+    @Req() request: any,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    this.logger.log('Received Stripe webhook');
+    return this.paymentService.handleStripeWebhook(request.rawBody, signature);
+  }
+
   @Get('stripe/config')
   @HttpCode(HttpStatus.OK)
   async getStripeConfig() {
@@ -190,6 +202,18 @@ export class PaymentController {
       message: 'Stripe configuration retrieved'
     };
   }
+
+  @Get('stripe/test-cards')
+  @HttpCode(HttpStatus.OK)
+  async getTestCards() {
+    return {
+      success: true,
+      data: this.paymentService.getTestPaymentMethods(),
+      message: 'Test payment methods retrieved'
+    };
+  }
+
+  // Test endpoints removed for production security
 
   @Get('debug/payment-intent/:paymentIntentId')
   @UseGuards(JwtAuthGuard, VerifiedUserGuard)
