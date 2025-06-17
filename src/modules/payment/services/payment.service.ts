@@ -38,7 +38,7 @@ export class PaymentService {
     }
 
     this.stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-02-24.acacia',
+      apiVersion: '2025-05-28.basil',
     });
   }
 
@@ -49,6 +49,22 @@ export class PaymentService {
    */
   async getBookingById(bookingId: string) {
     return this.bookingModel.findById(bookingId).exec();
+  }
+
+  /**
+   * Get PaymentIntent details from Stripe for debugging
+   * @param paymentIntentId The PaymentIntent ID
+   * @returns PaymentIntent object from Stripe
+   */
+  async getPaymentIntentDetails(paymentIntentId: string) {
+    try {
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      this.logger.log(`Retrieved PaymentIntent ${paymentIntentId} with status: ${paymentIntent.status}`);
+      return paymentIntent;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve PaymentIntent ${paymentIntentId}: ${error.message}`);
+      throw error;
+    }
   }
 
   async createPaymentIntent(createPaymentIntentDto: CreatePaymentIntentDto) {
@@ -108,6 +124,18 @@ export class PaymentService {
       this.logger.log(
         `Payment intent created: ${paymentIntent.id} for booking: ${bookingId}`,
       );
+
+      // Enhanced logging for debugging
+      this.logger.debug(`PaymentIntent details:`, {
+        id: paymentIntent.id,
+        client_secret: paymentIntent.client_secret ?
+          `${paymentIntent.client_secret.substring(0, 20)}...` : 'null',
+        status: paymentIntent.status,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        account: paymentIntent.client_secret ?
+          paymentIntent.client_secret.split('_')[2] : 'unknown'
+      });
 
       return {
         paymentIntentId: paymentIntent.id,

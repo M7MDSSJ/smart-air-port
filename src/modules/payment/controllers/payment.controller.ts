@@ -20,6 +20,7 @@ import { VerifiedUserGuard } from 'src/common/guards/verifiedUser.guard';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 import {
   BadRequestException,
   ForbiddenException,
@@ -43,6 +44,7 @@ export class PaymentController {
     private readonly paymentService: PaymentService,
     private readonly paymobService: PaymobService,
     private readonly paymentTransactionService: PaymentTransactionService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('create-payment-intent')
@@ -169,6 +171,60 @@ export class PaymentController {
       error: null,
       meta: null,
     };
+  }
+
+  @Get('stripe/config')
+  @HttpCode(HttpStatus.OK)
+  async getStripeConfig() {
+    const stripePublicKey = this.configService.get<string>('STRIPE_PUBLIC_KEY');
+    const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+
+    return {
+      success: true,
+      data: {
+        publicKey: stripePublicKey,
+        secretKeyPrefix: stripeSecretKey ? stripeSecretKey.substring(0, 12) + '...' : 'NOT_SET',
+        keysMatch: stripePublicKey && stripeSecretKey &&
+                   stripePublicKey.includes(stripeSecretKey.split('_')[2]) // Extract account ID
+      },
+      message: 'Stripe configuration retrieved'
+    };
+  }
+
+  @Get('debug/payment-intent/:paymentIntentId')
+  @UseGuards(JwtAuthGuard, VerifiedUserGuard)
+  @HttpCode(HttpStatus.OK)
+  async debugPaymentIntent(
+    @User() user: JwtUser,
+    @Param('paymentIntentId') paymentIntentId: string,
+  ) {
+    this.logger.log(`Debugging payment intent: ${paymentIntentId} for user: ${user.id}`);
+
+    try {
+      const paymentIntent = await this.paymentService.getPaymentIntentDetails(paymentIntentId);
+
+      return {
+        success: true,
+        data: {
+          id: paymentIntent.id,
+          status: paymentIntent.status,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          client_secret_prefix: paymentIntent.client_secret ?
+            paymentIntent.client_secret.substring(0, 20) + '...' : 'null',
+          metadata: paymentIntent.metadata,
+          created: new Date(paymentIntent.created * 1000),
+        },
+        message: 'Payment intent details retrieved'
+      };
+    } catch (error) {
+      this.logger.error(`Failed to retrieve payment intent: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to retrieve payment intent details'
+      };
+    }
   }
 
   @Post('paymob/create-payment-key')
