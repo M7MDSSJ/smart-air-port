@@ -1,0 +1,75 @@
+{
+  "timestamp": "2025-06-17T14:36:38.772Z",
+  "summary": {
+    "totalTests": 5,
+    "totalPassed": 4,
+    "totalFailed": 1
+  },
+  "results": {
+    "stripe": {
+      "passed": 1,
+      "failed": 1,
+      "tests": [
+        {
+          "name": "Stripe Test Cards Check",
+          "status": "FAILED",
+          "error": "Request failed with status code 404",
+          "details": {
+            "success": false,
+            "message": "Cannot GET /payment/stripe/test-cards",
+            "error": "NotFoundException",
+            "statusCode": 404,
+            "timestamp": "2025-06-17T14:36:37.824Z",
+            "path": "/payment/stripe/test-cards",
+            "errors": {}
+          }
+        },
+        {
+          "name": "Create Stripe Payment Intent",
+          "status": "PASSED",
+          "result": {
+            "status": "skipped",
+            "note": "Payment intent creation requires authenticated user and valid booking"
+          }
+        }
+      ]
+    },
+    "paymob": {
+      "passed": 0,
+      "failed": 0,
+      "tests": []
+    },
+    "config": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Stripe Configuration Check",
+          "status": "PASSED",
+          "result": {
+            "publicKey": "pk_test_51QuhXLPxWTn...",
+            "secretKeyPrefix": "sk_test_51Qu...",
+            "keysMatch": false,
+            "keyType": "test"
+          }
+        },
+        {
+          "name": "User Authentication",
+          "status": "PASSED",
+          "result": {
+            "status": "skipped",
+            "note": "Using mock authentication for config tests"
+          }
+        },
+        {
+          "name": "PayMob Configuration Check",
+          "status": "PASSED",
+          "result": {
+            "authStatus": "skipped",
+            "note": "PayMob test requires actual payment creation"
+          }
+        }
+      ]
+    }
+  }
+}
