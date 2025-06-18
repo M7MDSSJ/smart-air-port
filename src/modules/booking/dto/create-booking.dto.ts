@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   MinLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -20,6 +21,136 @@ export enum TravelerType {
   ADULT = 'adult',
   CHILD = 'child',
   INFANT = 'infant',
+}
+
+export enum FlightType {
+  GO = 'GO',
+  RETURN = 'RETURN',
+}
+
+export enum BookingType {
+  ONE_WAY = 'ONE_WAY',
+  ROUND_TRIP = 'ROUND_TRIP',
+}
+
+export class BaggageOptionDto {
+  @ApiProperty({
+    example: 'checked',
+    description: 'Type of baggage (carry-on, checked, etc.)',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Baggage type is required' })
+  type: string;
+
+  @ApiProperty({
+    example: '23kg',
+    description: 'Weight allowance for baggage',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Baggage weight is required' })
+  weight: string;
+
+  @ApiProperty({
+    example: 50,
+    description: 'Price for the baggage option',
+  })
+  @IsNumber({}, { message: 'Baggage price must be a valid number' })
+  @Min(0, { message: 'Baggage price must be positive' })
+  price: number;
+}
+
+export class FlightDataDto {
+  @ApiProperty({
+    example: 'FL123456',
+    description: 'Unique flight identifier',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Flight ID is required' })
+  flightID: string;
+
+  @ApiProperty({
+    enum: FlightType,
+    example: FlightType.GO,
+    description: 'Type of flight (GO or RETURN)',
+  })
+  @IsEnum(FlightType, {
+    message: 'Flight type must be GO or RETURN',
+  })
+  typeOfFlight: FlightType;
+
+  @ApiProperty({
+    example: 2,
+    description: 'Number of stops (optional)',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'Number of stops must be a valid number' })
+  @Min(0, { message: 'Number of stops must be non-negative' })
+  numberOfStops?: number;
+
+  @ApiProperty({
+    example: 'LGA',
+    description: 'Origin airport IATA code',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Origin airport code is required' })
+  @MinLength(3, { message: 'Airport code must be 3 characters' })
+  originAirportCode: string;
+
+  @ApiProperty({
+    example: 'DAD',
+    description: 'Destination airport IATA code',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Destination airport code is required' })
+  @MinLength(3, { message: 'Airport code must be 3 characters' })
+  destinationAirportCode: string;
+
+  @ApiProperty({
+    example: 'New York',
+    description: 'Origin city name',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Origin city is required' })
+  originCIty: string;
+
+  @ApiProperty({
+    example: 'Da Nang',
+    description: 'Destination city name',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Destination city is required' })
+  destinationCIty: string;
+
+  @ApiProperty({
+    example: '2024-08-28',
+    description: 'Departure date in YYYY-MM-DD format',
+  })
+  @IsDateString(
+    {},
+    { message: 'Departure date must be a valid date in YYYY-MM-DD format' },
+  )
+  departureDate: string;
+
+  @ApiProperty({
+    example: '2024-08-28',
+    description: 'Arrival date in YYYY-MM-DD format',
+  })
+  @IsDateString(
+    {},
+    { message: 'Arrival date must be a valid date in YYYY-MM-DD format' },
+  )
+  arrivalDate: string;
+
+  @ApiProperty({
+    type: BaggageOptionDto,
+    description: 'Selected baggage option details',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BaggageOptionDto)
+  selectedBaggageOption?: BaggageOptionDto;
 }
 
 export class ContactDetailsDto {
@@ -126,76 +257,126 @@ export class TravellerInfoDto {
 }
 
 export class CreateBookingDto {
+  // Booking type - determines if it's one-way or round-trip
+  @ApiProperty({
+    enum: BookingType,
+    example: BookingType.ONE_WAY,
+    description: 'Type of booking (ONE_WAY or ROUND_TRIP)',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(BookingType, {
+    message: 'Booking type must be ONE_WAY or ROUND_TRIP',
+  })
+  bookingType?: BookingType;
+
+  // For round-trip bookings, use flightData array
+  @ApiProperty({
+    type: [FlightDataDto],
+    description: 'Array of flight data (required for round-trip, optional for one-way)',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FlightDataDto)
+  @ValidateIf((o) => o.bookingType === BookingType.ROUND_TRIP)
+  @IsNotEmpty({ message: 'Flight data is required for round-trip bookings' })
+  flightData?: FlightDataDto[];
+
+  // Legacy fields for one-way bookings (backward compatibility)
   @ApiProperty({
     example: 'FL123456',
-    description: 'Unique flight identifier',
+    description: 'Unique flight identifier (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Flight ID is required' })
-  flightID: string;
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Flight ID is required for one-way bookings' })
+  flightID?: string;
 
   @ApiProperty({
     example: 'LGA',
-    description: 'Origin airport IATA code',
+    description: 'Origin airport IATA code (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Origin airport code is required' })
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Origin airport code is required for one-way bookings' })
   @MinLength(3, { message: 'Airport code must be 3 characters' })
-  originAirportCode: string;
+  originAirportCode?: string;
 
   @ApiProperty({
     example: 'DAD',
-    description: 'Destination airport IATA code',
+    description: 'Destination airport IATA code (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Destination airport code is required' })
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Destination airport code is required for one-way bookings' })
   @MinLength(3, { message: 'Airport code must be 3 characters' })
-  destinationAirportCode: string;
+  destinationAirportCode?: string;
 
   @ApiProperty({
     example: 'New York',
-    description: 'Origin city name',
+    description: 'Origin city name (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Origin city is required' })
-  originCIty: string;
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Origin city is required for one-way bookings' })
+  originCIty?: string;
 
   @ApiProperty({
     example: 'Da Nang',
-    description: 'Destination city name',
+    description: 'Destination city name (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Destination city is required' })
-  destinationCIty: string;
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Destination city is required for one-way bookings' })
+  destinationCIty?: string;
 
   @ApiProperty({
     example: '2024-08-28',
-    description: 'Departure date in YYYY-MM-DD format',
+    description: 'Departure date in YYYY-MM-DD format (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsDateString(
     {},
     { message: 'Departure date must be a valid date in YYYY-MM-DD format' },
   )
-  departureDate: string;
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Departure date is required for one-way bookings' })
+  departureDate?: string;
 
   @ApiProperty({
     example: '2024-08-28',
-    description: 'Arrival date in YYYY-MM-DD format',
+    description: 'Arrival date in YYYY-MM-DD format (for one-way bookings)',
+    required: false,
   })
+  @IsOptional()
   @IsDateString(
     {},
     { message: 'Arrival date must be a valid date in YYYY-MM-DD format' },
   )
-  arrivalDate: string;
+  @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
+  @IsNotEmpty({ message: 'Arrival date is required for one-way bookings' })
+  arrivalDate?: string;
 
   @ApiProperty({
     example: {
       type: 'checked',
       weight: '23kg',
       price: 50,
-      currency: 'USD',
     },
-    description: 'Selected baggage option details',
+    description: 'Selected baggage option details (for one-way bookings)',
     required: false,
   })
   @IsOptional()

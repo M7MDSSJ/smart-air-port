@@ -351,15 +351,9 @@ export class PaymentService {
   private convertBookingToEmailData(
     booking: BookingDocument,
   ): BookingEmailData {
-    return {
+    const baseData = {
       bookingRef: booking.bookingRef,
-      flightId: booking.flightId,
-      originAirportCode: booking.originAirportCode,
-      destinationAirportCode: booking.destinationAirportCode,
-      originCity: booking.originCity,
-      destinationCity: booking.destinationCity,
-      departureDate: booking.departureDate,
-      arrivalDate: booking.arrivalDate,
+      bookingType: booking.bookingType,
       totalPrice: booking.totalPrice,
       currency: booking.currency,
       travellersInfo: booking.travellersInfo.map((traveler) => ({
@@ -368,8 +362,39 @@ export class PaymentService {
         travelerType: traveler.travelerType,
       })),
       contactDetails: booking.contactDetails,
-      selectedBaggageOption: booking.selectedBaggageOption,
     };
+
+    // Handle round-trip vs one-way booking data
+    if (booking.bookingType === 'ROUND_TRIP' && booking.flightData) {
+      return {
+        ...baseData,
+        flightData: booking.flightData.map(flight => ({
+          flightID: flight.flightID,
+          typeOfFlight: flight.typeOfFlight,
+          numberOfStops: flight.numberOfStops,
+          originAirportCode: flight.originAirportCode,
+          destinationAirportCode: flight.destinationAirportCode,
+          originCIty: flight.originCIty,
+          destinationCIty: flight.destinationCIty,
+          departureDate: flight.departureDate,
+          arrivalDate: flight.arrivalDate,
+          selectedBaggageOption: flight.selectedBaggageOption,
+        })),
+      };
+    } else {
+      // One-way booking (legacy format)
+      return {
+        ...baseData,
+        flightId: booking.flightId,
+        originAirportCode: booking.originAirportCode,
+        destinationAirportCode: booking.destinationAirportCode,
+        originCity: booking.originCity,
+        destinationCity: booking.destinationCity,
+        departureDate: booking.departureDate,
+        arrivalDate: booking.arrivalDate,
+        selectedBaggageOption: booking.selectedBaggageOption,
+      };
+    }
   }
 
   /**

@@ -267,22 +267,7 @@ paymentStatus: pending -> completed -> failed
 4. Cancellation reason is optional but recommended
 5. Cancellation will trigger an email notification to the user
 
-### Email Notifications
-Users will receive email notifications for:
-- Booking cancellation (manual or timeout)
-- Cancellation reason (if provided)
-- Next steps (if applicable)
-
 ### Environment Variables
 ```
 BOOKING_TIMEOUT_MINUTES=5  # Time in minutes before pending bookings are cancelled
 ```
-
-### Best Practices
-1. Always check booking status before attempting cancellation
-2. Include cancellation reason for better tracking
-3. Monitor email delivery status
-4. Keep track of cancellation patterns
-5. Implement proper error handling
-6. Use appropriate HTTP status codes
-7. Maintain audit trail of cancellations
