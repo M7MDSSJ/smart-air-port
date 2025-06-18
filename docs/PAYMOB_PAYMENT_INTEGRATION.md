@@ -1,4 +1,6 @@
-## API Endpoints
+#Commentted for now (later)
+
+<!-- ## API Endpoints
 
 ### 1. Create Payment
 
@@ -213,4 +215,4 @@ PIN/OTP: Any numbers
 If you see errors like `"usd" is not a valid choice.`, ensure your integration is sending/using `"EGP"` for all Paymob API calls.
 ---
 
-
+ -->

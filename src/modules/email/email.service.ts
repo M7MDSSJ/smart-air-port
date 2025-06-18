@@ -169,7 +169,17 @@ export class EmailService implements OnModuleInit {
           bookingData,
         );
 
-      const subject = `✈️ Booking Confirmed - ${bookingData.bookingRef} | ${bookingData.originAirportCode} → ${bookingData.destinationAirportCode}`;
+      // Generate subject line based on booking type
+      let subject = `✈️ Booking Confirmed - ${bookingData.bookingRef}`;
+
+      if (bookingData.bookingType === 'ROUND_TRIP' && bookingData.flightData) {
+        const goFlight = bookingData.flightData.find(f => f.typeOfFlight === 'GO');
+        if (goFlight) {
+          subject += ` | ${goFlight.originAirportCode} ⇄ ${goFlight.destinationAirportCode}`;
+        }
+      } else if (bookingData.originAirportCode && bookingData.destinationAirportCode) {
+        subject += ` | ${bookingData.originAirportCode} → ${bookingData.destinationAirportCode}`;
+      }
 
       await this.sendEmail({
         to: bookingData.contactDetails.email,

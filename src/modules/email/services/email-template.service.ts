@@ -1,15 +1,35 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as QRCode from 'qrcode';
+import { BookingType, FlightType } from '../../booking/dto/create-booking.dto';
+
+export interface FlightEmailData {
+  flightID: string;
+  typeOfFlight: FlightType;
+  numberOfStops?: number;
+  originAirportCode: string;
+  destinationAirportCode: string;
+  originCIty: string;
+  destinationCIty: string;
+  departureDate: Date;
+  arrivalDate: Date;
+  selectedBaggageOption?: any;
+}
 
 export interface BookingEmailData {
   bookingRef: string;
-  flightId: string;
-  originAirportCode: string;
-  destinationAirportCode: string;
-  originCity: string;
-  destinationCity: string;
-  departureDate: Date;
-  arrivalDate: Date;
+  bookingType?: BookingType;
+  // For round-trip bookings
+  flightData?: FlightEmailData[];
+  // Legacy fields for one-way bookings
+  flightId?: string;
+  originAirportCode?: string;
+  destinationAirportCode?: string;
+  originCity?: string;
+  destinationCity?: string;
+  departureDate?: Date;
+  arrivalDate?: Date;
+  selectedBaggageOption?: any;
+  // Common fields
   totalPrice: number;
   currency: string;
   travellersInfo: Array<{
@@ -21,7 +41,6 @@ export interface BookingEmailData {
     email: string;
     phone: string;
   };
-  selectedBaggageOption?: any;
 }
 
 @Injectable()
@@ -121,14 +140,49 @@ export class EmailTemplateService {
       );
     }
 
-    const departureDate = this.formatDate(bookingData.departureDate);
-    const departureTime = this.formatTime(bookingData.departureDate);
-    const arrivalDate = this.formatDate(bookingData.arrivalDate);
-    const arrivalTime = this.formatTime(bookingData.arrivalDate);
     const totalPrice = this.formatCurrency(
       bookingData.totalPrice,
       bookingData.currency,
     );
+
+    // Determine if this is a round-trip or one-way booking
+    const isRoundTrip = bookingData.bookingType === BookingType.ROUND_TRIP && bookingData.flightData;
+
+    let flightDetailsHtml = '';
+    let emailSubjectRoute = '';
+
+    if (isRoundTrip && bookingData.flightData) {
+      // Handle round-trip booking
+      const goFlight = bookingData.flightData.find(f => f.typeOfFlight === FlightType.GO);
+      const returnFlight = bookingData.flightData.find(f => f.typeOfFlight === FlightType.RETURN);
+
+      if (goFlight && returnFlight) {
+        emailSubjectRoute = `${goFlight.originAirportCode} ⇄ ${goFlight.destinationAirportCode}`;
+        flightDetailsHtml = this.generateRoundTripFlightHtml(goFlight, returnFlight);
+      }
+    } else {
+      // Handle one-way booking (legacy)
+      if (bookingData.departureDate && bookingData.arrivalDate) {
+        emailSubjectRoute = `${bookingData.originAirportCode} → ${bookingData.destinationAirportCode}`;
+        const departureDate = this.formatDate(bookingData.departureDate);
+        const departureTime = this.formatTime(bookingData.departureDate);
+        const arrivalDate = this.formatDate(bookingData.arrivalDate);
+        const arrivalTime = this.formatTime(bookingData.arrivalDate);
+
+        flightDetailsHtml = this.generateOneWayFlightHtml({
+          flightId: bookingData.flightId || '',
+          originAirportCode: bookingData.originAirportCode || '',
+          destinationAirportCode: bookingData.destinationAirportCode || '',
+          originCity: bookingData.originCity || '',
+          destinationCity: bookingData.destinationCity || '',
+          departureDate,
+          departureTime,
+          arrivalDate,
+          arrivalTime,
+          selectedBaggageOption: bookingData.selectedBaggageOption
+        });
+      }
+    }
 
     const passengersHtml = bookingData.travellersInfo
       .map(
@@ -144,26 +198,6 @@ export class EmailTemplateService {
       `,
       )
       .join('');
-
-    const baggageHtml = bookingData.selectedBaggageOption
-      ? `
-        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-          <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">Baggage Information</h3>
-          <p style="margin: 5px 0; color: #666;">
-            <strong>Type:</strong> ${bookingData.selectedBaggageOption.type || 'Standard'}
-          </p>
-          ${
-            bookingData.selectedBaggageOption.weight
-              ? `
-            <p style="margin: 5px 0; color: #666;">
-              <strong>Weight:</strong> ${bookingData.selectedBaggageOption.weight}
-            </p>
-          `
-              : ''
-          }
-        </div>
-      `
-      : '';
 
     return `
 <!DOCTYPE html>
@@ -337,29 +371,7 @@ export class EmailTemplateService {
         </div>
 
         <div class="content">
-            <div class="flight-info">
-                <h2 style="margin-top: 0; color: #333;">Flight Details</h2>
-                <p style="margin: 5px 0; color: #666;"><strong>Flight:</strong> ${bookingData.flightId}</p>
-
-                <div class="route">
-                    <div class="airport">
-                        <div class="airport-code">${bookingData.originAirportCode}</div>
-                        <div class="city-name">${bookingData.originCity}</div>
-                    </div>
-                    <div class="arrow">→</div>
-                    <div class="airport">
-                        <div class="airport-code">${bookingData.destinationAirportCode}</div>
-                        <div class="city-name">${bookingData.destinationCity}</div>
-                    </div>
-                </div>
-
-                <div class="date-time">
-                    <strong>Departure:</strong> ${departureDate} at ${departureTime}
-                </div>
-                <div class="date-time">
-                    <strong>Arrival:</strong> ${arrivalDate} at ${arrivalTime}
-                </div>
-            </div>
+            ${flightDetailsHtml}
 
             <div style="margin: 30px 0;">
                 <h3 style="color: #333; margin-bottom: 15px;">Passengers</h3>
@@ -375,8 +387,6 @@ export class EmailTemplateService {
                     </tbody>
                 </table>
             </div>
-
-            ${baggageHtml}
 
             <div class="price-summary">
                 <h3 style="margin: 0 0 10px 0; color: #333;">Total Paid</h3>
@@ -445,6 +455,168 @@ export class EmailTemplateService {
     </div>
 </body>
 </html>
+    `;
+  }
+
+  /**
+   * Generate HTML for round-trip flights
+   */
+  private generateRoundTripFlightHtml(goFlight: FlightEmailData, returnFlight: FlightEmailData): string {
+    const goDepartureDate = this.formatDate(goFlight.departureDate);
+    const goDepartureTime = this.formatTime(goFlight.departureDate);
+    const goArrivalDate = this.formatDate(goFlight.arrivalDate);
+    const goArrivalTime = this.formatTime(goFlight.arrivalDate);
+
+    const returnDepartureDate = this.formatDate(returnFlight.departureDate);
+    const returnDepartureTime = this.formatTime(returnFlight.departureDate);
+    const returnArrivalDate = this.formatDate(returnFlight.arrivalDate);
+    const returnArrivalTime = this.formatTime(returnFlight.arrivalDate);
+
+    const goBaggageHtml = this.generateBaggageHtml(goFlight.selectedBaggageOption);
+    const returnBaggageHtml = this.generateBaggageHtml(returnFlight.selectedBaggageOption);
+
+    return `
+      <div class="flight-info">
+        <h2 style="margin-top: 0; color: #333;">Round Trip Flight Details</h2>
+
+        <!-- Outbound Flight -->
+        <div style="margin-bottom: 30px; padding: 20px; border: 2px solid #e3f2fd; border-radius: 8px; background-color: #f8f9fa;">
+          <h3 style="margin: 0 0 15px 0; color: #1976d2;">✈️ Outbound Flight</h3>
+          <p style="margin: 5px 0; color: #666;"><strong>Flight:</strong> ${goFlight.flightID}</p>
+          ${goFlight.numberOfStops ? `<p style="margin: 5px 0; color: #666;"><strong>Stops:</strong> ${goFlight.numberOfStops}</p>` : ''}
+
+          <div class="route">
+            <div class="airport">
+              <div class="airport-code">${goFlight.originAirportCode}</div>
+              <div class="city-name">${goFlight.originCIty}</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="airport">
+              <div class="airport-code">${goFlight.destinationAirportCode}</div>
+              <div class="city-name">${goFlight.destinationCIty}</div>
+            </div>
+          </div>
+
+          <div class="date-time">
+            <strong>Departure:</strong> ${goDepartureDate} at ${goDepartureTime}
+          </div>
+          <div class="date-time">
+            <strong>Arrival:</strong> ${goArrivalDate} at ${goArrivalTime}
+          </div>
+
+          ${goBaggageHtml}
+        </div>
+
+        <!-- Return Flight -->
+        <div style="margin-bottom: 20px; padding: 20px; border: 2px solid #e8f5e8; border-radius: 8px; background-color: #f8f9fa;">
+          <h3 style="margin: 0 0 15px 0; color: #388e3c;">🔄 Return Flight</h3>
+          <p style="margin: 5px 0; color: #666;"><strong>Flight:</strong> ${returnFlight.flightID}</p>
+          ${returnFlight.numberOfStops ? `<p style="margin: 5px 0; color: #666;"><strong>Stops:</strong> ${returnFlight.numberOfStops}</p>` : ''}
+
+          <div class="route">
+            <div class="airport">
+              <div class="airport-code">${returnFlight.originAirportCode}</div>
+              <div class="city-name">${returnFlight.originCIty}</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="airport">
+              <div class="airport-code">${returnFlight.destinationAirportCode}</div>
+              <div class="city-name">${returnFlight.destinationCIty}</div>
+            </div>
+          </div>
+
+          <div class="date-time">
+            <strong>Departure:</strong> ${returnDepartureDate} at ${returnDepartureTime}
+          </div>
+          <div class="date-time">
+            <strong>Arrival:</strong> ${returnArrivalDate} at ${returnArrivalTime}
+          </div>
+
+          ${returnBaggageHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate HTML for one-way flights
+   */
+  private generateOneWayFlightHtml(flightData: {
+    flightId: string;
+    originAirportCode: string;
+    destinationAirportCode: string;
+    originCity: string;
+    destinationCity: string;
+    departureDate: string;
+    departureTime: string;
+    arrivalDate: string;
+    arrivalTime: string;
+    selectedBaggageOption?: any;
+  }): string {
+    const baggageHtml = this.generateBaggageHtml(flightData.selectedBaggageOption);
+
+    return `
+      <div class="flight-info">
+        <h2 style="margin-top: 0; color: #333;">Flight Details</h2>
+        <p style="margin: 5px 0; color: #666;"><strong>Flight:</strong> ${flightData.flightId}</p>
+
+        <div class="route">
+          <div class="airport">
+            <div class="airport-code">${flightData.originAirportCode}</div>
+            <div class="city-name">${flightData.originCity}</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="airport">
+            <div class="airport-code">${flightData.destinationAirportCode}</div>
+            <div class="city-name">${flightData.destinationCity}</div>
+          </div>
+        </div>
+
+        <div class="date-time">
+          <strong>Departure:</strong> ${flightData.departureDate} at ${flightData.departureTime}
+        </div>
+        <div class="date-time">
+          <strong>Arrival:</strong> ${flightData.arrivalDate} at ${flightData.arrivalTime}
+        </div>
+
+        ${baggageHtml}
+      </div>
+    `;
+  }
+
+  /**
+   * Generate baggage HTML section
+   */
+  private generateBaggageHtml(selectedBaggageOption?: any): string {
+    if (!selectedBaggageOption) {
+      return '';
+    }
+
+    return `
+      <div style="margin-top: 15px; padding: 15px; background-color: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+        <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 14px;">Baggage Information</h4>
+        <p style="margin: 5px 0; color: #856404; font-size: 13px;">
+          <strong>Type:</strong> ${selectedBaggageOption.type || 'Standard'}
+        </p>
+        ${
+          selectedBaggageOption.weight
+            ? `
+          <p style="margin: 5px 0; color: #856404; font-size: 13px;">
+            <strong>Weight:</strong> ${selectedBaggageOption.weight}
+          </p>
+        `
+            : ''
+        }
+        ${
+          selectedBaggageOption.price
+            ? `
+          <p style="margin: 5px 0; color: #856404; font-size: 13px;">
+            <strong>Price:</strong> $${selectedBaggageOption.price}
+          </p>
+        `
+            : ''
+        }
+      </div>
     `;
   }
 

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Booking, BookingDocument } from '../schemas/booking.schema';
-import { CreateBookingDto } from '../dto/create-booking.dto';
+import { Booking, BookingDocument, FlightData } from '../schemas/booking.schema';
+import { CreateBookingDto, BookingType, FlightType } from '../dto/create-booking.dto';
 import { FlightService } from 'src/modules/flight/flight.service';
 import { EmailService } from 'src/modules/email/email.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -29,6 +29,12 @@ export class BookingService {
   ): Promise<BookingDocument> {
     this.logger.log(`Creating booking for userId: ${userId}`);
 
+    // Determine booking type
+    const bookingType = createBookingDto.bookingType || BookingType.ONE_WAY;
+
+    // Validate booking data based on type
+    this.validateBookingData(createBookingDto, bookingType);
+
     // Generate a unique bookingRef if not provided
     let bookingRef = createBookingDto.bookingRef;
     if (!bookingRef) {
@@ -46,32 +52,53 @@ export class BookingService {
     const finalTotalPrice = createBookingDto.totalPrice;
 
     this.logger.log(
-      `Creating booking with total price: ${finalTotalPrice} ${createBookingDto.currency}`,
+      `Creating ${bookingType} booking with total price: ${finalTotalPrice} ${createBookingDto.currency}`,
     );
 
-    // Create booking object
-    const newBooking = new this.bookingModel({
+    // Create booking object based on type
+    const bookingData: any = {
       userId: new Types.ObjectId(userId),
-      flightId: createBookingDto.flightID,
-      originAirportCode: createBookingDto.originAirportCode,
-      destinationAirportCode: createBookingDto.destinationAirportCode,
-      originCity: createBookingDto.originCIty,
-      destinationCity: createBookingDto.destinationCIty,
-      departureDate: new Date(createBookingDto.departureDate),
-      arrivalDate: new Date(createBookingDto.arrivalDate),
-      selectedBaggageOption: createBookingDto.selectedBaggageOption || null,
-      totalPrice: finalTotalPrice, // Use the provided total price as-is
+      bookingType,
+      totalPrice: finalTotalPrice,
       currency: createBookingDto.currency,
       travellersInfo: createBookingDto.travellersInfo,
       contactDetails: createBookingDto.contactDetails,
       status: 'pending',
       bookingRef,
-    });
+    };
+
+    if (bookingType === BookingType.ROUND_TRIP) {
+      // Handle round-trip booking
+      bookingData.flightData = createBookingDto.flightData?.map((flight) => ({
+        flightID: flight.flightID,
+        typeOfFlight: flight.typeOfFlight,
+        numberOfStops: flight.numberOfStops,
+        originAirportCode: flight.originAirportCode,
+        destinationAirportCode: flight.destinationAirportCode,
+        originCIty: flight.originCIty,
+        destinationCIty: flight.destinationCIty,
+        departureDate: new Date(flight.departureDate),
+        arrivalDate: new Date(flight.arrivalDate),
+        selectedBaggageOption: flight.selectedBaggageOption,
+      }));
+    } else {
+      // Handle one-way booking (backward compatibility)
+      bookingData.flightId = createBookingDto.flightID;
+      bookingData.originAirportCode = createBookingDto.originAirportCode;
+      bookingData.destinationAirportCode = createBookingDto.destinationAirportCode;
+      bookingData.originCity = createBookingDto.originCIty;
+      bookingData.destinationCity = createBookingDto.destinationCIty;
+      bookingData.departureDate = new Date(createBookingDto.departureDate!);
+      bookingData.arrivalDate = new Date(createBookingDto.arrivalDate!);
+      bookingData.selectedBaggageOption = createBookingDto.selectedBaggageOption;
+    }
+
+    const newBooking = new this.bookingModel(bookingData);
 
     try {
       const savedBooking = await newBooking.save();
       this.logger.log(
-        `Booking created successfully with ID: ${savedBooking._id.toString()}`,
+        `${bookingType} booking created successfully with ID: ${savedBooking._id.toString()}`,
       );
       return savedBooking;
     } catch (error: unknown) {
@@ -84,6 +111,40 @@ export class BookingService {
         this.logger.error('Failed to create booking with unknown error');
       }
       throw error;
+    }
+  }
+
+  private validateBookingData(createBookingDto: CreateBookingDto, bookingType: BookingType): void {
+    if (bookingType === BookingType.ROUND_TRIP) {
+      if (!createBookingDto.flightData || createBookingDto.flightData.length === 0) {
+        throw new BadRequestException('Flight data is required for round-trip bookings');
+      }
+
+      if (createBookingDto.flightData.length !== 2) {
+        throw new BadRequestException('Round-trip bookings must have exactly 2 flights (GO and RETURN)');
+      }
+
+      const goFlight = createBookingDto.flightData.find(f => f.typeOfFlight === FlightType.GO);
+      const returnFlight = createBookingDto.flightData.find(f => f.typeOfFlight === FlightType.RETURN);
+
+      if (!goFlight || !returnFlight) {
+        throw new BadRequestException('Round-trip bookings must have one GO flight and one RETURN flight');
+      }
+
+      // Validate that return flight departs after go flight arrives
+      const goArrival = new Date(goFlight.arrivalDate);
+      const returnDeparture = new Date(returnFlight.departureDate);
+
+      if (returnDeparture <= goArrival) {
+        throw new BadRequestException('Return flight must depart after the arrival of the outbound flight');
+      }
+    } else {
+      // Validate one-way booking fields
+      if (!createBookingDto.flightID || !createBookingDto.originAirportCode ||
+          !createBookingDto.destinationAirportCode || !createBookingDto.departureDate ||
+          !createBookingDto.arrivalDate) {
+        throw new BadRequestException('All flight details are required for one-way bookings');
+      }
     }
   }
 
