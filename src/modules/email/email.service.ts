@@ -186,9 +186,8 @@ export class EmailService implements OnModuleInit {
         `Failed to send booking confirmation email for booking ${bookingData.bookingRef}:`,
         error instanceof Error ? error.stack : error,
       );
-      throw new BadRequestException(
-        'Failed to send booking confirmation email',
-      );
+      // Don't throw error here - email failure shouldn't fail the payment process
+      // Just log the error and continue
     }
   }
 
@@ -229,7 +228,8 @@ export class EmailService implements OnModuleInit {
         `Failed to send email to ${options.to}: ${errorMessage}`,
         errorStack,
       );
-      throw new BadRequestException('Failed to send email');
+      // Don't throw error here - let the calling function handle it
+      throw error;
     }
   }
 }
