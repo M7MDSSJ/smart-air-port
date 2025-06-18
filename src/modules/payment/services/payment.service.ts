@@ -669,6 +669,8 @@ export class PaymentService {
    * @param signature The Stripe signature header
    */
   async handleStripeWebhook(rawBody: Buffer, signature: string) {
+    this.logger.log('=== PROCESSING STRIPE WEBHOOK IN SERVICE ===');
+
     const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
 
     if (!webhookSecret) {
@@ -676,14 +678,34 @@ export class PaymentService {
       throw new BadRequestException('Webhook secret not configured');
     }
 
+    this.logger.log(`Webhook verification details:`, {
+      rawBodyLength: rawBody ? rawBody.length : 0,
+      signatureProvided: !!signature,
+      webhookSecretConfigured: !!webhookSecret,
+      webhookSecretPrefix: webhookSecret ? webhookSecret.substring(0, 10) + '...' : 'NOT_SET'
+    });
+
     let event: Stripe.Event;
 
     try {
       // Verify the webhook signature
       event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-      this.logger.log(`Received Stripe webhook event: ${event.type}`);
+      this.logger.log(`✅ Stripe webhook event verified successfully: ${event.type}`);
+      this.logger.log(`Event ID: ${event.id}, Created: ${new Date(event.created * 1000).toISOString()}`);
+
+      if (event.data && event.data.object) {
+        const obj = event.data.object as any;
+        this.logger.log(`Event object details:`, {
+          id: obj.id,
+          object: obj.object,
+          status: obj.status,
+          metadata: obj.metadata
+        });
+      }
     } catch (error) {
-      this.logger.error(`Webhook signature verification failed: ${error.message}`);
+      this.logger.error(`❌ Webhook signature verification failed: ${error.message}`);
+      this.logger.error(`Raw body preview: ${rawBody ? rawBody.toString().substring(0, 100) + '...' : 'NULL'}`);
+      this.logger.error(`Signature preview: ${signature ? signature.substring(0, 50) + '...' : 'NULL'}`);
       throw new BadRequestException('Invalid webhook signature');
     }
 
@@ -714,24 +736,42 @@ export class PaymentService {
    * Handle successful payment intent
    */
   private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    this.logger.log('=== HANDLING PAYMENT INTENT SUCCEEDED ===');
+    this.logger.log(`Payment Intent ID: ${paymentIntent.id}`);
+    this.logger.log(`Payment Intent Status: ${paymentIntent.status}`);
+    this.logger.log(`Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+    this.logger.log(`Payment Intent Metadata:`, paymentIntent.metadata);
+
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (!bookingId) {
-      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      this.logger.error(`❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      this.logger.error(`Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`);
       return;
     }
 
-    this.logger.log(`Processing successful payment for booking: ${bookingId}`);
+    this.logger.log(`✅ Processing successful payment for booking: ${bookingId}`);
 
     try {
       // Find and update the booking
+      this.logger.log(`🔍 Looking for booking with ID: ${bookingId}`);
       const booking = await this.bookingModel.findById(bookingId);
       if (!booking) {
-        this.logger.error(`Booking not found: ${bookingId}`);
+        this.logger.error(`❌ Booking not found: ${bookingId}`);
+        this.logger.error(`This could indicate the booking was deleted or the ID is incorrect`);
         return;
       }
 
+      this.logger.log(`📋 Found booking:`, {
+        id: booking._id.toString(),
+        ref: booking.bookingRef,
+        currentStatus: booking.status,
+        currentPaymentStatus: booking.paymentStatus,
+        userId: booking.userId.toString()
+      });
+
       // Update booking status
+      this.logger.log(`🔄 Updating booking status to confirmed...`);
       const updatedBooking = await this.bookingModel.findByIdAndUpdate(
         bookingId,
         {
@@ -742,6 +782,19 @@ export class PaymentService {
         },
         { new: true },
       );
+
+      if (updatedBooking) {
+        this.logger.log(`✅ Booking updated successfully:`, {
+          id: updatedBooking._id.toString(),
+          ref: updatedBooking.bookingRef,
+          newStatus: updatedBooking.status,
+          newPaymentStatus: updatedBooking.paymentStatus,
+          paymentCompletedAt: updatedBooking.paymentCompletedAt
+        });
+      } else {
+        this.logger.error(`❌ Failed to update booking ${bookingId}`);
+        return;
+      }
 
       // Create payment record
       const paymentData: CreatePaymentDto = {

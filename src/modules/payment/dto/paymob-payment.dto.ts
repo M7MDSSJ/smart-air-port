@@ -16,8 +16,11 @@ export class CreatePaymobPaymentDto {
 
 export class PaymobPaymentResponseDto {
   paymentKey: string;
-  iframeId: string;
   integrationId: string;
+  orderId: number;
+  amountCents: number;
+  currency: string;
   success: boolean;
-  paymentUrl: string;
+  expiresAt: Date;
+  merchantOrderId: string;
 }

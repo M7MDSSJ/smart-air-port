@@ -23,7 +23,6 @@ export default registerAs('app', () => ({
   paymobMerchantId: process.env.PAYMOB_MERCHANT_ID,
   paymobHmacSecret: process.env.PAYMOB_HMAC_SECRET,
   paymobCardIntegrationId: process.env.PAYMOB_CARD_INTEGRATION_ID,
-  paymobIframeId: process.env.PAYMOB_IFRAME_ID,
 
   // Redis
   redisHost: process.env.REDIS_HOST,

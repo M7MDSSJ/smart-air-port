@@ -19,12 +19,20 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { VerifiedUserGuard } from 'src/common/guards/verifiedUser.guard';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
-import { Request } from 'express';
+
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  HttpException,
 } from '@nestjs/common';
 import { PaymobService } from '../services/paymob.service';
 import { PaymentTransactionService } from '../services/payment-transaction.service';
@@ -130,15 +138,30 @@ export class PaymentController {
     @Headers('x-provider') provider: string,
     @Req() req: RawBodyRequest<Request>,
   ) {
-    this.logger.debug(
-      `Webhook received: provider=${provider}, paymobSignature=${paymobSignature}`,
-    );
-    if (provider === 'paymob') {
-      this.logger.log('Received Paymob webhook');
-      return this.paymobService.handleWebhook(paymobSignature, req.rawBody);
-    } else {
-      this.logger.log('Received Stripe webhook');
-      return this.paymentService.handleWebhook(signature, req.rawBody);
+    this.logger.log('=== GENERIC WEBHOOK RECEIVED ===');
+    this.logger.log(`Headers received:`, {
+      'stripe-signature': signature ? `${signature.substring(0, 20)}...` : 'NOT_PROVIDED',
+      'x-paymob-signature': paymobSignature ? `${paymobSignature.substring(0, 20)}...` : 'NOT_PROVIDED',
+      'x-provider': provider || 'NOT_PROVIDED',
+      'content-type': req.headers['content-type'],
+      'user-agent': req.headers['user-agent'],
+    });
+
+    try {
+      if (provider === 'paymob') {
+        this.logger.log('Processing as Paymob webhook');
+        return this.paymobService.handleWebhook(paymobSignature, req.rawBody);
+      } else if (provider === 'stripe' || signature) {
+        this.logger.log('Processing as Stripe webhook via generic endpoint');
+        return this.paymentService.handleWebhook(signature, req.rawBody);
+      } else {
+        this.logger.warn('Unknown webhook provider or missing signature');
+        this.logger.warn('If this is a Stripe webhook, use /payment/stripe/webhook endpoint instead');
+        return { received: false, error: 'Unknown provider or missing signature' };
+      }
+    } catch (error) {
+      this.logger.error(`Generic webhook processing failed: ${error.message}`);
+      throw error;
     }
   }
 
@@ -181,8 +204,25 @@ export class PaymentController {
     @Req() request: any,
     @Headers('stripe-signature') signature: string,
   ) {
-    this.logger.log('Received Stripe webhook');
-    return this.paymentService.handleStripeWebhook(request.rawBody, signature);
+    this.logger.log('=== STRIPE WEBHOOK RECEIVED ===');
+    this.logger.log(`Stripe webhook details:`, {
+      'stripe-signature': signature ? `${signature.substring(0, 20)}...` : 'NOT_PROVIDED',
+      'content-type': request.headers['content-type'],
+      'user-agent': request.headers['user-agent'],
+      'content-length': request.headers['content-length'],
+      'rawBodyExists': !!request.rawBody,
+      'rawBodyLength': request.rawBody ? request.rawBody.length : 0,
+    });
+
+    try {
+      const result = await this.paymentService.handleStripeWebhook(request.rawBody, signature);
+      this.logger.log('Stripe webhook processed successfully');
+      return result;
+    } catch (error) {
+      this.logger.error(`Stripe webhook processing failed: ${error.message}`);
+      this.logger.error(`Error stack: ${error.stack}`);
+      throw error;
+    }
   }
 
   @Get('stripe/config')
@@ -303,22 +343,10 @@ export class PaymentController {
       state: 'NA',
     };
 
-    // Get auth token from Paymob
-    const authToken = await this.paymobService.authenticate();
-
-    // Register order with Paymob
-    const { orderId } = await this.paymobService.registerOrder(
-      authToken,
+    // Create SDK payment data using the new method
+    const sdkPaymentData = await this.paymobService.createSDKPaymentData(
       createPaymobPaymentDto.bookingId,
       amountCents,
-      'EGP', // Force EGP for Paymob
-    );
-
-    // Get payment key from Paymob
-    const paymentKey = await this.paymobService.requestPaymentKey(
-      authToken,
-      amountCents,
-      orderId,
       billingData,
       'EGP', // Force EGP for Paymob
     );
@@ -331,10 +359,11 @@ export class PaymentController {
       currency: 'EGP',
       provider: PaymentProvider.PAYMOB,
       method: PaymentMethod.CREDIT_CARD,
-      paymentKey: paymentKey.paymentKey,
+      paymentKey: sdkPaymentData.paymentKey,
       metadata: {
-        paymobOrderId: orderId,
-        integrationId: this.paymobService.getCardIntegrationId(),
+        paymobOrderId: sdkPaymentData.orderId,
+        integrationId: sdkPaymentData.integrationId,
+        expiresAt: sdkPaymentData.expiresAt,
       },
       isTest: process.env.NODE_ENV !== 'production',
     };
@@ -347,16 +376,413 @@ export class PaymentController {
       }`,
     );
 
-    // Build the full payment URL for the iframe
-    const paymentUrl = `https://accept.paymob.com/api/acceptance/iframes/${this.paymobService.getIframeId()}?payment_token=${paymentKey.paymentKey}`;
-
-    // Return the payment key, payment URL, and other required data for the Flutter SDK
+    // Return SDK-compatible data for Flutter integration
     return {
       success: true,
-      paymentKey: paymentKey.paymentKey,
-      iframeId: this.paymobService.getIframeId(),
-      integrationId: this.paymobService.getCardIntegrationId(),
-      paymentUrl,
+      paymentKey: sdkPaymentData.paymentKey,
+      integrationId: sdkPaymentData.integrationId,
+      orderId: sdkPaymentData.orderId,
+      amountCents: sdkPaymentData.amountCents,
+      currency: sdkPaymentData.currency,
+      expiresAt: sdkPaymentData.expiresAt,
+      merchantOrderId: sdkPaymentData.merchantOrderId,
     };
+  }
+
+  /**
+   * Verify payment status for SDK integration
+   * This endpoint allows the Flutter app to check payment status after SDK completion
+   */
+  @Post('paymob/verify-payment')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Verify Paymob payment status for SDK integration' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment verification result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        paymentStatus: { type: 'string' },
+        transactionId: { type: 'string' },
+        amount: { type: 'number' },
+        currency: { type: 'string' },
+        paidAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Payment not found' })
+  async verifyPaymobPayment(
+    @Body() verifyPaymentDto: { bookingId: string; transactionId?: string },
+    @Req() req,
+  ) {
+    const user = req.user;
+    this.logger.log(
+      `Verifying Paymob payment for booking ${verifyPaymentDto.bookingId} by user ${user.id}`,
+    );
+
+    try {
+      // Find the payment record
+      const payment = await this.paymentTransactionService.findPaymentByBookingId(
+        verifyPaymentDto.bookingId,
+      );
+
+      if (!payment) {
+        throw new HttpException('Payment not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify user owns this payment
+      if (payment.userId.toString() !== user.id) {
+        throw new HttpException('Unauthorized access to payment', HttpStatus.FORBIDDEN);
+      }
+
+      return {
+        success: true,
+        paymentStatus: payment.status,
+        transactionId: payment.transactionId,
+        amount: payment.amount,
+        currency: payment.currency,
+        paidAt: payment.paidAt,
+        metadata: payment.metadata,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to verify payment for booking ${verifyPaymentDto.bookingId}:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get payment status by booking ID for SDK integration
+   */
+  @Get('paymob/status/:bookingId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get payment status by booking ID for SDK integration' })
+  @ApiParam({ name: 'bookingId', description: 'Booking ID to check payment status for' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment status information',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        paymentStatus: { type: 'string' },
+        paymentKey: { type: 'string' },
+        integrationId: { type: 'string' },
+        orderId: { type: 'number' },
+        amount: { type: 'number' },
+        currency: { type: 'string' },
+        expiresAt: { type: 'string', format: 'date-time' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Payment not found' })
+  async getPaymobPaymentStatus(
+    @Param('bookingId') bookingId: string,
+    @Req() req,
+  ) {
+    const user = req.user;
+    this.logger.log(
+      `Getting payment status for booking ${bookingId} by user ${user.id}`,
+    );
+
+    try {
+      // Find the payment record
+      const payment = await this.paymentTransactionService.findPaymentByBookingId(bookingId);
+
+      if (!payment) {
+        throw new HttpException('Payment not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify user owns this payment
+      if (payment.userId.toString() !== user.id) {
+        throw new HttpException('Unauthorized access to payment', HttpStatus.FORBIDDEN);
+      }
+
+      return {
+        success: true,
+        paymentStatus: payment.status,
+        paymentKey: payment.paymentKey,
+        integrationId: payment.metadata?.integrationId,
+        orderId: payment.metadata?.paymobOrderId,
+        amount: payment.amount,
+        currency: payment.currency,
+        expiresAt: payment.metadata?.expiresAt,
+        createdAt: payment.createdAt,
+        transactionId: payment.transactionId,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get payment status for booking ${bookingId}:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Debug endpoint to manually check and sync payment status with Stripe
+   * This endpoint helps debug webhook issues by manually checking payment status
+   */
+  @Post('debug/sync-payment-status')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Debug: Manually sync payment status with Stripe' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment status sync result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        bookingId: { type: 'string' },
+        paymentIntentId: { type: 'string' },
+        stripeStatus: { type: 'string' },
+        bookingStatus: { type: 'string' },
+        paymentStatus: { type: 'string' },
+        syncPerformed: { type: 'boolean' },
+        message: { type: 'string' },
+      },
+    },
+  })
+  async debugSyncPaymentStatus(
+    @Body() body: { bookingId: string },
+    @Req() req,
+  ) {
+    const user = req.user;
+    this.logger.log(
+      `Debug: Syncing payment status for booking ${body.bookingId} by user ${user.id}`,
+    );
+
+    try {
+      // Find the booking
+      const booking = await this.paymentService.getBookingById(body.bookingId);
+
+      if (!booking) {
+        throw new HttpException('Booking not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify user owns this booking
+      if (booking.userId.toString() !== user.id) {
+        throw new HttpException('Unauthorized access to booking', HttpStatus.FORBIDDEN);
+      }
+
+      this.logger.log(`Found booking:`, {
+        id: booking._id.toString(),
+        ref: booking.bookingRef,
+        status: booking.status,
+        paymentStatus: booking.paymentStatus,
+        paymentIntentId: booking.paymentIntentId
+      });
+
+      if (!booking.paymentIntentId) {
+        return {
+          success: false,
+          bookingId: body.bookingId,
+          message: 'No payment intent ID found for this booking',
+          syncPerformed: false
+        };
+      }
+
+      // Get payment intent details from Stripe
+      const paymentIntentDetails = await this.paymentService.getPaymentIntentDetails(booking.paymentIntentId);
+
+      this.logger.log(`Stripe payment intent details:`, {
+        id: paymentIntentDetails.id,
+        status: paymentIntentDetails.status,
+        amount: paymentIntentDetails.amount,
+        currency: paymentIntentDetails.currency,
+        metadata: paymentIntentDetails.metadata
+      });
+
+      let syncPerformed = false;
+      let message = 'Payment status is already in sync';
+
+      // Check if we need to sync the status
+      if (paymentIntentDetails.status === 'succeeded' && booking.paymentStatus !== 'completed') {
+        this.logger.log(`Payment succeeded on Stripe but booking not updated. Syncing...`);
+
+        // Manually trigger the payment success handler
+        await this.paymentService.confirmPayment({
+          paymentIntentId: booking.paymentIntentId,
+          userEmail: user.email
+        });
+
+        syncPerformed = true;
+        message = 'Payment status synced successfully';
+      }
+
+      return {
+        success: true,
+        bookingId: body.bookingId,
+        paymentIntentId: booking.paymentIntentId,
+        stripeStatus: paymentIntentDetails.status,
+        bookingStatus: booking.status,
+        paymentStatus: booking.paymentStatus,
+        syncPerformed,
+        message
+      };
+
+    } catch (error) {
+      this.logger.error(
+        `Failed to sync payment status for booking ${body.bookingId}:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Debug endpoint to get detailed payment and booking information
+   */
+  @Get('debug/payment-details/:bookingId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Debug: Get detailed payment and booking information' })
+  @ApiParam({ name: 'bookingId', description: 'Booking ID to get details for' })
+  async debugGetPaymentDetails(
+    @Param('bookingId') bookingId: string,
+    @Req() req,
+  ) {
+    const user = req.user;
+    this.logger.log(
+      `Debug: Getting payment details for booking ${bookingId} by user ${user.id}`,
+    );
+
+    try {
+      // Find the booking
+      const booking = await this.paymentService.getBookingById(bookingId);
+
+      if (!booking) {
+        throw new HttpException('Booking not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Verify user owns this booking
+      if (booking.userId.toString() !== user.id) {
+        throw new HttpException('Unauthorized access to booking', HttpStatus.FORBIDDEN);
+      }
+
+      let stripeDetails = null;
+      if (booking.paymentIntentId) {
+        try {
+          stripeDetails = await this.paymentService.getPaymentIntentDetails(booking.paymentIntentId);
+        } catch (error) {
+          this.logger.warn(`Could not fetch Stripe details: ${error.message}`);
+        }
+      }
+
+      // Find payment records
+      const paymentRecords = await this.paymentTransactionService.findPaymentsByBookingId(bookingId);
+
+      return {
+        success: true,
+        booking: {
+          id: booking._id.toString(),
+          ref: booking.bookingRef,
+          status: booking.status,
+          paymentStatus: booking.paymentStatus,
+          paymentIntentId: booking.paymentIntentId,
+          paymentCompletedAt: booking.paymentCompletedAt,
+          totalPrice: booking.totalPrice,
+          currency: booking.currency,
+          createdAt: booking.createdAt,
+          updatedAt: booking.updatedAt
+        },
+        stripeDetails: stripeDetails ? {
+          id: stripeDetails.id,
+          status: stripeDetails.status,
+          amount: stripeDetails.amount,
+          currency: stripeDetails.currency,
+          created: new Date(stripeDetails.created * 1000),
+          metadata: stripeDetails.metadata
+        } : null,
+        paymentRecords: paymentRecords || []
+      };
+
+    } catch (error) {
+      this.logger.error(
+        `Failed to get payment details for booking ${bookingId}:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Test webhook signature verification
+   * This endpoint helps test if webhook signature verification is working
+   */
+  @Post('debug/test-webhook-signature')
+  @HttpCode(HttpStatus.OK)
+  async testWebhookSignature(
+    @Req() request: any,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    this.logger.log('=== TESTING WEBHOOK SIGNATURE VERIFICATION ===');
+
+    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+
+    this.logger.log('Test webhook details:', {
+      signatureProvided: !!signature,
+      signatureLength: signature ? signature.length : 0,
+      webhookSecretConfigured: !!webhookSecret,
+      webhookSecretLength: webhookSecret ? webhookSecret.length : 0,
+      rawBodyExists: !!request.rawBody,
+      rawBodyLength: request.rawBody ? request.rawBody.length : 0,
+      rawBodyType: request.rawBody ? typeof request.rawBody : 'undefined',
+      contentType: request.headers['content-type'],
+    });
+
+    if (!webhookSecret) {
+      return {
+        success: false,
+        error: 'STRIPE_WEBHOOK_SECRET not configured',
+        details: 'Check your environment variables'
+      };
+    }
+
+    if (!signature) {
+      return {
+        success: false,
+        error: 'No stripe-signature header provided',
+        details: 'Add stripe-signature header to your request'
+      };
+    }
+
+    if (!request.rawBody) {
+      return {
+        success: false,
+        error: 'No raw body available',
+        details: 'Raw body is required for webhook signature verification'
+      };
+    }
+
+    try {
+      // Try to construct a Stripe event (this will test signature verification)
+      const stripe = require('stripe')(this.configService.get<string>('STRIPE_SECRET_KEY'));
+      const event = stripe.webhooks.constructEvent(request.rawBody, signature, webhookSecret);
+
+      return {
+        success: true,
+        message: 'Webhook signature verification successful',
+        eventType: event.type,
+        eventId: event.id
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Webhook signature verification failed',
+        details: error.message,
+        troubleshooting: {
+          checkWebhookSecret: 'Verify STRIPE_WEBHOOK_SECRET matches Stripe dashboard',
+          checkSignature: 'Ensure stripe-signature header is correctly set',
+          checkRawBody: 'Ensure raw body is preserved and not parsed as JSON'
+        }
+      };
+    }
   }
 }

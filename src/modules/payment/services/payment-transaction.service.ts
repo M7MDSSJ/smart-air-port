@@ -99,6 +99,25 @@ export class PaymentTransactionService {
   }
 
   /**
+   * Find payment by booking ID (alias for compatibility)
+   */
+  async findPaymentByBookingId(bookingId: string): Promise<PaymentDocument | null> {
+    return this.findByBookingId(bookingId);
+  }
+
+  /**
+   * Find all payments by booking ID
+   */
+  async findPaymentsByBookingId(bookingId: string): Promise<PaymentDocument[]> {
+    try {
+      return await this.paymentModel.find({ bookingId }).exec();
+    } catch (error) {
+      this.logger.error(`Failed to find payments by booking ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Get all payments for a user
    */
   async findByUserId(
