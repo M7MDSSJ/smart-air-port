@@ -66,7 +66,7 @@ curl -X POST http://localhost:3001/payment/paymob/create-payment-key \
 
 **cURL Command**:
 ```bash
-curl -X GET http://localhost:3001/payment/paymob/status/YOUR_BOOKING_ID \
+curl -X GET http://localhost:3000/payment/paymob/status/YOUR_BOOKING_ID \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
