@@ -69,6 +69,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 ```
 **WEBHOOK**
 ```json
+
 POST /payments/webhook
 Headers{
 Stripe-Signature: <stripe-signature-header>

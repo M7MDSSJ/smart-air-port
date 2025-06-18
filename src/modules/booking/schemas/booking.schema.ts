@@ -1,17 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
+import { BookingType, FlightType } from '../dto/create-booking.dto';
 
 export type BookingDocument = Booking & Document;
 
-@Schema({
-  timestamps: true,
-})
-export class Booking {
-  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'User' })
-  userId: MongooseSchema.Types.ObjectId;
-
+@Schema({ _id: false })
+export class FlightData {
   @Prop({ required: true, type: String })
-  flightId: string;
+  flightID: string;
+
+  @Prop({ required: true, type: String, enum: ['GO', 'RETURN'] })
+  typeOfFlight: FlightType;
+
+  @Prop({ type: Number })
+  numberOfStops?: number;
 
   @Prop({ required: true })
   originAirportCode: string;
@@ -20,10 +22,10 @@ export class Booking {
   destinationAirportCode: string;
 
   @Prop({ required: true })
-  originCity: string;
+  originCIty: string;
 
   @Prop({ required: true })
-  destinationCity: string;
+  destinationCIty: string;
 
   @Prop({ required: true, type: Date })
   departureDate: Date;
@@ -32,7 +34,52 @@ export class Booking {
   arrivalDate: Date;
 
   @Prop({ type: Object })
-  selectedBaggageOption: Record<string, any>;
+  selectedBaggageOption?: Record<string, any>;
+}
+
+@Schema({
+  timestamps: true,
+})
+export class Booking {
+  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'User' })
+  userId: MongooseSchema.Types.ObjectId;
+
+  // Booking type - determines if it's one-way or round-trip
+  @Prop({
+    type: String,
+    enum: ['ONE_WAY', 'ROUND_TRIP'],
+    default: 'ONE_WAY'
+  })
+  bookingType: BookingType;
+
+  // For round-trip bookings, store flight data array
+  @Prop({ type: [FlightData] })
+  flightData?: FlightData[];
+
+  // Legacy fields for one-way bookings (backward compatibility)
+  @Prop({ type: String })
+  flightId?: string;
+
+  @Prop({ type: String })
+  originAirportCode?: string;
+
+  @Prop({ type: String })
+  destinationAirportCode?: string;
+
+  @Prop({ type: String })
+  originCity?: string;
+
+  @Prop({ type: String })
+  destinationCity?: string;
+
+  @Prop({ type: Date })
+  departureDate?: Date;
+
+  @Prop({ type: Date })
+  arrivalDate?: Date;
+
+  @Prop({ type: Object })
+  selectedBaggageOption?: Record<string, any>;
 
   @Prop({ required: true, type: Number })
   totalPrice: number;
