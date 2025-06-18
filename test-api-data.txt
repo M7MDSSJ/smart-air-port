@@ -12,8 +12,9 @@ user
 }
 
 
-
-
+{"email": "ukggxocilpqhkcynno@nespj.com",
+  "password": "Password123!@"
+  }
 
 
 
