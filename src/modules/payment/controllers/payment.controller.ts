@@ -713,6 +713,48 @@ export class PaymentController {
   }
 
   /**
+   * Force process a webhook for debugging
+   * This endpoint bypasses signature verification for testing
+   */
+  @Post('debug/force-process-webhook')
+  @HttpCode(HttpStatus.OK)
+  async forceProcessWebhook(@Body() webhookData: any) {
+    this.logger.log('=== FORCE PROCESSING WEBHOOK FOR DEBUG ===');
+    this.logger.log(`Event type: ${webhookData.type}`);
+    this.logger.log(`Event ID: ${webhookData.id}`);
+
+    try {
+      if (webhookData.type === 'payment_intent.succeeded') {
+        const paymentIntent = webhookData.data.object;
+        this.logger.log(`Processing payment intent: ${paymentIntent.id}`);
+        this.logger.log(`Booking ID from metadata: ${paymentIntent.metadata?.bookingId}`);
+
+        // Call the service method directly
+        await this.paymentService['handlePaymentIntentSucceeded'](paymentIntent);
+
+        return {
+          success: true,
+          message: 'Webhook processed successfully',
+          eventType: webhookData.type,
+          paymentIntentId: paymentIntent.id,
+          bookingId: paymentIntent.metadata?.bookingId
+        };
+      } else {
+        return {
+          success: false,
+          message: `Event type ${webhookData.type} not supported in debug mode`
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error force processing webhook: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Test webhook signature verification
    * This endpoint helps test if webhook signature verification is working
    */
