@@ -62,7 +62,6 @@ export class PaymobService {
   private readonly paymobMerchantId: string;
   private readonly paymobHmacSecret: string;
   private readonly paymobCardIntegrationId: string;
-  private readonly paymobIframeId: string;
 
   private readonly logger = new Logger(PaymobService.name);
 
@@ -85,7 +84,6 @@ export class PaymobService {
     this.paymobCardIntegrationId = this.configService.get<string>(
       'PAYMOB_CARD_INTEGRATION_ID',
     );
-    this.paymobIframeId = this.configService.get<string>('PAYMOB_IFRAME_ID');
 
     // Log initialization (without sensitive data)
     this.logger.log('PaymobService initialized');
@@ -95,7 +93,6 @@ export class PaymobService {
       PAYMOB_API_KEY: this.paymobApiKey,
       PAYMOB_MERCHANT_ID: this.paymobMerchantId,
       PAYMOB_CARD_INTEGRATION_ID: this.paymobCardIntegrationId,
-      PAYMOB_IFRAME_ID: this.paymobIframeId,
     };
 
     for (const [key, value] of Object.entries(requiredConfigs)) {
@@ -107,12 +104,7 @@ export class PaymobService {
     }
   }
 
-  /**
-   * Get the iframe ID for Paymob
-   */
-  getIframeId(): string {
-    return this.paymobIframeId;
-  }
+
 
   /**
    * Get transaction details from Paymob
@@ -247,6 +239,64 @@ export class PaymobService {
    */
   getCardIntegrationId(): string {
     return this.paymobCardIntegrationId;
+  }
+
+  /**
+   * Create payment data for Flutter SDK integration
+   * This method combines authentication, order registration, and payment key generation
+   * to provide all necessary data for the Flutter SDK
+   */
+  async createSDKPaymentData(
+    merchantOrderId: string,
+    amountCents: number,
+    billingData: Record<string, any>,
+    currency: string = 'EGP',
+  ): Promise<{
+    paymentKey: string;
+    integrationId: string;
+    orderId: number;
+    amountCents: number;
+    currency: string;
+    expiresAt: Date;
+    merchantOrderId: string;
+  }> {
+    try {
+      // Step 1: Authenticate with Paymob
+      const authToken = await this.authenticate();
+
+      // Step 2: Register order with Paymob
+      const { orderId } = await this.registerOrder(
+        authToken,
+        merchantOrderId,
+        amountCents,
+        currency,
+      );
+
+      // Step 3: Get payment key from Paymob
+      const { paymentKey, expiresAt } = await this.requestPaymentKey(
+        authToken,
+        amountCents,
+        orderId,
+        billingData,
+        currency,
+      );
+
+      return {
+        paymentKey,
+        integrationId: this.paymobCardIntegrationId,
+        orderId,
+        amountCents,
+        currency,
+        expiresAt,
+        merchantOrderId,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to create SDK payment data for order ${merchantOrderId}:`,
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      throw error;
+    }
   }
 
   /**
