@@ -210,4 +210,16 @@ export class PaymentTransactionService {
       throw error;
     }
   }
+
+  /**
+   * Get total payment count
+   */
+  async getPaymentCount(): Promise<number> {
+    try {
+      return await this.paymentModel.countDocuments().exec();
+    } catch (error) {
+      this.logger.error(`Failed to get payment count: ${error.message}`);
+      throw error;
+    }
+  }
 }

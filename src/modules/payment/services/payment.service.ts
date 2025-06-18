@@ -963,22 +963,67 @@ export class PaymentService {
         return;
       }
 
-      // Create payment record
-      const paymentData: CreatePaymentDto = {
-        userId: updatedBooking.userId.toString(),
-        bookingId: updatedBooking._id.toString(),
-        amount: paymentIntent.amount / 100, // Convert from cents
-        currency: paymentIntent.currency.toUpperCase(),
-        provider: PaymentProvider.STRIPE,
-        method: PaymentMethod.CREDIT_CARD,
-        transactionId: paymentIntent.id,
-        metadata: paymentIntent,
-        isTest: paymentIntent.livemode === false,
-        status: PaymentStatus.COMPLETED,
-      };
+      // Check if payment record already exists to prevent duplicates
+      this.logger.log(`🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`);
+      const existingPayment = await this.paymentTransactionService.findByTransactionId(paymentIntent.id);
 
-      await this.paymentTransactionService.createPayment(paymentData);
-      this.logger.log(`Created payment record for webhook payment: ${paymentIntent.id}`);
+      if (existingPayment) {
+        this.logger.log(`⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`);
+        this.logger.log(`Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`);
+      } else {
+        // Create payment record
+        this.logger.log(`🔄 Creating payment record for booking: ${bookingId}`);
+
+        // Calculate amount - use paymentIntent amount or fallback to booking total
+        let paymentAmount = 0;
+        if (paymentIntent.amount && typeof paymentIntent.amount === 'number') {
+          paymentAmount = paymentIntent.amount / 100; // Convert from cents
+          this.logger.log(`💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`);
+        } else {
+          paymentAmount = updatedBooking.totalPrice;
+          this.logger.log(`💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`);
+        }
+
+        const paymentData: CreatePaymentDto = {
+          userId: updatedBooking.userId.toString(),
+          bookingId: updatedBooking._id.toString(),
+          amount: paymentAmount,
+          currency: paymentIntent.currency ? paymentIntent.currency.toUpperCase() : updatedBooking.currency,
+          provider: PaymentProvider.STRIPE,
+          method: PaymentMethod.CREDIT_CARD,
+          transactionId: paymentIntent.id,
+          metadata: paymentIntent,
+          isTest: paymentIntent.livemode === false,
+          status: PaymentStatus.COMPLETED,
+        };
+
+        this.logger.log(`💾 Payment data to create:`, {
+          userId: paymentData.userId,
+          bookingId: paymentData.bookingId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          provider: paymentData.provider,
+          method: paymentData.method,
+          transactionId: paymentData.transactionId,
+          isTest: paymentData.isTest,
+          status: paymentData.status
+        });
+
+        try {
+          const createdPayment = await this.paymentTransactionService.createPayment(paymentData);
+          this.logger.log(`✅ Payment record created successfully:`, {
+            paymentId: createdPayment._id.toString(),
+            bookingId: createdPayment.bookingId,
+            amount: createdPayment.amount,
+            status: createdPayment.status,
+            transactionId: createdPayment.transactionId
+          });
+        } catch (paymentError) {
+          this.logger.error(`❌ Failed to create payment record: ${paymentError.message}`);
+          this.logger.error(`Payment error stack:`, paymentError.stack);
+          // Don't throw here - we still want to send the email even if payment record fails
+        }
+      }
 
       // Send confirmation email
       await this.sendBookingConfirmationEmail(updatedBooking);
@@ -1038,6 +1083,19 @@ export class PaymentService {
       this.logger.log(`Updated booking ${bookingId} status to canceled`);
     } catch (error) {
       this.logger.error(`Error processing canceled payment webhook: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get total payment count for debugging
+   */
+  async getPaymentCount(): Promise<number> {
+    try {
+      const count = await this.paymentTransactionService.getPaymentCount();
+      return count;
+    } catch (error) {
+      this.logger.error(`Error getting payment count: ${error.message}`);
+      throw error;
     }
   }
 }

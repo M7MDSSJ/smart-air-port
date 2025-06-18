@@ -827,4 +827,33 @@ export class PaymentController {
       };
     }
   }
+
+  /**
+   * Get payment count for debugging
+   */
+  @Get('debug/payment-count')
+  @HttpCode(HttpStatus.OK)
+  async getPaymentCount() {
+    this.logger.log('=== CHECKING PAYMENT COUNT ===');
+
+    try {
+      const count = await this.paymentService.getPaymentCount();
+      this.logger.log(`Total payments in database: ${count}`);
+
+      return {
+        success: true,
+        message: 'Payment count retrieved',
+        data: {
+          totalPayments: count
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Error getting payment count: ${error.message}`);
+      return {
+        success: false,
+        message: 'Failed to get payment count',
+        error: error.message
+      };
+    }
+  }
 }

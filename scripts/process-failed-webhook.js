@@ -15,7 +15,7 @@ const https = require('https');
 const API_BASE_URL = process.env.API_URL || 'https://sky-shifters.duckdns.org';
 const DEBUG_ENDPOINT = '/payment/debug/force-process-webhook';
 
-function processWebhook(paymentIntentId, bookingId, bookingRef) {
+function processWebhook(paymentIntentId, bookingId, bookingRef, amount = null) {
   const webhookData = {
     id: `evt_${Date.now()}_manual`,
     object: "event",
@@ -24,7 +24,7 @@ function processWebhook(paymentIntentId, bookingId, bookingRef) {
       object: {
         id: paymentIntentId,
         object: "payment_intent",
-        amount: 0, // Will be filled from actual payment
+        amount: amount ? Math.round(amount * 100) : 19124, // Default to $191.24 in cents if not provided
         currency: "usd",
         status: "succeeded",
         metadata: {
@@ -96,17 +96,18 @@ function main() {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
-    console.log('❌ Usage: node scripts/process-failed-webhook.js <payment_intent_id> <booking_id> [booking_ref]');
+    console.log('❌ Usage: node scripts/process-failed-webhook.js <payment_intent_id> <booking_id> [booking_ref] [amount]');
     console.log('');
     console.log('Examples:');
     console.log('  node scripts/process-failed-webhook.js pi_3RbU5CPxWTngOvfG2EzVk5Ef 685337c54644432bdeea2c44');
     console.log('  node scripts/process-failed-webhook.js pi_3RbU5CPxWTngOvfG2EzVk5Ef 685337c54644432bdeea2c44 GA938571');
+    console.log('  node scripts/process-failed-webhook.js pi_3RbU5CPxWTngOvfG2EzVk5Ef 685337c54644432bdeea2c44 GA938571 191.24');
     console.log('');
     console.log('💡 You can find these values in your server logs when a payment succeeds but webhook fails.');
     process.exit(1);
   }
 
-  const [paymentIntentId, bookingId, bookingRef] = args;
+  const [paymentIntentId, bookingId, bookingRef, amount] = args;
 
   // Validate payment intent ID format
   if (!paymentIntentId.startsWith('pi_')) {
@@ -123,7 +124,7 @@ function main() {
   console.log('🚀 Smart Airport - Webhook Recovery Tool');
   console.log('==========================================');
   
-  processWebhook(paymentIntentId, bookingId, bookingRef);
+  processWebhook(paymentIntentId, bookingId, bookingRef, amount ? parseFloat(amount) : null);
 }
 
 // Handle script execution
