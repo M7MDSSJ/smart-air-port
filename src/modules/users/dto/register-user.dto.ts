@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 import { IsValidCountry } from '../../../common/validators/is-valid-country';
 import { IsValidPhoneNumber } from '../../../common/validators/is-valid-phone-number';
-import { IsAdult } from '../../../common/validators/is-adult';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'user@example.com' })

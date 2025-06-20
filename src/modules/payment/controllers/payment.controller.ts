@@ -515,7 +515,7 @@ export class PaymentController {
         amount: payment.amount,
         currency: payment.currency,
         expiresAt: payment.metadata?.expiresAt,
-        createdAt: payment.createdAt,
+        createdAt: (payment as any).createdAt,
         transactionId: payment.transactionId,
       };
     } catch (error) {
@@ -611,7 +611,8 @@ export class PaymentController {
         // Manually trigger the payment success handler
         await this.paymentService.confirmPayment({
           paymentIntentId: booking.paymentIntentId,
-          userEmail: user.email
+          userEmail: user.email,
+          bookingId: booking._id.toString() // Add the missing bookingId
         });
 
         syncPerformed = true;
@@ -690,8 +691,8 @@ export class PaymentController {
           paymentCompletedAt: booking.paymentCompletedAt,
           totalPrice: booking.totalPrice,
           currency: booking.currency,
-          createdAt: booking.createdAt,
-          updatedAt: booking.updatedAt
+          createdAt: (booking as any).createdAt,
+          updatedAt: (booking as any).updatedAt
         },
         stripeDetails: stripeDetails ? {
           id: stripeDetails.id,
@@ -885,7 +886,7 @@ export class PaymentController {
             provider: payment.provider,
             method: payment.method,
             transactionId: payment.transactionId,
-            createdAt: payment.createdAt,
+            createdAt: (payment as any).createdAt,
             isTest: payment.isTest
           })),
           count: payments.length
@@ -927,7 +928,7 @@ export class PaymentController {
               provider: payment.provider,
               method: payment.method,
               transactionId: payment.transactionId,
-              createdAt: payment.createdAt,
+              createdAt: (payment as any).createdAt,
               paidAt: payment.paidAt,
               isTest: payment.isTest
             }
