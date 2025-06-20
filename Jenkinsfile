@@ -60,7 +60,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-deploy-key', keyFileVariable: 'SSH_KEY')]) {
+                sshagent(['jenkins-deploy-key']) {
                     sh '''
                         export PATH="$BUN_INSTALL/bin:$PATH"
                         echo "🚀 Deploying application..."
@@ -69,20 +69,17 @@ pipeline {
                         HOST_IP="10.1.0.4"
                         SSH_USER="alijs"
                         
-                        # Ensure proper permissions on SSH key
-                        chmod 600 $SSH_KEY
-                        
                         # Simple test connection
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "echo SSH connection successful"
+                        ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "echo SSH connection successful"
                         
                         # Create target directory
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
+                        ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
                         
                         # Copy the built files
-                        scp -o StrictHostKeyChecking=no -i $SSH_KEY -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/
+                        scp -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/
                         
                         # Restart the application
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
+                        ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
                     '''
                 }
             }
