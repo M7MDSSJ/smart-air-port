@@ -27,16 +27,18 @@ pipeline {
             }
         }
 
-        stage('Build') {
-    steps {
-        timeout(time: 2, unit: 'MINUTES') {
-            sh '''
-                echo "Building with TypeScript..."
-                npx tsc -p tsconfig.build.json
-            '''
+      stage('Build') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    sh '''
+                        export BUN_INSTALL="$HOME/.bun"
+                        export PATH="$BUN_INSTALL/bin:$PATH"
+                        echo "Using fallback tsc build..."
+                        npx tsc -p tsconfig.build.json
+                    '''
+                }
+            }
         }
-    }
-}
 
         stage('Test') {
             steps {
