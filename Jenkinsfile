@@ -58,6 +58,23 @@ pipeline {
             }
         }
 
+        stage('Deploy') {
+            steps {
+                sh '''
+                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    echo "🚀 Deploying application..."
+                    # Install PM2 if not already installed
+                    npm install -g pm2 || true
+                    # Stop existing application if running
+                    pm2 stop smart-air-port || true
+                    # Start the application with PM2
+                    pm2 start dist/main.js --name smart-air-port
+                    # Save PM2 configuration
+                    pm2 save
+                '''
+            }
+        }
+
         stage('Push Build Info') {
             when {
                 expression { fileExists('build-info.txt') }
