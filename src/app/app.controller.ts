@@ -4,6 +4,6 @@ import { Controller, Get } from '@nestjs/common';
 export class HealthController {
   @Get()
   testApp() {
-    return 'GOLANG ALI z2 ';
+    return 'GOLANG ALI z3 ';
   }
 }
