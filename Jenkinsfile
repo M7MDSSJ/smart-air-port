@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         BUN_INSTALL = "${HOME}/.bun"
-        PATH = "${HOME}/.bun/bin:${PATH}"
+        PATH = "${HOME}/.bun/bin:/usr/local/bin:${PATH}"
     }
 
     triggers {
@@ -17,13 +17,28 @@ pipeline {
             }
         }
 
-        stage('Install Bun') {
+        stage('Install Dependencies') {
             steps {
                 sh '''
+                    # Install Node.js and npm if not already installed
+                    if ! command -v node > /dev/null; then
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+                        apt-get install -y nodejs
+                    fi
+
+                    echo "✅ Node.js version: $(node -v)"
+                    echo "✅ npm version: $(npm -v)"
+
+                    # Install Bun
                     curl -fsSL https://bun.sh/install | bash
-                    export BUN_INSTALL="$HOME/.bun"
-                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    export PATH="$HOME/.bun/bin:$PATH"
                     bun install
+
+                    # Install NestJS CLI
+                    npm install -g @nestjs/cli
+
+                    # Install SWC (speedy web compiler)
+                    npm install -D @swc/core @swc/cli
                 '''
             }
         }
@@ -32,7 +47,7 @@ pipeline {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
                     sh '''
-                        export PATH="$BUN_INSTALL/bin:$PATH"
+                        export PATH="$HOME/.bun/bin:$PATH"
                         echo "🛠️ Running TypeScript build..."
                         if [ -f tsconfig.build.json ]; then
                             bunx tsc -p tsconfig.build.json
@@ -51,7 +66,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    export PATH="$HOME/.bun/bin:$PATH"
                     echo "🧪 Running tests..."
                     bun test || echo "⚠️ Tests failed or were skipped"
                 '''
@@ -65,7 +80,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'ced0805f-8694-4c16-b243-e13c5e4b07dd', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh '''
-                        export PATH="$BUN_INSTALL/bin:$PATH"
+                        export PATH="$HOME/.bun/bin:$PATH"
                         git config user.email "jenkins@example.com"
                         git config user.name "Jenkins CI"
                         git pull origin main || true
