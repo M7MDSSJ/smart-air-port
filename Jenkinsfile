@@ -69,7 +69,18 @@ pipeline {
                         HOST_IP="10.1.0.4"
                         SSH_USER="alijs"
                         
-                        # Create a temporary SSH config to use the key and disable host key checking
+                        # Debug: Show SSH key info (safely)
+                        echo "Using SSH key from credential ID: jenkins-deploy-key"
+                        ssh-keygen -l -f $SSH_KEY || echo "Could not read SSH key"
+                        
+                        # Ensure proper permissions on SSH key
+                        chmod 600 $SSH_KEY
+                        
+                        # Test connection with verbose output
+                        echo "Testing SSH connection..."
+                        ssh -v -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "echo SSH connection successful" || echo "SSH connection failed"
+                        
+                        # Create a temporary SSH config
                         mkdir -p ~/.ssh
                         cat > ~/.ssh/config << EOF
 Host $HOST_IP
@@ -78,10 +89,16 @@ Host $HOST_IP
     IdentityFile $SSH_KEY
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
+    LogLevel DEBUG3
 EOF
                         chmod 600 ~/.ssh/config
                         
-                        # Make sure the target directory exists
+                        # Try to connect with verbose output
+                        echo "Testing SSH connection..."
+                        ssh -v -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "echo SSH connection successful"
+                        
+                        # If we get here, connection was successful
+                        echo "Making target directory..."
                         ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
                         
                         # Copy the built files to the application server
