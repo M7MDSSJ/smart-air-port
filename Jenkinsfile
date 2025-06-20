@@ -65,49 +65,18 @@ pipeline {
                         export PATH="$BUN_INSTALL/bin:$PATH"
                         echo "🚀 Deploying application..."
                         
+                        # Extract public key from private key
+                        ssh-keygen -y -f $SSH_KEY > /tmp/jenkins_pubkey
+                        echo "Generated public key from private key:"
+                        cat /tmp/jenkins_pubkey
+                        
                         # Set the correct hostname and username
-                        HOST_IP="Grad2025Backend"  # Use the actual hostname or IP address
-                        SSH_USER="alijs"           # Use the correct username
-                        
-                        # Debug: Check if the key file exists and has content
-                        ls -la $SSH_KEY
-                        echo "Key file size: $(wc -c < $SSH_KEY)"
-                        
-                        # Create a temporary SSH config to use the key
-                        mkdir -p ~/.ssh
-                        cat > ~/.ssh/config << EOF
-Host $HOST_IP
-    HostName $HOST_IP
-    User $SSH_USER
-    IdentityFile $SSH_KEY
-    StrictHostKeyChecking no
-    LogLevel DEBUG3
-EOF
-                        chmod 600 ~/.ssh/config
-                        
-                        # Try direct IP address instead of hostname
-                        # Get IP address
-                        IP_ADDRESS=$(getent hosts $HOST_IP | awk '{ print $1 }')
-                        echo "Resolved IP address: $IP_ADDRESS"
+                        HOST_IP="10.1.0.4"  # Use the IP address directly
+                        SSH_USER="alijs"
                         
                         # Try SSH with verbose output
                         echo "Testing SSH connection with verbose output..."
-                        ssh -vvv $HOST_IP "echo SSH connection successful" || echo "SSH connection failed"
-                        
-                        # Try with IP address directly if hostname resolution worked
-                        if [ ! -z "$IP_ADDRESS" ]; then
-                            echo "Trying with IP address directly..."
-                            ssh -vvv $SSH_USER@$IP_ADDRESS "echo SSH connection successful" || echo "SSH connection with IP failed"
-                        fi
-                        
-                        # Try copying the key directly to authorized_keys for testing
-                        echo "Trying to use the key directly..."
-                        cat $SSH_KEY | ssh-keygen -y > /tmp/jenkins_pubkey
-                        echo "Generated public key:"
-                        cat /tmp/jenkins_pubkey
-                        
-                        # Make sure the target directory exists
-                        ssh -vvv -i $SSH_KEY $HOST_IP "mkdir -p ~/smart-air-port/dist" || echo "Failed to create directory"
+                        ssh -vvv -i $SSH_KEY $SSH_USER@$HOST_IP "echo SSH connection successful" || echo "SSH connection failed"
                     '''
                 }
             }
