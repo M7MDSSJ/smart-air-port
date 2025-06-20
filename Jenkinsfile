@@ -71,6 +71,7 @@ pipeline {
                         
                         # Debug: Check if the key file exists and has content
                         ls -la $SSH_KEY
+                        echo "Key file size: $(wc -c < $SSH_KEY)"
                         
                         # Create a temporary SSH config to use the key
                         mkdir -p ~/.ssh
@@ -80,19 +81,33 @@ Host $HOST_IP
     User $SSH_USER
     IdentityFile $SSH_KEY
     StrictHostKeyChecking no
+    LogLevel DEBUG3
 EOF
                         chmod 600 ~/.ssh/config
                         
+                        # Try direct IP address instead of hostname
+                        # Get IP address
+                        IP_ADDRESS=$(getent hosts $HOST_IP | awk '{ print $1 }')
+                        echo "Resolved IP address: $IP_ADDRESS"
+                        
+                        # Try SSH with verbose output
+                        echo "Testing SSH connection with verbose output..."
+                        ssh -vvv $HOST_IP "echo SSH connection successful" || echo "SSH connection failed"
+                        
+                        # Try with IP address directly if hostname resolution worked
+                        if [ ! -z "$IP_ADDRESS" ]; then
+                            echo "Trying with IP address directly..."
+                            ssh -vvv $SSH_USER@$IP_ADDRESS "echo SSH connection successful" || echo "SSH connection with IP failed"
+                        fi
+                        
+                        # Try copying the key directly to authorized_keys for testing
+                        echo "Trying to use the key directly..."
+                        cat $SSH_KEY | ssh-keygen -y > /tmp/jenkins_pubkey
+                        echo "Generated public key:"
+                        cat /tmp/jenkins_pubkey
+                        
                         # Make sure the target directory exists
-                        ssh $HOST_IP "mkdir -p ~/smart-air-port/dist"
-                        
-                        # Copy the built files to the application server
-                        echo "Copying files to application server..."
-                        scp -r dist/* $HOST_IP:~/smart-air-port/dist/
-                        
-                        # SSH into the application server and restart the application
-                        echo "Restarting application on server..."
-                        ssh $HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
+                        ssh -vvv -i $SSH_KEY $HOST_IP "mkdir -p ~/smart-air-port/dist" || echo "Failed to create directory"
                     '''
                 }
             }
