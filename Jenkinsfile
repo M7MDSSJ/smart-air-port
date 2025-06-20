@@ -65,13 +65,20 @@ pipeline {
                         export PATH="$BUN_INSTALL/bin:$PATH"
                         echo "🚀 Deploying application..."
                         
+                        # Set the correct hostname and username
+                        HOST_IP="Grad2025Backend"  # Use the actual hostname or IP address
+                        SSH_USER="alijs"           # Use the correct username
+                        
+                        # Make sure the target directory exists
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
+                        
                         # Copy the built files to the application server
                         echo "Copying files to application server..."
-                        scp -o StrictHostKeyChecking=no -r dist/* azureuser@localhost:/home/azureuser/smart-air-port/dist/
+                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/
                         
                         # SSH into the application server and restart the application
                         echo "Restarting application on server..."
-                        ssh -o StrictHostKeyChecking=no azureuser@localhost "cd /home/azureuser/smart-air-port && pm2 restart smart-airport"
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
                     '''
                 }
             }
