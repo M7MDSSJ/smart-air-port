@@ -28,10 +28,14 @@ pipeline {
         }
 
         stage('Build') {
-            steps {
-                sh 'bun run build'
-            }
-        }
+    steps {
+        sh '''
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+            bun run nest build -- --no-swcrc --log-level=debug
+        '''
+    }
+}
 
         stage('Test') {
             steps {
