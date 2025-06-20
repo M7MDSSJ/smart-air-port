@@ -1,28 +1,46 @@
 pipeline {
     agent any
 
+    environment {
+        BUN_INSTALL = "${HOME}/.bun"
+        PATH = "${HOME}/.bun/bin:${PATH}"
+    }
+
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/your-username/your-repo.git'
+                checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Bun') {
             steps {
-                sh 'npm install'
+                sh '''
+                    curl -fsSL https://bun.sh/install | bash
+                    export BUN_INSTALL="$HOME/.bun"
+                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    bun install
+                '''
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'
+                sh '''
+                    export BUN_INSTALL="$HOME/.bun"
+                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    bun run build
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test'
+                sh '''
+                    export BUN_INSTALL="$HOME/.bun"
+                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    bun test
+                '''
             }
         }
     }
