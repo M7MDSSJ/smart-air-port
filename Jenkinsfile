@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         BUN_INSTALL = "${HOME}/.bun"
-        PATH = "${HOME}/.bun/bin:${PATH}"
+        PATH = "${BUN_INSTALL}/bin:${PATH}"
+        DEPLOY_DIR = "/path/to/your/app/on/vm"
     }
 
     triggers {
@@ -21,8 +22,6 @@ pipeline {
             steps {
                 sh '''
                     curl -fsSL https://bun.sh/install | bash
-                    export BUN_INSTALL="$HOME/.bun"
-                    export PATH="$BUN_INSTALL/bin:$PATH"
                     bun install
                 '''
             }
@@ -30,39 +29,65 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh '''
-                    export BUN_INSTALL="$HOME/.bun"
-                    export PATH="$BUN_INSTALL/bin:$PATH"
-                    bun run build
-                '''
+                sh 'bun run build'
             }
         }
 
         stage('Test') {
             steps {
+                sh 'bun test'
+            }
+        }
+
+        stage('Deploy to VM') {
+            steps {
                 sh '''
-                    export BUN_INSTALL="$HOME/.bun"
-                    export PATH="$BUN_INSTALL/bin:$PATH"
-                    bun test
+                    # Stop the current application
+                    pm2 stop smart-air-port || true
+                    
+                    # Copy build files to deployment directory
+                    cp -R dist/* ${DEPLOY_DIR}/
+                    cp package.json ${DEPLOY_DIR}/
+                    
+                    # Install dependencies in production mode
+                    cd ${DEPLOY_DIR}
+                    bun install --production
+                    
+                    # Restart the application
+                    pm2 start dist/main.js --name smart-air-port
+                    
+                    # Save PM2 configuration
+                    pm2 save
                 '''
             }
         }
 
-        stage('Push Changes to GitHub') {
+        stage('Update Build Info') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'your-git-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh '''
                         git config user.email "jenkins@example.com"
                         git config user.name "Jenkins CI"
 
-                        # Example file modification
-                        echo "Build at $(date)" > build-info.txt
+                        # Create build info file
+                        echo "Build completed at $(date)" > build-info.txt
+                        echo "Commit: $(git rev-parse HEAD)" >> build-info.txt
+                        
                         git add build-info.txt
-                        git commit -m "Add build info from Jenkins"
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Aliexe-code/smart-air-port.git HEAD:main
+                        git commit -m "Update build info from Jenkins [skip ci]" || echo "No changes to commit"
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Aliexe-code/smart-air-port.git HEAD:main || echo "Nothing to push"
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }
