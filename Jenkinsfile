@@ -29,11 +29,12 @@ pipeline {
 
         stage('Build') {
     steps {
-        sh '''
-            export BUN_INSTALL="$HOME/.bun"
-            export PATH="$BUN_INSTALL/bin:$PATH"
-            bun run nest build -- --no-swcrc --log-level=debug
-        '''
+        timeout(time: 2, unit: 'MINUTES') {
+            sh '''
+                echo "Building with TypeScript..."
+                npx tsc -p tsconfig.build.json
+            '''
+        }
     }
 }
 
