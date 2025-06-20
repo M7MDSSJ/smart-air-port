@@ -60,7 +60,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(['jenkins-deploy-key']) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-deploy-key', keyFileVariable: 'SSH_KEY')]) {
                     sh '''
                         export PATH="$BUN_INSTALL/bin:$PATH"
                         echo "🚀 Deploying application..."
