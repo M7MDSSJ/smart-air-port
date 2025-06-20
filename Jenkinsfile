@@ -69,16 +69,30 @@ pipeline {
                         HOST_IP="Grad2025Backend"  # Use the actual hostname or IP address
                         SSH_USER="alijs"           # Use the correct username
                         
+                        # Debug: Check if the key file exists and has content
+                        ls -la $SSH_KEY
+                        
+                        # Create a temporary SSH config to use the key
+                        mkdir -p ~/.ssh
+                        cat > ~/.ssh/config << EOF
+Host $HOST_IP
+    HostName $HOST_IP
+    User $SSH_USER
+    IdentityFile $SSH_KEY
+    StrictHostKeyChecking no
+EOF
+                        chmod 600 ~/.ssh/config
+                        
                         # Make sure the target directory exists
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
+                        ssh $HOST_IP "mkdir -p ~/smart-air-port/dist"
                         
                         # Copy the built files to the application server
                         echo "Copying files to application server..."
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/
+                        scp -r dist/* $HOST_IP:~/smart-air-port/dist/
                         
                         # SSH into the application server and restart the application
                         echo "Restarting application on server..."
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
+                        ssh $HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
                     '''
                 }
             }
