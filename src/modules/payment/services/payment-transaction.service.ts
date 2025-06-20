@@ -222,4 +222,20 @@ export class PaymentTransactionService {
       throw error;
     }
   }
+
+  /**
+   * Get recent payments for debugging
+   */
+  async getRecentPayments(limit: number = 10): Promise<PaymentDocument[]> {
+    try {
+      return await this.paymentModel
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .exec();
+    } catch (error) {
+      this.logger.error(`Failed to get recent payments: ${error.message}`);
+      throw error;
+    }
+  }
 }

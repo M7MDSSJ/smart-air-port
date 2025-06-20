@@ -1,8 +1,46 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { BookingType, FlightType } from '../dto/create-booking.dto';
+import { BookingType, FlightType, TravelerType } from '../dto/create-booking.dto';
 
 export type BookingDocument = Booking & Document;
+
+@Schema({ _id: false })
+export class TravelerInfo {
+  @Prop({ required: true })
+  firstName: string;
+
+  @Prop({ required: true })
+  lastName: string;
+
+  @Prop({ required: true })
+  birthDate: string;
+
+  @Prop({
+    required: true,
+    type: String,
+    enum: Object.values(TravelerType)
+  })
+  travelerType: TravelerType;
+
+  @Prop({ required: true })
+  nationality: string;
+
+  @Prop({ required: true })
+  passportNumber: string;
+
+  @Prop({ required: true })
+  issuingCountry: string;
+
+  @Prop({ required: true })
+  expiryDate: string;
+
+  // Seat assignment fields
+  @Prop({ type: String })
+  seatNumber?: string;
+
+  @Prop({ type: Date })
+  seatAssignedAt?: Date;
+}
 
 @Schema({ _id: false })
 export class FlightData {
@@ -87,8 +125,8 @@ export class Booking {
   @Prop({ required: true })
   currency: string;
 
-  @Prop({ type: Array, required: true })
-  travellersInfo: any[];
+  @Prop({ type: [TravelerInfo], required: true })
+  travellersInfo: TravelerInfo[];
 
   @Prop({ type: Object, required: true })
   contactDetails: {
