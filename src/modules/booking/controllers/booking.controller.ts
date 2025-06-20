@@ -10,6 +10,7 @@ import {
   ForbiddenException,
   Logger,
   Query,
+  Put,
 } from '@nestjs/common';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dto/create-booking.dto';
@@ -146,6 +147,50 @@ export class BookingController {
         status: cancelledBooking.status,
         cancelledAt: cancelledBooking.cancelledAt,
         cancellationReason: cancelledBooking.cancellationReason
+      },
+      error: null,
+      meta: null
+    };
+  }
+
+  @Put(':id/assign-seats')
+  @UseGuards(JwtAuthGuard, VerifiedUserGuard)
+  @HttpCode(HttpStatus.OK)
+  async assignSeats(
+    @Param('id') bookingId: string,
+    @User() user: JwtUser,
+    @Query('cabinClass') cabinClass?: 'economy' | 'business'
+  ) {
+    this.logger.log(`Assigning seats to booking ${bookingId} for user ${user.id}`);
+
+    // First verify the booking belongs to the user
+    const booking = await this.bookingService.getBookingById(bookingId);
+    if (booking.userId.toString() !== user.id) {
+      throw new ForbiddenException(
+        'You are not authorized to modify this booking',
+      );
+    }
+
+    const updatedBooking = await this.bookingService.assignSeatsToExistingBooking(
+      bookingId,
+      cabinClass || 'economy'
+    );
+
+    return {
+      success: true,
+      message: 'Seats assigned successfully',
+      data: {
+        bookingId: updatedBooking._id,
+        bookingRef: updatedBooking.bookingRef,
+        travellersInfo: updatedBooking.travellersInfo,
+        seatAssignments: updatedBooking.travellersInfo
+          .filter(traveler => traveler.seatNumber)
+          .map(traveler => ({
+            name: `${traveler.firstName} ${traveler.lastName}`,
+            travelerType: traveler.travelerType,
+            seatNumber: traveler.seatNumber,
+            assignedAt: traveler.seatAssignedAt
+          }))
       },
       error: null,
       meta: null

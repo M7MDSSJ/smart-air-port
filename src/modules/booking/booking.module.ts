@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BookingService } from './services/booking.service';
+import { SeatAssignmentService } from './services/seat-assignment.service';
 import { BookingController } from './controllers/booking.controller';
 import { Booking, BookingSchema } from './schemas/booking.schema';
 import { FlightModule } from '../flight/flight.module';
@@ -33,7 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
   ],
   controllers: [BookingController],
-  providers: [BookingService],
-  exports: [BookingService],
+  providers: [BookingService, SeatAssignmentService],
+  exports: [BookingService, SeatAssignmentService],
 })
 export class BookingModule {}

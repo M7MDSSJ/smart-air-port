@@ -5,6 +5,7 @@ import { Booking, BookingDocument, FlightData } from '../schemas/booking.schema'
 import { CreateBookingDto, BookingType, FlightType } from '../dto/create-booking.dto';
 import { FlightService } from 'src/modules/flight/flight.service';
 import { EmailService } from 'src/modules/email/email.service';
+import { SeatAssignmentService } from './seat-assignment.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 
@@ -17,6 +18,7 @@ export class BookingService {
     @InjectModel(Booking.name) private bookingModel: Model<BookingDocument>,
     private readonly flightService: FlightService,
     private readonly emailService: EmailService,
+    private readonly seatAssignmentService: SeatAssignmentService,
     private readonly configService: ConfigService,
   ) {
     this.bookingTimeoutMinutes = this.configService.get<number>('BOOKING_TIMEOUT_MINUTES', 5);
@@ -100,7 +102,21 @@ export class BookingService {
       this.logger.log(
         `${bookingType} booking created successfully with ID: ${savedBooking._id.toString()}`,
       );
-      return savedBooking;
+
+      // Assign seats to travelers after booking is created
+      try {
+        await this.assignSeatsToBooking(savedBooking._id.toString());
+        this.logger.log(`Seat assignment completed for booking: ${savedBooking._id.toString()}`);
+      } catch (seatError) {
+        this.logger.error(
+          `Failed to assign seats for booking ${savedBooking._id.toString()}: ${seatError instanceof Error ? seatError.message : 'Unknown error'}`,
+        );
+        // Don't throw error here - booking is still valid even without seat assignments
+      }
+
+      // Return the updated booking with seat assignments
+      const updatedBooking = await this.bookingModel.findById(savedBooking._id);
+      return updatedBooking || savedBooking;
     } catch (error: unknown) {
       if (error instanceof Error) {
         this.logger.error(
@@ -111,6 +127,56 @@ export class BookingService {
         this.logger.error('Failed to create booking with unknown error');
       }
       throw error;
+    }
+  }
+
+  /**
+   * Assign seats to travelers in a booking
+   */
+  private async assignSeatsToBooking(bookingId: string): Promise<void> {
+    this.logger.log(`Starting seat assignment for booking: ${bookingId}`);
+
+    // Find the booking
+    const booking = await this.bookingModel.findById(bookingId);
+    if (!booking) {
+      throw new Error(`Booking ${bookingId} not found`);
+    }
+
+    // Generate seat assignments
+    const seatAssignments = await this.seatAssignmentService.assignSeats(
+      booking.travellersInfo,
+      'economy' // Default to economy class
+    );
+
+    if (seatAssignments.length === 0) {
+      this.logger.log(`No seat assignments needed for booking: ${bookingId}`);
+      return;
+    }
+
+    // Apply seat assignments to travelers
+    const updatedTravelers = await this.seatAssignmentService.applySeatAssignments(
+      booking.travellersInfo,
+      seatAssignments
+    );
+
+    // Update the booking with seat assignments
+    await this.bookingModel.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          travellersInfo: updatedTravelers
+        }
+      }
+    );
+
+    // Log seat assignment summary
+    const summary = this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
+    this.logger.log(`Seat assignment completed for booking ${bookingId}: ${summary}`);
+
+    // Validate assignments
+    const validation = this.seatAssignmentService.validateSeatAssignments(seatAssignments);
+    if (!validation.isValid) {
+      this.logger.warn(`Seat assignment validation failed for booking ${bookingId}: ${validation.errors.join(', ')}`);
     }
   }
 
@@ -169,6 +235,58 @@ export class BookingService {
     }
 
     return booking;
+  }
+
+  /**
+   * Manually assign seats to an existing booking
+   * This can be used for bookings that were created before seat assignment was implemented
+   */
+  async assignSeatsToExistingBooking(
+    bookingId: string,
+    cabinClass: 'economy' | 'business' = 'economy'
+  ): Promise<BookingDocument> {
+    this.logger.log(`Manually assigning seats to booking: ${bookingId}`);
+
+    const booking = await this.getBookingById(bookingId);
+
+    // Check if seats are already assigned
+    const hasSeats = booking.travellersInfo.some(traveler => traveler.seatNumber);
+    if (hasSeats) {
+      this.logger.warn(`Booking ${bookingId} already has seat assignments`);
+      return booking;
+    }
+
+    // Generate and apply seat assignments
+    const seatAssignments = await this.seatAssignmentService.assignSeats(
+      booking.travellersInfo,
+      cabinClass
+    );
+
+    if (seatAssignments.length === 0) {
+      this.logger.log(`No seat assignments needed for booking: ${bookingId}`);
+      return booking;
+    }
+
+    const updatedTravelers = await this.seatAssignmentService.applySeatAssignments(
+      booking.travellersInfo,
+      seatAssignments
+    );
+
+    // Update the booking
+    const updatedBooking = await this.bookingModel.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          travellersInfo: updatedTravelers
+        }
+      },
+      { new: true }
+    );
+
+    const summary = this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
+    this.logger.log(`Manual seat assignment completed for booking ${bookingId}: ${summary}`);
+
+    return updatedBooking;
   }
 
   /**

@@ -372,25 +372,137 @@ export class PaymentService {
   }
 
   private async handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    this.logger.log('=== HANDLING PAYMENT SUCCEEDED (GENERIC WEBHOOK) ===');
+    this.logger.log(`Payment Intent ID: ${paymentIntent.id}`);
+    this.logger.log(`Payment Intent Status: ${paymentIntent.status}`);
+    this.logger.log(`Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+    this.logger.log(`Payment Intent Metadata:`, paymentIntent.metadata);
+
     const bookingId = paymentIntent.metadata.bookingId;
 
-    if (bookingId) {
+    if (!bookingId) {
+      this.logger.error(`❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      this.logger.error(`Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`);
+      return;
+    }
+
+    this.logger.log(`✅ Processing successful payment for booking: ${bookingId}`);
+
+    try {
+      // Find and update the booking
+      this.logger.log(`🔍 Looking for booking with ID: ${bookingId}`);
+      const booking = await this.bookingModel.findById(bookingId);
+      if (!booking) {
+        this.logger.error(`❌ Booking not found: ${bookingId}`);
+        return;
+      }
+
+      this.logger.log(`📋 Found booking:`, {
+        id: booking._id.toString(),
+        ref: booking.bookingRef,
+        currentStatus: booking.status,
+        currentPaymentStatus: booking.paymentStatus,
+        userId: booking.userId.toString()
+      });
+
+      // Update booking status
+      this.logger.log(`🔄 Updating booking status to confirmed...`);
       const updatedBooking = await this.bookingModel.findByIdAndUpdate(
         bookingId,
         {
           paymentStatus: 'completed',
           status: 'confirmed',
+          paymentIntentId: paymentIntent.id,
           paymentCompletedAt: new Date(),
         },
         { new: true },
       );
 
-      if (updatedBooking) {
-        // Send booking confirmation email
-        await this.sendBookingConfirmationEmail(updatedBooking);
+      if (!updatedBooking) {
+        this.logger.error(`❌ Failed to update booking ${bookingId}`);
+        return;
       }
 
-      this.logger.log(`Payment succeeded for booking: ${bookingId}`);
+      this.logger.log(`✅ Booking updated successfully:`, {
+        id: updatedBooking._id.toString(),
+        ref: updatedBooking.bookingRef,
+        newStatus: updatedBooking.status,
+        newPaymentStatus: updatedBooking.paymentStatus,
+        paymentCompletedAt: updatedBooking.paymentCompletedAt
+      });
+
+      // Check if payment record already exists to prevent duplicates
+      this.logger.log(`🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`);
+      const existingPayment = await this.paymentTransactionService.findByTransactionId(paymentIntent.id);
+
+      if (existingPayment) {
+        this.logger.log(`⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`);
+        this.logger.log(`Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`);
+      } else {
+        // Create payment record
+        this.logger.log(`🔄 Creating payment record for booking: ${bookingId}`);
+
+        // Calculate amount - use paymentIntent amount or fallback to booking total
+        let paymentAmount = 0;
+        if (paymentIntent.amount && typeof paymentIntent.amount === 'number') {
+          paymentAmount = paymentIntent.amount / 100; // Convert from cents
+          this.logger.log(`💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`);
+        } else {
+          paymentAmount = updatedBooking.totalPrice;
+          this.logger.log(`💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`);
+        }
+
+        const paymentData: CreatePaymentDto = {
+          userId: updatedBooking.userId.toString(),
+          bookingId: updatedBooking._id.toString(),
+          amount: paymentAmount,
+          currency: paymentIntent.currency ? paymentIntent.currency.toUpperCase() : updatedBooking.currency,
+          provider: PaymentProvider.STRIPE,
+          method: PaymentMethod.CREDIT_CARD,
+          transactionId: paymentIntent.id,
+          metadata: paymentIntent,
+          isTest: paymentIntent.livemode === false,
+          status: PaymentStatus.COMPLETED,
+        };
+
+        this.logger.log(`💾 Payment data to create:`, {
+          userId: paymentData.userId,
+          bookingId: paymentData.bookingId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          provider: paymentData.provider,
+          method: paymentData.method,
+          transactionId: paymentData.transactionId,
+          isTest: paymentData.isTest,
+          status: paymentData.status
+        });
+
+        try {
+          const createdPayment = await this.paymentTransactionService.createPayment(paymentData);
+          this.logger.log(`✅ Payment record created successfully:`, {
+            paymentId: createdPayment._id.toString(),
+            bookingId: createdPayment.bookingId,
+            amount: createdPayment.amount,
+            status: createdPayment.status,
+            transactionId: createdPayment.transactionId
+          });
+        } catch (paymentError) {
+          this.logger.error(`❌ Failed to create payment record: ${paymentError.message}`);
+          this.logger.error(`Payment error stack:`, paymentError.stack);
+          // Don't throw here - we still want to send the email even if payment record fails
+        }
+      }
+
+      // Send booking confirmation email
+      if (updatedBooking) {
+        await this.sendBookingConfirmationEmail(updatedBooking);
+        this.logger.log(`📧 Booking confirmation email sent for booking: ${bookingId}`);
+      }
+
+      this.logger.log(`✅ Payment succeeded for booking: ${bookingId}`);
+    } catch (error) {
+      this.logger.error(`❌ Error processing successful payment webhook: ${error.message}`);
+      this.logger.error(`Error stack:`, error.stack);
     }
   }
 

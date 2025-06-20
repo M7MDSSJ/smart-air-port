@@ -11,6 +11,7 @@ import {
   RawBodyRequest,
   Req,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { PaymentService } from '../services/payment.service';
 import { CreatePaymentIntentDto } from '../dto/create-payment-intent.dto';
@@ -852,6 +853,102 @@ export class PaymentController {
       return {
         success: false,
         message: 'Failed to get payment count',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get recent payments for debugging
+   */
+  @Get('debug/recent-payments')
+  @HttpCode(HttpStatus.OK)
+  async getRecentPayments(@Query('limit') limit?: string) {
+    this.logger.log('=== CHECKING RECENT PAYMENTS ===');
+
+    try {
+      const paymentLimit = limit ? parseInt(limit, 10) : 10;
+      const payments = await this.paymentTransactionService.getRecentPayments(paymentLimit);
+
+      this.logger.log(`Found ${payments.length} recent payments`);
+
+      return {
+        success: true,
+        message: 'Recent payments retrieved',
+        data: {
+          payments: payments.map(payment => ({
+            id: payment._id.toString(),
+            bookingId: payment.bookingId,
+            amount: payment.amount,
+            currency: payment.currency,
+            status: payment.status,
+            provider: payment.provider,
+            method: payment.method,
+            transactionId: payment.transactionId,
+            createdAt: payment.createdAt,
+            isTest: payment.isTest
+          })),
+          count: payments.length
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Error getting recent payments: ${error.message}`);
+      return {
+        success: false,
+        message: 'Failed to get recent payments',
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Check payment record for specific booking
+   */
+  @Get('debug/booking/:bookingId/payment')
+  @HttpCode(HttpStatus.OK)
+  async getPaymentByBooking(@Param('bookingId') bookingId: string) {
+    this.logger.log(`=== CHECKING PAYMENT FOR BOOKING: ${bookingId} ===`);
+
+    try {
+      const payment = await this.paymentTransactionService.findByBookingId(bookingId);
+
+      if (payment) {
+        this.logger.log(`Found payment record for booking ${bookingId}`);
+        return {
+          success: true,
+          message: 'Payment record found',
+          data: {
+            payment: {
+              id: payment._id.toString(),
+              bookingId: payment.bookingId,
+              amount: payment.amount,
+              currency: payment.currency,
+              status: payment.status,
+              provider: payment.provider,
+              method: payment.method,
+              transactionId: payment.transactionId,
+              createdAt: payment.createdAt,
+              paidAt: payment.paidAt,
+              isTest: payment.isTest
+            }
+          }
+        };
+      } else {
+        this.logger.warn(`No payment record found for booking ${bookingId}`);
+        return {
+          success: false,
+          message: 'No payment record found for this booking',
+          data: {
+            bookingId: bookingId,
+            paymentExists: false
+          }
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error checking payment for booking ${bookingId}: ${error.message}`);
+      return {
+        success: false,
+        message: 'Failed to check payment record',
         error: error.message
       };
     }
