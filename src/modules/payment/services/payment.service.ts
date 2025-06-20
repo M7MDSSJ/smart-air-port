@@ -38,7 +38,7 @@ export class PaymentService {
     }
 
     this.stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-05-28.basil',
+      apiVersion: '2025-02-24.acacia',
     });
   }
 
