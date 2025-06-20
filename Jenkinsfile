@@ -65,18 +65,32 @@ pipeline {
                         export PATH="$BUN_INSTALL/bin:$PATH"
                         echo "🚀 Deploying application..."
                         
-                        # Extract public key from private key
-                        ssh-keygen -y -f $SSH_KEY > /tmp/jenkins_pubkey
-                        echo "Generated public key from private key:"
-                        cat /tmp/jenkins_pubkey
-                        
-                        # Set the correct hostname and username
-                        HOST_IP="10.1.0.4"  # Use the IP address directly
+                        # Set the correct IP address and username
+                        HOST_IP="10.1.0.4"
                         SSH_USER="alijs"
                         
-                        # Try SSH with verbose output
-                        echo "Testing SSH connection with verbose output..."
-                        ssh -vvv -i $SSH_KEY $SSH_USER@$HOST_IP "echo SSH connection successful" || echo "SSH connection failed"
+                        # Create a temporary SSH config to use the key and disable host key checking
+                        mkdir -p ~/.ssh
+                        cat > ~/.ssh/config << EOF
+Host $HOST_IP
+    HostName $HOST_IP
+    User $SSH_USER
+    IdentityFile $SSH_KEY
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+EOF
+                        chmod 600 ~/.ssh/config
+                        
+                        # Make sure the target directory exists
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
+                        
+                        # Copy the built files to the application server
+                        echo "Copying files to application server..."
+                        scp -o StrictHostKeyChecking=no -i $SSH_KEY -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/ || echo "Failed to copy files"
+                        
+                        # SSH into the application server and restart the application
+                        echo "Restarting application on server..."
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
                     '''
                 }
             }
