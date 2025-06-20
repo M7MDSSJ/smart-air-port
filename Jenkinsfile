@@ -63,14 +63,14 @@ pipeline {
                 sh '''
                     export PATH="$BUN_INSTALL/bin:$PATH"
                     echo "🚀 Deploying application..."
-                    # Install PM2 if not already installed
-                    npm install -g pm2 || true
-                    # Stop existing application if running
-                    pm2 stop smart-airport || true
-                    # Start the application with PM2
-                    pm2 start dist/main.js --name smart-airport
-                    # Save PM2 configuration
-                    pm2 save
+                    
+                    # Copy the built files to the application server
+                    echo "Copying files to application server..."
+                    scp -r dist/* alijs@Grad2025Backend:/home/alijs/smart-air-port/dist/
+                    
+                    # SSH into the application server and restart the application
+                    echo "Restarting application on server..."
+                    ssh alijs@Grad2025Backend "cd /home/alijs/smart-air-port && pm2 restart smart-airport"
                 '''
             }
         }
