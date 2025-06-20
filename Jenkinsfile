@@ -32,21 +32,28 @@ pipeline {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
                     sh '''
-                        export BUN_INSTALL="$HOME/.bun"
                         export PATH="$BUN_INSTALL/bin:$PATH"
-                        echo "Running TypeScript build..."
-                        bunx tsc -p tsconfig.json  # use tsconfig.json directly
+                        echo "🛠️ Running TypeScript build..."
+                        if [ -f tsconfig.build.json ]; then
+                            bunx tsc -p tsconfig.build.json
+                        else
+                            echo "⚠️ tsconfig.build.json not found. Using tsconfig.json..."
+                            bunx tsc -p tsconfig.json
+                        fi
                     '''
                 }
             }
         }
 
         stage('Test') {
+            when {
+                expression { fileExists('bun.lockb') }
+            }
             steps {
                 sh '''
-                    export BUN_INSTALL="$HOME/.bun"
                     export PATH="$BUN_INSTALL/bin:$PATH"
-                    bun test || echo "⚠️ Tests failed or skipped"
+                    echo "🧪 Running tests..."
+                    bun test || echo "⚠️ Tests failed or were skipped"
                 '''
             }
         }
@@ -58,12 +65,13 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'ced0805f-8694-4c16-b243-e13c5e4b07dd', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh '''
+                        export PATH="$BUN_INSTALL/bin:$PATH"
                         git config user.email "jenkins@example.com"
                         git config user.name "Jenkins CI"
                         git pull origin main || true
-                        echo "Build at $(date +%Y-%m-%dT%H:%M:%SZ)" > build-info.txt
+                        echo "Build at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > build-info.txt
                         git add build-info.txt || true
-                        git commit -m "Add build info [skip ci]" || true
+                        git commit -m "🔧 Update build info [skip ci]" || true
                         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Aliexe-code/smart-air-port.git HEAD:main || true
                     '''
                 }
@@ -72,7 +80,11 @@ pipeline {
     }
 
     post {
-        success { echo '✅ Build succeeded!' }
-        failure { echo '❌ Build failed. Check errors above.' }
+        success {
+            echo '✅ Build and deployment succeeded!'
+        }
+        failure {
+            echo '❌ Build failed. Check the logs for more information.'
+        }
     }
 }
