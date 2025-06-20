@@ -64,7 +64,7 @@ pipeline {
 
         stage('Update Build Info') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'ced0805f-8694-4c16-b243-e13c5e4b07dd', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh '''
                         git config user.email "jenkins@example.com"
                         git config user.name "Jenkins CI"
