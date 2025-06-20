@@ -59,33 +59,19 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                sh '''
-                    export PATH="$BUN_INSTALL/bin:$PATH"
-                    echo "🚀 Deploying application..."
-                    
-                    # Install sshpass if not already installed
-                    which sshpass || apt-get update && apt-get install -y sshpass
-                    
-                    # Set the correct IP address, username and password
-                    HOST_IP="10.1.0.4"
-                    SSH_USER="alijs"
-                    SSH_PASS="jenkins123"  # Replace with the password you set
-                    
-                    # Test connection
-                    sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "echo SSH connection successful"
-                    
-                    # Create target directory
-                    sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "mkdir -p ~/smart-air-port/dist"
-                    
-                    # Copy the built files
-                    sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -r dist/* $SSH_USER@$HOST_IP:~/smart-air-port/dist/
-                    
-                    # Restart the application
-                    sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$HOST_IP "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
-                '''
-            }
+    steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-deploy-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+            sh '''
+                export PATH="$BUN_INSTALL/bin:$PATH"
+                echo "🚀 Deploying application..."
+                ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "echo SSH connection successful"
+                ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "mkdir -p ~/smart-air-port/dist"
+                scp -i $SSH_KEY -o StrictHostKeyChecking=no -r dist/* $SSH_USER@10.1.0.4:~/smart-air-port/dist/
+                ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
+            '''
         }
+    }
+}
 
         stage('Push Build Info') {
             when {
