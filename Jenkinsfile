@@ -60,18 +60,20 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh '''
-                    export PATH="$BUN_INSTALL/bin:$PATH"
-                    echo "🚀 Deploying application..."
-                    
-                    # Copy the built files to the application server
-                    echo "Copying files to application server..."
-                    scp -r dist/* alijs@Grad2025Backend:/home/alijs/smart-air-port/dist/
-                    
-                    # SSH into the application server and restart the application
-                    echo "Restarting application on server..."
-                    ssh alijs@Grad2025Backend "cd /home/alijs/smart-air-port && pm2 restart smart-airport"
-                '''
+                sshagent(['jenkins-deploy-key']) {
+                    sh '''
+                        export PATH="$BUN_INSTALL/bin:$PATH"
+                        echo "🚀 Deploying application..."
+                        
+                        # Copy the built files to the application server
+                        echo "Copying files to application server..."
+                        scp -o StrictHostKeyChecking=no -r dist/* azureuser@localhost:/home/azureuser/smart-air-port/dist/
+                        
+                        # SSH into the application server and restart the application
+                        echo "Restarting application on server..."
+                        ssh -o StrictHostKeyChecking=no azureuser@localhost "cd /home/azureuser/smart-air-port && pm2 restart smart-airport"
+                    '''
+                }
             }
         }
 
