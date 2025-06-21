@@ -38,11 +38,19 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                sh 'bun run lint'
-            }
-        }
+       stage('Lint') {
+    steps {
+        sh '''
+            # Rename eslint.config.js to eslint.config.mjs if it exists
+            if [ -f eslint.config.js ]; then
+                mv eslint.config.js eslint.config.mjs
+            fi
+            
+            # Run lint
+            bun run lint
+        '''
+    }
+}
 
         stage('Test') {
             steps {
