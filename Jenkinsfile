@@ -3,7 +3,12 @@ pipeline {
 
     environment {
         BUN_INSTALL = "${HOME}/.bun"
-        PATH = "${HOME}/.bun/bin:${PATH}"
+        PATH = "${BUN_INSTALL}/bin:${PATH}"
+        DEPLOY_DIR = "/var/www/smart-air-port"
+        REMOTE_USER = "deploy"
+        REMOTE_HOST = "your-server-ip-or-hostname"
+        SSH_CREDENTIALS_ID = "smart-air-port-ssh-key"
+        NODE_ENV = "production"
     }
 
     triggers {
@@ -17,106 +22,135 @@ pipeline {
             }
         }
 
-        stage('Install Bun') {
+        stage('Setup Environment') {
             steps {
                 sh '''
-                    curl -fsSL https://bun.sh/install | bash
-                    export BUN_INSTALL="$HOME/.bun"
-                    export PATH="$BUN_INSTALL/bin:$PATH"
+                    # Install Bun if not already installed
+                    if ! command -v bun &> /dev/null; then
+                        curl -fsSL https://bun.sh/install | bash
+                    else
+                        echo "Bun is already installed"
+                    fi
+                    
+                    # Install dependencies
                     bun install
                 '''
             }
         }
 
-        stage('Build') {
+        stage('Lint') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    sh '''
-                        export PATH="$BUN_INSTALL/bin:$PATH"
-                        echo "🛠️ Running TypeScript build..."
-                        if [ -f tsconfig.build.json ]; then
-                            bunx tsc -p tsconfig.build.json
-                        else
-                            echo "⚠️ tsconfig.build.json not found. Using tsconfig.json..."
-                            bunx tsc -p tsconfig.json
-                        fi
-                    '''
-                }
+                sh 'bun run lint'
             }
         }
 
         stage('Test') {
-            when {
-                expression { fileExists('bun.lockb') }
+            steps {
+                sh 'bun test'
             }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'bun run build'
+            }
+        }
+
+        stage('Prepare Deployment') {
             steps {
                 sh '''
-                    export PATH="$BUN_INSTALL/bin:$PATH"
-                    echo "🧪 Running tests..."
-                    bun test || echo "⚠️ Tests failed or were skipped"
+                    # Create deployment package
+                    mkdir -p deploy
+                    cp -r dist deploy/
+                    cp package.json deploy/
+                    cp bun.lock deploy/
+                    cp -r src/i18n deploy/
+                    
+                    # Create .env file for production
+                    cat > deploy/.env << EOL
+NODE_ENV=production
+PORT=3001
+MONGO_URI=${MONGO_URI}
+JWT_SECRET=${JWT_SECRET}
+JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}
+STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+PAYMOB_API_KEY=${PAYMOB_API_KEY}
+PAYMOB_MERCHANT_ID=${PAYMOB_MERCHANT_ID}
+PAYMOB_HMAC_SECRET=${PAYMOB_HMAC_SECRET}
+PAYMOB_CARD_INTEGRATION_ID=${PAYMOB_CARD_INTEGRATION_ID}
+REDIS_HOST=${REDIS_HOST}
+REDIS_PORT=${REDIS_PORT}
+REDIS_TTL=${REDIS_TTL}
+REDIS_PASSWORD=${REDIS_PASSWORD}
+EOL
+                    
+                    # Create deployment archive
+                    tar -czf smart-air-port-deploy.tar.gz -C deploy .
                 '''
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Server') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-deploy-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                sshagent(credentials: [env.SSH_CREDENTIALS_ID]) {
                     sh '''
-                        export PATH="$BUN_INSTALL/bin:$PATH"
-                        echo "🚀 Deploying application..."
+                        # Copy deployment package to server
+                        scp -o StrictHostKeyChecking=no smart-air-port-deploy.tar.gz ${REMOTE_USER}@${REMOTE_HOST}:~/
                         
-                        # Test SSH connection
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "echo SSH connection successful"
-                        
-                        # Create directories if they don't exist
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "mkdir -p ~/smart-air-port/dist"
-                        
-                        # Copy the built files
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r dist/* $SSH_USER@10.1.0.4:~/smart-air-port/dist/
-                        
-                        # Create a tarball of node_modules to transfer efficiently
-                        tar -czf node_modules.tar.gz node_modules
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no node_modules.tar.gz $SSH_USER@10.1.0.4:~/smart-air-port/
-                        
-                        # Copy package.json and package-lock.json
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no package*.json $SSH_USER@10.1.0.4:~/smart-air-port/
-                        
-                        # Extract node_modules on the server and install any missing dependencies
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && tar -xzf node_modules.tar.gz && npm install --production"
-                        
-                        # Restart the application with PM2
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && pm2 restart smart-airport || pm2 start dist/main.js --name smart-airport"
-                        
-                        # Verify the application is running
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && pm2 status"
-                        
-                        # Check application logs for any startup errors
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && pm2 logs smart-airport --lines 10 || true"
-                        
-                        # Clean up the tarball
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@10.1.0.4 "cd ~/smart-air-port && rm -f node_modules.tar.gz"
-                        
-                        echo "✅ Deployment completed successfully!"
+                        # Execute deployment commands on remote server
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            # Stop the current application
+                            pm2 stop smart-air-port || true
+                            
+                            # Backup current deployment
+                            if [ -d ${DEPLOY_DIR} ]; then
+                                mv ${DEPLOY_DIR} ${DEPLOY_DIR}_backup_$(date +%Y%m%d%H%M%S)
+                            fi
+                            
+                            # Create deployment directory
+                            mkdir -p ${DEPLOY_DIR}
+                            
+                            # Extract deployment package
+                            tar -xzf ~/smart-air-port-deploy.tar.gz -C ${DEPLOY_DIR}
+                            
+                            # Install production dependencies
+                            cd ${DEPLOY_DIR}
+                            bun install --production
+                            
+                            # Start the application with PM2
+                            pm2 start dist/main.js --name smart-air-port --env production
+                            
+                            # Save PM2 configuration
+                            pm2 save
+                            
+                            # Cleanup
+                            rm ~/smart-air-port-deploy.tar.gz
+                            
+                            # Keep only the 3 most recent backups
+                            ls -dt ${DEPLOY_DIR}_backup_* | tail -n +4 | xargs -r rm -rf
+                        "
                     '''
                 }
             }
         }
 
-        stage('Push Build Info') {
-            when {
-                expression { fileExists('build-info.txt') }
-            }
+        stage('Update Build Info') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'ced0805f-8694-4c16-b243-e13c5e4b07dd', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh '''
-                        export PATH="$BUN_INSTALL/bin:$PATH"
                         git config user.email "jenkins@example.com"
                         git config user.name "Jenkins CI"
-                        git pull origin main || true
-                        echo "Build at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > build-info.txt
-                        git add build-info.txt || true
-                        git commit -m "🔧 Update build info [skip ci]" || true
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Aliexe-code/smart-air-port.git HEAD:main || true
+
+                        # Create build info file
+                        echo "Build completed at $(date)" > build-info.txt
+                        echo "Commit: $(git rev-parse HEAD)" >> build-info.txt
+                        echo "Build number: ${BUILD_NUMBER}" >> build-info.txt
+                        
+                        git add build-info.txt
+                        git commit -m "Update build info from Jenkins [skip ci]" || echo "No changes to commit"
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Aliexe-code/smart-air-port.git HEAD:main || echo "Nothing to push"
                     '''
                 }
             }
@@ -124,11 +158,17 @@ pipeline {
     }
 
     post {
+        always {
+            // Clean workspace after build
+            cleanWs()
+        }
         success {
-            echo '✅ Build and deployment succeeded!'
+            echo 'Deployment successful!'
+            // You can add Slack/Email notifications here
         }
         failure {
-            echo '❌ Build failed. Check the logs for more information.'
+            echo 'Deployment failed!'
+            // You can add Slack/Email notifications here
         }
     }
 }
