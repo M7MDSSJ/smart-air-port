@@ -178,7 +178,7 @@ Resend email verification code.
 ## Password Management
 
 ### 7. Request Password Reset
-**POST** `/users/request-reset-password`
+**POST** `/users/request-password-reset`
 
 Request password reset code via email.
 

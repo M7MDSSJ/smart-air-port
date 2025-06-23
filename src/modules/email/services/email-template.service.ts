@@ -63,11 +63,6 @@ export class EmailTemplateService {
           light: '#FFFFFF',
         },
         errorCorrectionLevel: 'M',
-        type: 'image/png',
-        quality: 0.92,
-        rendererOpts: {
-          quality: 0.92,
-        },
       });
 
       this.logger.log(
@@ -149,7 +144,6 @@ export class EmailTemplateService {
     const isRoundTrip = bookingData.bookingType === BookingType.ROUND_TRIP && bookingData.flightData;
 
     let flightDetailsHtml = '';
-    let emailSubjectRoute = '';
 
     if (isRoundTrip && bookingData.flightData) {
       // Handle round-trip booking
@@ -157,13 +151,11 @@ export class EmailTemplateService {
       const returnFlight = bookingData.flightData.find(f => f.typeOfFlight === FlightType.RETURN);
 
       if (goFlight && returnFlight) {
-        emailSubjectRoute = `${goFlight.originAirportCode} ⇄ ${goFlight.destinationAirportCode}`;
         flightDetailsHtml = this.generateRoundTripFlightHtml(goFlight, returnFlight);
       }
     } else {
       // Handle one-way booking (legacy)
       if (bookingData.departureDate && bookingData.arrivalDate) {
-        emailSubjectRoute = `${bookingData.originAirportCode} → ${bookingData.destinationAirportCode}`;
         const departureDate = this.formatDate(bookingData.departureDate);
         const departureTime = this.formatTime(bookingData.departureDate);
         const arrivalDate = this.formatDate(bookingData.arrivalDate);
@@ -186,7 +178,7 @@ export class EmailTemplateService {
 
     const passengersHtml = bookingData.travellersInfo
       .map(
-        (passenger, index) => `
+        (passenger) => `
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">
             ${passenger.firstName} ${passenger.lastName}
