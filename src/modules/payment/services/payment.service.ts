@@ -37,9 +37,7 @@ export class PaymentService {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
 
-    this.stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-05-28.basil',
-    });
+    this.stripe = new Stripe(stripeSecretKey);
   }
 
   /**
