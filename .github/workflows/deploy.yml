@@ -21,10 +21,11 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.AZURE_HOST }} >> ~/.ssh/known_hosts
+        shell: bash
 
-      - name: Deploy via SSH as alijs
+      - name: Deploy via SSH
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }} << 'ENDSSH'
             # Fix git ownership and permissions issues
             cd /home/alijs
             sudo chown -R alijs:alijs smart-air-port
@@ -57,4 +58,5 @@ jobs:
             # Check application status
             echo "Application status:"
             pm2 status
-          EOF
+          ENDSSH
+        shell: bash
