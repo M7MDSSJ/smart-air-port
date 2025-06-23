@@ -65,6 +65,7 @@ Content-Type: application/json
     {
       "flightID": "RT789012",
       "typeOfFlight": "RETURN",
+      "numberOfStops": 0,
       "originAirportCode": "DAD",
       "destinationAirportCode": "LGA",
       "originCIty": "Da Nang",
@@ -104,6 +105,7 @@ Content-Type: application/json
 {
   "bookingType": "ONE_WAY",
   "flightID": "OW123456",
+  "numberOfStops": 2,
   "originAirportCode": "LGA",
   "destinationAirportCode": "DAD",
   "originCIty": "New York",
@@ -144,8 +146,16 @@ Content-Type: application/json
 - One flight must have `typeOfFlight: "RETURN"`
 - Return flight departure must be after outbound flight arrival
 - All flight data fields are required
+- `numberOfStops` is optional and must be between 0 and 2 if provided
 
 ### One-Way Bookings
 - Legacy fields (`flightID`, `originAirportCode`, etc.) are required
 - `bookingType` defaults to `ONE_WAY` if not specified
+- `numberOfStops` is optional and must be between 0 and 2 if provided
 - Maintains full backward compatibility
+
+### Number of Stops Field
+- **Optional field** for both one-way and round-trip bookings
+- **Valid values**: 0 (direct flight), 1 (one stop), 2 (two stops)
+- **Default**: Not specified (null/undefined)
+- **Validation**: Must be a non-negative integer, maximum value is 2

@@ -92,6 +92,7 @@ export class BookingService {
       bookingData.destinationCity = createBookingDto.destinationCIty;
       bookingData.departureDate = new Date(createBookingDto.departureDate!);
       bookingData.arrivalDate = new Date(createBookingDto.arrivalDate!);
+      bookingData.numberOfStops = createBookingDto.numberOfStops;
       bookingData.selectedBaggageOption = createBookingDto.selectedBaggageOption;
     }
 
