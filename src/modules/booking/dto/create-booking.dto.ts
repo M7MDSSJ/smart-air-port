@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   MinLength,
   Min,
+  Max,
   ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -79,13 +80,14 @@ export class FlightDataDto {
   typeOfFlight: FlightType;
 
   @ApiProperty({
-    example: 2,
-    description: 'Number of stops (optional)',
+    example: 1,
+    description: 'Number of stops (0, 1, or 2)',
     required: false,
   })
   @IsOptional()
   @IsNumber({}, { message: 'Number of stops must be a valid number' })
   @Min(0, { message: 'Number of stops must be non-negative' })
+  @Max(2, { message: 'Number of stops cannot exceed 2' })
   numberOfStops?: number;
 
   @ApiProperty({
@@ -369,6 +371,17 @@ export class CreateBookingDto {
   @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
   @IsNotEmpty({ message: 'Arrival date is required for one-way bookings' })
   arrivalDate?: string;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Number of stops (0, 1, or 2) for one-way bookings',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'Number of stops must be a valid number' })
+  @Min(0, { message: 'Number of stops must be non-negative' })
+  @Max(2, { message: 'Number of stops cannot exceed 2' })
+  numberOfStops?: number;
 
   @ApiProperty({
     example: {

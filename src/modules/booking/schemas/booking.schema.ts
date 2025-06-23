@@ -116,6 +116,9 @@ export class Booking {
   @Prop({ type: Date })
   arrivalDate?: Date;
 
+  @Prop({ type: Number })
+  numberOfStops?: number;
+
   @Prop({ type: Object })
   selectedBaggageOption?: Record<string, any>;
 
