@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Deploy App on Azure VM
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # Set a timeout to prevent hanging builds
+    timeout-minutes: 15
 
     steps:
       - name: Checkout Repo
@@ -25,7 +25,16 @@ jobs:
       - name: Deploy via SSH as alijs
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.AZURE_USER }}@${{ secrets.AZURE_HOST }} << 'EOF'
-            cd /home/alijs/smart-air-port
+            # Fix git ownership and permissions issues
+            cd /home/alijs
+            sudo chown -R alijs:alijs smart-air-port
+            sudo chmod -R 755 smart-air-port
+            cd smart-air-port
+            
+            # Configure git to trust this directory
+            git config --global --add safe.directory /home/alijs/smart-air-port
+            
+            # Pull latest changes
             git pull origin main
             
             # Check if node_modules exists, install if not
