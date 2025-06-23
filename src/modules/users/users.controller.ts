@@ -124,14 +124,14 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   async updateProfile(
-    @User() user: UserDocument,
+    @User() user: JwtUser,
     @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<ProfileResponseDto> {
-    if (!user || !user._id) {
+    if (!user || !user.id) {
       throw new UnauthorizedException('Invalid user credentials');
     }
     return this.userManagementService.updateProfile(
-      user._id.toString(),
+      user.id.toString(),
       updateProfileDto,
     );
   }
