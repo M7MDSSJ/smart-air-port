@@ -6,7 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "bun run nest build",
+    "build": "echo 'Building application...' && bun run nest build",
+    "build:ci": "NODE_OPTIONS='--max-old-space-size=4096' bun run nest build --verbose",
     "format": "bun run prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "bun run nest start",
     "start:dev": "bun run nest start --watch",
