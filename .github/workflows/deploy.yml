@@ -7,36 +7,30 @@ on:
 
 jobs:
   deploy:
+    name: Deploy Backend to Azure VM
     runs-on: ubuntu-latest
 
     steps:
-      - name: Execute remote SSH commands
+      - name: Execute SSH Commands on Azure VM
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            echo "🚀 Starting deployment script..."
+            export PATH=$HOME/.bun/bin:$PATH
 
-            cd smart-air-port
+            cd ~/smart-air-port
 
-            echo "📦 Stashing any local changes..."
-            git stash || true
+            echo "Resetting any local changes..."
+            git reset --hard origin/main
+            git clean -fd
 
-            echo "⬇️ Pulling latest code from main branch..."
-            git pull origin main --rebase
+            echo "Pulling latest code from GitHub..."
+            git pull origin main
 
-            echo "📤 Re-applying local changes (if any)..."
-            git stash pop || true
-
-            echo "🔧 Exporting bun path..."
-            export PATH="$HOME/.bun/bin:$PATH"
-
-            echo "🔨 Building the application..."
+            echo "Building application..."
             bun run build
 
-            echo "♻️ Restarting application with PM2..."
+            echo "Restarting application with PM2..."
             pm2 restart smart-airport
-
-            echo "✅ Deployment finished successfully!"
