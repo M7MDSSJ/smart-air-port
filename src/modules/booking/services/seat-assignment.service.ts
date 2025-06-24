@@ -39,34 +39,44 @@ export class SeatAssignmentService {
     travelers: TravelerInfo[],
     cabinClass: 'economy' | 'business' = 'economy',
   ): Promise<SeatAssignment[]> {
-    this.logger.log(`Assigning seats for ${travelers.length} travelers in ${cabinClass} class`);
+    this.logger.log(
+      `Assigning seats for ${travelers.length} travelers in ${cabinClass} class`,
+    );
 
     const assignments: SeatAssignment[] = [];
     const usedSeats = new Set<string>();
 
     // Filter travelers who need seats (adults and children only)
-    const travelersNeedingSeats = travelers.filter(
-      (traveler, index) => {
-        const needsSeat = traveler.travelerType === TravelerType.ADULT || 
-                         traveler.travelerType === TravelerType.CHILD;
-        
-        if (needsSeat) {
-          this.logger.log(`Traveler ${index + 1}: ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType}) - needs seat`);
-        } else {
-          this.logger.log(`Traveler ${index + 1}: ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType}) - no seat needed`);
-        }
-        
-        return needsSeat;
-      }
-    );
+    const travelersNeedingSeats = travelers.filter((traveler, index) => {
+      const needsSeat =
+        traveler.travelerType === TravelerType.ADULT ||
+        traveler.travelerType === TravelerType.CHILD;
 
-    this.logger.log(`${travelersNeedingSeats.length} travelers need seat assignments`);
+      if (needsSeat) {
+        this.logger.log(
+          `Traveler ${index + 1}: ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType}) - needs seat`,
+        );
+      } else {
+        this.logger.log(
+          `Traveler ${index + 1}: ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType}) - no seat needed`,
+        );
+      }
+
+      return needsSeat;
+    });
+
+    this.logger.log(
+      `${travelersNeedingSeats.length} travelers need seat assignments`,
+    );
 
     // Generate seat assignments
     for (let i = 0; i < travelers.length; i++) {
       const traveler = travelers[i];
-      
-      if (traveler.travelerType === TravelerType.ADULT || traveler.travelerType === TravelerType.CHILD) {
+
+      if (
+        traveler.travelerType === TravelerType.ADULT ||
+        traveler.travelerType === TravelerType.CHILD
+      ) {
         const seatNumber = this.generateRandomSeat(cabinClass, usedSeats);
         usedSeats.add(seatNumber);
 
@@ -77,13 +87,19 @@ export class SeatAssignmentService {
           travelerName: `${traveler.firstName} ${traveler.lastName}`,
         });
 
-        this.logger.log(`Assigned seat ${seatNumber} to ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType})`);
+        this.logger.log(
+          `Assigned seat ${seatNumber} to ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType})`,
+        );
       } else {
-        this.logger.log(`No seat assigned to ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType})`);
+        this.logger.log(
+          `No seat assigned to ${traveler.firstName} ${traveler.lastName} (${traveler.travelerType})`,
+        );
       }
     }
 
-    this.logger.log(`Seat assignment completed. ${assignments.length} seats assigned.`);
+    this.logger.log(
+      `Seat assignment completed. ${assignments.length} seats assigned.`,
+    );
     return assignments;
   }
 
@@ -106,9 +122,10 @@ export class SeatAssignmentService {
       } while (config.excludedRows.includes(row));
 
       // Generate random seat letter
-      const seatLetter = config.seatLetters[
-        Math.floor(Math.random() * config.seatLetters.length)
-      ];
+      const seatLetter =
+        config.seatLetters[
+          Math.floor(Math.random() * config.seatLetters.length)
+        ];
 
       const seatNumber = `${row}${seatLetter}`;
 
@@ -156,18 +173,22 @@ export class SeatAssignmentService {
     travelers: TravelerInfo[],
     assignments: SeatAssignment[],
   ): Promise<TravelerInfo[]> {
-    this.logger.log(`Applying ${assignments.length} seat assignments to travelers`);
+    this.logger.log(
+      `Applying ${assignments.length} seat assignments to travelers`,
+    );
 
     const updatedTravelers = [...travelers];
     const assignmentTime = new Date();
 
     assignments.forEach((assignment) => {
       if (assignment.travelerIndex < updatedTravelers.length) {
-        updatedTravelers[assignment.travelerIndex].seatNumber = assignment.seatNumber;
-        updatedTravelers[assignment.travelerIndex].seatAssignedAt = assignmentTime;
-        
+        updatedTravelers[assignment.travelerIndex].seatNumber =
+          assignment.seatNumber;
+        updatedTravelers[assignment.travelerIndex].seatAssignedAt =
+          assignmentTime;
+
         this.logger.log(
-          `Applied seat ${assignment.seatNumber} to traveler ${assignment.travelerIndex + 1}: ${assignment.travelerName}`
+          `Applied seat ${assignment.seatNumber} to traveler ${assignment.travelerIndex + 1}: ${assignment.travelerName}`,
         );
       }
     });

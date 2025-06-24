@@ -1,4 +1,8 @@
-import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
+} from 'class-validator';
 import { differenceInYears, parse } from 'date-fns';
 
 export function IsAdult(validationOptions?: ValidationOptions) {
@@ -11,12 +15,13 @@ export function IsAdult(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (!value) return false;
-          
+
           try {
-            const birthDate = typeof value === 'string' 
-              ? parse(value, 'yyyy-MM-dd', new Date())
-              : value;
-            
+            const birthDate =
+              typeof value === 'string'
+                ? parse(value, 'yyyy-MM-dd', new Date())
+                : value;
+
             const age = differenceInYears(new Date(), birthDate);
             return age >= 18;
           } catch (e) {

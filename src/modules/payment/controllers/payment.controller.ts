@@ -141,8 +141,12 @@ export class PaymentController {
   ) {
     this.logger.log('=== GENERIC WEBHOOK RECEIVED ===');
     this.logger.log(`Headers received:`, {
-      'stripe-signature': signature ? `${signature.substring(0, 20)}...` : 'NOT_PROVIDED',
-      'x-paymob-signature': paymobSignature ? `${paymobSignature.substring(0, 20)}...` : 'NOT_PROVIDED',
+      'stripe-signature': signature
+        ? `${signature.substring(0, 20)}...`
+        : 'NOT_PROVIDED',
+      'x-paymob-signature': paymobSignature
+        ? `${paymobSignature.substring(0, 20)}...`
+        : 'NOT_PROVIDED',
       'x-provider': provider || 'NOT_PROVIDED',
       'content-type': req.headers['content-type'],
       'user-agent': req.headers['user-agent'],
@@ -157,8 +161,13 @@ export class PaymentController {
         return this.paymentService.handleWebhook(signature, req.rawBody);
       } else {
         this.logger.warn('Unknown webhook provider or missing signature');
-        this.logger.warn('If this is a Stripe webhook, use /payment/stripe/webhook endpoint instead');
-        return { received: false, error: 'Unknown provider or missing signature' };
+        this.logger.warn(
+          'If this is a Stripe webhook, use /payment/stripe/webhook endpoint instead',
+        );
+        return {
+          received: false,
+          error: 'Unknown provider or missing signature',
+        };
       }
     } catch (error) {
       this.logger.error(`Generic webhook processing failed: ${error.message}`);
@@ -207,16 +216,21 @@ export class PaymentController {
   ) {
     this.logger.log('=== STRIPE WEBHOOK RECEIVED ===');
     this.logger.log(`Stripe webhook details:`, {
-      'stripe-signature': signature ? `${signature.substring(0, 20)}...` : 'NOT_PROVIDED',
+      'stripe-signature': signature
+        ? `${signature.substring(0, 20)}...`
+        : 'NOT_PROVIDED',
       'content-type': request.headers['content-type'],
       'user-agent': request.headers['user-agent'],
       'content-length': request.headers['content-length'],
-      'rawBodyExists': !!request.rawBody,
-      'rawBodyLength': request.rawBody ? request.rawBody.length : 0,
+      rawBodyExists: !!request.rawBody,
+      rawBodyLength: request.rawBody ? request.rawBody.length : 0,
     });
 
     try {
-      const result = await this.paymentService.handleStripeWebhook(request.rawBody, signature);
+      const result = await this.paymentService.handleStripeWebhook(
+        request.rawBody,
+        signature,
+      );
       this.logger.log('Stripe webhook processed successfully');
       return result;
     } catch (error) {
@@ -236,11 +250,15 @@ export class PaymentController {
       success: true,
       data: {
         publicKey: stripePublicKey,
-        secretKeyPrefix: stripeSecretKey ? stripeSecretKey.substring(0, 12) + '...' : 'NOT_SET',
-        keysMatch: stripePublicKey && stripeSecretKey &&
-                   stripePublicKey.includes(stripeSecretKey.split('_')[2]) // Extract account ID
+        secretKeyPrefix: stripeSecretKey
+          ? stripeSecretKey.substring(0, 12) + '...'
+          : 'NOT_SET',
+        keysMatch:
+          stripePublicKey &&
+          stripeSecretKey &&
+          stripePublicKey.includes(stripeSecretKey.split('_')[2]), // Extract account ID
       },
-      message: 'Stripe configuration retrieved'
+      message: 'Stripe configuration retrieved',
     };
   }
 
@@ -250,7 +268,7 @@ export class PaymentController {
     return {
       success: true,
       data: this.paymentService.getTestPaymentMethods(),
-      message: 'Test payment methods retrieved'
+      message: 'Test payment methods retrieved',
     };
   }
 
@@ -263,10 +281,13 @@ export class PaymentController {
     @User() user: JwtUser,
     @Param('paymentIntentId') paymentIntentId: string,
   ) {
-    this.logger.log(`Debugging payment intent: ${paymentIntentId} for user: ${user.id}`);
+    this.logger.log(
+      `Debugging payment intent: ${paymentIntentId} for user: ${user.id}`,
+    );
 
     try {
-      const paymentIntent = await this.paymentService.getPaymentIntentDetails(paymentIntentId);
+      const paymentIntent =
+        await this.paymentService.getPaymentIntentDetails(paymentIntentId);
 
       return {
         success: true,
@@ -275,19 +296,20 @@ export class PaymentController {
           status: paymentIntent.status,
           amount: paymentIntent.amount,
           currency: paymentIntent.currency,
-          client_secret_prefix: paymentIntent.client_secret ?
-            paymentIntent.client_secret.substring(0, 20) + '...' : 'null',
+          client_secret_prefix: paymentIntent.client_secret
+            ? paymentIntent.client_secret.substring(0, 20) + '...'
+            : 'null',
           metadata: paymentIntent.metadata,
           created: new Date(paymentIntent.created * 1000),
         },
-        message: 'Payment intent details retrieved'
+        message: 'Payment intent details retrieved',
       };
     } catch (error) {
       this.logger.error(`Failed to retrieve payment intent: ${error.message}`);
       return {
         success: false,
         error: error.message,
-        message: 'Failed to retrieve payment intent details'
+        message: 'Failed to retrieve payment intent details',
       };
     }
   }
@@ -368,9 +390,8 @@ export class PaymentController {
       },
       isTest: process.env.NODE_ENV !== 'production',
     };
-    const payment = await this.paymentTransactionService.createPayment(
-      paymentData,
-    );
+    const payment =
+      await this.paymentTransactionService.createPayment(paymentData);
     this.logger.log(
       `Created initial payment record ${payment._id.toString()} with pending status for booking ${
         createPaymobPaymentDto.bookingId
@@ -426,9 +447,10 @@ export class PaymentController {
 
     try {
       // Find the payment record
-      const payment = await this.paymentTransactionService.findPaymentByBookingId(
-        verifyPaymentDto.bookingId,
-      );
+      const payment =
+        await this.paymentTransactionService.findPaymentByBookingId(
+          verifyPaymentDto.bookingId,
+        );
 
       if (!payment) {
         throw new HttpException('Payment not found', HttpStatus.NOT_FOUND);
@@ -436,7 +458,10 @@ export class PaymentController {
 
       // Verify user owns this payment
       if (payment.userId.toString() !== user.id) {
-        throw new HttpException('Unauthorized access to payment', HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          'Unauthorized access to payment',
+          HttpStatus.FORBIDDEN,
+        );
       }
 
       return {
@@ -462,8 +487,13 @@ export class PaymentController {
    */
   @Get('paymob/status/:bookingId')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get payment status by booking ID for SDK integration' })
-  @ApiParam({ name: 'bookingId', description: 'Booking ID to check payment status for' })
+  @ApiOperation({
+    summary: 'Get payment status by booking ID for SDK integration',
+  })
+  @ApiParam({
+    name: 'bookingId',
+    description: 'Booking ID to check payment status for',
+  })
   @ApiResponse({
     status: 200,
     description: 'Payment status information',
@@ -495,7 +525,8 @@ export class PaymentController {
 
     try {
       // Find the payment record
-      const payment = await this.paymentTransactionService.findPaymentByBookingId(bookingId);
+      const payment =
+        await this.paymentTransactionService.findPaymentByBookingId(bookingId);
 
       if (!payment) {
         throw new HttpException('Payment not found', HttpStatus.NOT_FOUND);
@@ -503,7 +534,10 @@ export class PaymentController {
 
       // Verify user owns this payment
       if (payment.userId.toString() !== user.id) {
-        throw new HttpException('Unauthorized access to payment', HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          'Unauthorized access to payment',
+          HttpStatus.FORBIDDEN,
+        );
       }
 
       return {
@@ -570,7 +604,10 @@ export class PaymentController {
 
       // Verify user owns this booking
       if (booking.userId.toString() !== user.id) {
-        throw new HttpException('Unauthorized access to booking', HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          'Unauthorized access to booking',
+          HttpStatus.FORBIDDEN,
+        );
       }
 
       this.logger.log(`Found booking:`, {
@@ -578,7 +615,7 @@ export class PaymentController {
         ref: booking.bookingRef,
         status: booking.status,
         paymentStatus: booking.paymentStatus,
-        paymentIntentId: booking.paymentIntentId
+        paymentIntentId: booking.paymentIntentId,
       });
 
       if (!booking.paymentIntentId) {
@@ -586,33 +623,41 @@ export class PaymentController {
           success: false,
           bookingId: body.bookingId,
           message: 'No payment intent ID found for this booking',
-          syncPerformed: false
+          syncPerformed: false,
         };
       }
 
       // Get payment intent details from Stripe
-      const paymentIntentDetails = await this.paymentService.getPaymentIntentDetails(booking.paymentIntentId);
+      const paymentIntentDetails =
+        await this.paymentService.getPaymentIntentDetails(
+          booking.paymentIntentId,
+        );
 
       this.logger.log(`Stripe payment intent details:`, {
         id: paymentIntentDetails.id,
         status: paymentIntentDetails.status,
         amount: paymentIntentDetails.amount,
         currency: paymentIntentDetails.currency,
-        metadata: paymentIntentDetails.metadata
+        metadata: paymentIntentDetails.metadata,
       });
 
       let syncPerformed = false;
       let message = 'Payment status is already in sync';
 
       // Check if we need to sync the status
-      if (paymentIntentDetails.status === 'succeeded' && booking.paymentStatus !== 'completed') {
-        this.logger.log(`Payment succeeded on Stripe but booking not updated. Syncing...`);
+      if (
+        paymentIntentDetails.status === 'succeeded' &&
+        booking.paymentStatus !== 'completed'
+      ) {
+        this.logger.log(
+          `Payment succeeded on Stripe but booking not updated. Syncing...`,
+        );
 
         // Manually trigger the payment success handler
         await this.paymentService.confirmPayment({
           paymentIntentId: booking.paymentIntentId,
           userEmail: user.email,
-          bookingId: booking._id.toString() // Add the missing bookingId
+          bookingId: booking._id.toString(), // Add the missing bookingId
         });
 
         syncPerformed = true;
@@ -627,9 +672,8 @@ export class PaymentController {
         bookingStatus: booking.status,
         paymentStatus: booking.paymentStatus,
         syncPerformed,
-        message
+        message,
       };
-
     } catch (error) {
       this.logger.error(
         `Failed to sync payment status for booking ${body.bookingId}:`,
@@ -644,7 +688,9 @@ export class PaymentController {
    */
   @Get('debug/payment-details/:bookingId')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Debug: Get detailed payment and booking information' })
+  @ApiOperation({
+    summary: 'Debug: Get detailed payment and booking information',
+  })
   @ApiParam({ name: 'bookingId', description: 'Booking ID to get details for' })
   async debugGetPaymentDetails(
     @Param('bookingId') bookingId: string,
@@ -665,20 +711,26 @@ export class PaymentController {
 
       // Verify user owns this booking
       if (booking.userId.toString() !== user.id) {
-        throw new HttpException('Unauthorized access to booking', HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          'Unauthorized access to booking',
+          HttpStatus.FORBIDDEN,
+        );
       }
 
       let stripeDetails = null;
       if (booking.paymentIntentId) {
         try {
-          stripeDetails = await this.paymentService.getPaymentIntentDetails(booking.paymentIntentId);
+          stripeDetails = await this.paymentService.getPaymentIntentDetails(
+            booking.paymentIntentId,
+          );
         } catch (error) {
           this.logger.warn(`Could not fetch Stripe details: ${error.message}`);
         }
       }
 
       // Find payment records
-      const paymentRecords = await this.paymentTransactionService.findPaymentsByBookingId(bookingId);
+      const paymentRecords =
+        await this.paymentTransactionService.findPaymentsByBookingId(bookingId);
 
       return {
         success: true,
@@ -692,19 +744,20 @@ export class PaymentController {
           totalPrice: booking.totalPrice,
           currency: booking.currency,
           createdAt: (booking as any).createdAt,
-          updatedAt: (booking as any).updatedAt
+          updatedAt: (booking as any).updatedAt,
         },
-        stripeDetails: stripeDetails ? {
-          id: stripeDetails.id,
-          status: stripeDetails.status,
-          amount: stripeDetails.amount,
-          currency: stripeDetails.currency,
-          created: new Date(stripeDetails.created * 1000),
-          metadata: stripeDetails.metadata
-        } : null,
-        paymentRecords: paymentRecords || []
+        stripeDetails: stripeDetails
+          ? {
+              id: stripeDetails.id,
+              status: stripeDetails.status,
+              amount: stripeDetails.amount,
+              currency: stripeDetails.currency,
+              created: new Date(stripeDetails.created * 1000),
+              metadata: stripeDetails.metadata,
+            }
+          : null,
+        paymentRecords: paymentRecords || [],
       };
-
     } catch (error) {
       this.logger.error(
         `Failed to get payment details for booking ${bookingId}:`,
@@ -729,29 +782,33 @@ export class PaymentController {
       if (webhookData.type === 'payment_intent.succeeded') {
         const paymentIntent = webhookData.data.object;
         this.logger.log(`Processing payment intent: ${paymentIntent.id}`);
-        this.logger.log(`Booking ID from metadata: ${paymentIntent.metadata?.bookingId}`);
+        this.logger.log(
+          `Booking ID from metadata: ${paymentIntent.metadata?.bookingId}`,
+        );
 
         // Call the service method directly
-        await this.paymentService['handlePaymentIntentSucceeded'](paymentIntent);
+        await this.paymentService['handlePaymentIntentSucceeded'](
+          paymentIntent,
+        );
 
         return {
           success: true,
           message: 'Webhook processed successfully',
           eventType: webhookData.type,
           paymentIntentId: paymentIntent.id,
-          bookingId: paymentIntent.metadata?.bookingId
+          bookingId: paymentIntent.metadata?.bookingId,
         };
       } else {
         return {
           success: false,
-          message: `Event type ${webhookData.type} not supported in debug mode`
+          message: `Event type ${webhookData.type} not supported in debug mode`,
         };
       }
     } catch (error) {
       this.logger.error(`Error force processing webhook: ${error.message}`);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -768,7 +825,9 @@ export class PaymentController {
   ) {
     this.logger.log('=== TESTING WEBHOOK SIGNATURE VERIFICATION ===');
 
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
 
     this.logger.log('Test webhook details:', {
       signatureProvided: !!signature,
@@ -785,7 +844,7 @@ export class PaymentController {
       return {
         success: false,
         error: 'STRIPE_WEBHOOK_SECRET not configured',
-        details: 'Check your environment variables'
+        details: 'Check your environment variables',
       };
     }
 
@@ -793,7 +852,7 @@ export class PaymentController {
       return {
         success: false,
         error: 'No stripe-signature header provided',
-        details: 'Add stripe-signature header to your request'
+        details: 'Add stripe-signature header to your request',
       };
     }
 
@@ -801,20 +860,26 @@ export class PaymentController {
       return {
         success: false,
         error: 'No raw body available',
-        details: 'Raw body is required for webhook signature verification'
+        details: 'Raw body is required for webhook signature verification',
       };
     }
 
     try {
       // Try to construct a Stripe event (this will test signature verification)
-      const stripe = require('stripe')(this.configService.get<string>('STRIPE_SECRET_KEY'));
-      const event = stripe.webhooks.constructEvent(request.rawBody, signature, webhookSecret);
+      const stripe = require('stripe')(
+        this.configService.get<string>('STRIPE_SECRET_KEY'),
+      );
+      const event = stripe.webhooks.constructEvent(
+        request.rawBody,
+        signature,
+        webhookSecret,
+      );
 
       return {
         success: true,
         message: 'Webhook signature verification successful',
         eventType: event.type,
-        eventId: event.id
+        eventId: event.id,
       };
     } catch (error) {
       return {
@@ -822,10 +887,11 @@ export class PaymentController {
         error: 'Webhook signature verification failed',
         details: error.message,
         troubleshooting: {
-          checkWebhookSecret: 'Verify STRIPE_WEBHOOK_SECRET matches Stripe dashboard',
+          checkWebhookSecret:
+            'Verify STRIPE_WEBHOOK_SECRET matches Stripe dashboard',
           checkSignature: 'Ensure stripe-signature header is correctly set',
-          checkRawBody: 'Ensure raw body is preserved and not parsed as JSON'
-        }
+          checkRawBody: 'Ensure raw body is preserved and not parsed as JSON',
+        },
       };
     }
   }
@@ -846,15 +912,15 @@ export class PaymentController {
         success: true,
         message: 'Payment count retrieved',
         data: {
-          totalPayments: count
-        }
+          totalPayments: count,
+        },
       };
     } catch (error) {
       this.logger.error(`Error getting payment count: ${error.message}`);
       return {
         success: false,
         message: 'Failed to get payment count',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -869,7 +935,8 @@ export class PaymentController {
 
     try {
       const paymentLimit = limit ? parseInt(limit, 10) : 10;
-      const payments = await this.paymentTransactionService.getRecentPayments(paymentLimit);
+      const payments =
+        await this.paymentTransactionService.getRecentPayments(paymentLimit);
 
       this.logger.log(`Found ${payments.length} recent payments`);
 
@@ -877,7 +944,7 @@ export class PaymentController {
         success: true,
         message: 'Recent payments retrieved',
         data: {
-          payments: payments.map(payment => ({
+          payments: payments.map((payment) => ({
             id: payment._id.toString(),
             bookingId: payment.bookingId,
             amount: payment.amount,
@@ -887,17 +954,17 @@ export class PaymentController {
             method: payment.method,
             transactionId: payment.transactionId,
             createdAt: (payment as any).createdAt,
-            isTest: payment.isTest
+            isTest: payment.isTest,
           })),
-          count: payments.length
-        }
+          count: payments.length,
+        },
       };
     } catch (error) {
       this.logger.error(`Error getting recent payments: ${error.message}`);
       return {
         success: false,
         message: 'Failed to get recent payments',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -911,7 +978,8 @@ export class PaymentController {
     this.logger.log(`=== CHECKING PAYMENT FOR BOOKING: ${bookingId} ===`);
 
     try {
-      const payment = await this.paymentTransactionService.findByBookingId(bookingId);
+      const payment =
+        await this.paymentTransactionService.findByBookingId(bookingId);
 
       if (payment) {
         this.logger.log(`Found payment record for booking ${bookingId}`);
@@ -930,9 +998,9 @@ export class PaymentController {
               transactionId: payment.transactionId,
               createdAt: (payment as any).createdAt,
               paidAt: payment.paidAt,
-              isTest: payment.isTest
-            }
-          }
+              isTest: payment.isTest,
+            },
+          },
         };
       } else {
         this.logger.warn(`No payment record found for booking ${bookingId}`);
@@ -941,16 +1009,18 @@ export class PaymentController {
           message: 'No payment record found for this booking',
           data: {
             bookingId: bookingId,
-            paymentExists: false
-          }
+            paymentExists: false,
+          },
         };
       }
     } catch (error) {
-      this.logger.error(`Error checking payment for booking ${bookingId}: ${error.message}`);
+      this.logger.error(
+        `Error checking payment for booking ${bookingId}: ${error.message}`,
+      );
       return {
         success: false,
         message: 'Failed to check payment record',
-        error: error.message
+        error: error.message,
       };
     }
   }
