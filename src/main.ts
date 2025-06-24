@@ -69,6 +69,10 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+   app.enableCors({
+    origin: 'https://sky-shifters.vercel.app',
+    credentials: true,
+  });
   // CORS removed for production - configure at reverse proxy level
   // app.enableCors({
   //   origin: ['http://localhost:3001', 'http://localhost:3000'],
