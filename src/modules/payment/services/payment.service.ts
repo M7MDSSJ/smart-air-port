@@ -56,11 +56,16 @@ export class PaymentService {
    */
   async getPaymentIntentDetails(paymentIntentId: string) {
     try {
-      const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
-      this.logger.log(`Retrieved PaymentIntent ${paymentIntentId} with status: ${paymentIntent.status}`);
+      const paymentIntent =
+        await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      this.logger.log(
+        `Retrieved PaymentIntent ${paymentIntentId} with status: ${paymentIntent.status}`,
+      );
       return paymentIntent;
     } catch (error) {
-      this.logger.error(`Failed to retrieve PaymentIntent ${paymentIntentId}: ${error.message}`);
+      this.logger.error(
+        `Failed to retrieve PaymentIntent ${paymentIntentId}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -128,13 +133,15 @@ export class PaymentService {
       // Enhanced logging for debugging
       this.logger.debug(`PaymentIntent details:`, {
         id: paymentIntent.id,
-        client_secret: paymentIntent.client_secret ?
-          `${paymentIntent.client_secret.substring(0, 20)}...` : 'null',
+        client_secret: paymentIntent.client_secret
+          ? `${paymentIntent.client_secret.substring(0, 20)}...`
+          : 'null',
         status: paymentIntent.status,
         amount: paymentIntent.amount,
         currency: paymentIntent.currency,
-        account: paymentIntent.client_secret ?
-          paymentIntent.client_secret.split('_')[2] : 'unknown'
+        account: paymentIntent.client_secret
+          ? paymentIntent.client_secret.split('_')[2]
+          : 'unknown',
       });
 
       return {
@@ -156,15 +163,23 @@ export class PaymentService {
           case 'StripeCardError':
             throw new BadRequestException(`Card error: ${error.message}`);
           case 'StripeRateLimitError':
-            throw new BadRequestException('Too many requests. Please try again later.');
+            throw new BadRequestException(
+              'Too many requests. Please try again later.',
+            );
           case 'StripeInvalidRequestError':
             throw new BadRequestException(`Invalid request: ${error.message}`);
           case 'StripeAPIError':
-            throw new BadRequestException('Payment service temporarily unavailable. Please try again.');
+            throw new BadRequestException(
+              'Payment service temporarily unavailable. Please try again.',
+            );
           case 'StripeConnectionError':
-            throw new BadRequestException('Network error. Please check your connection and try again.');
+            throw new BadRequestException(
+              'Network error. Please check your connection and try again.',
+            );
           case 'StripeAuthenticationError':
-            throw new BadRequestException('Payment configuration error. Please contact support.');
+            throw new BadRequestException(
+              'Payment configuration error. Please contact support.',
+            );
           default:
             throw new BadRequestException(`Payment error: ${error.message}`);
         }
@@ -286,7 +301,9 @@ export class PaymentService {
     this.logger.log(`Signature provided: ${!!signature}`);
     this.logger.log(`Payload type: ${typeof payload}`);
     this.logger.log(`Payload length: ${payload ? payload.length : 0}`);
-    this.logger.log(`Signature: ${signature ? signature.substring(0, 50) + '...' : 'NONE'}`);
+    this.logger.log(
+      `Signature: ${signature ? signature.substring(0, 50) + '...' : 'NONE'}`,
+    );
 
     if (!webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET not configured');
@@ -328,22 +345,33 @@ export class PaymentService {
 
         this.logger.log(`✅ Webhook signature verified successfully`);
       } catch (verificationError) {
-        this.logger.warn(`⚠️ Webhook signature verification failed: ${verificationError.message}`);
-        this.logger.warn(`Attempting to process webhook without verification (proxy fallback)`);
+        this.logger.warn(
+          `⚠️ Webhook signature verification failed: ${verificationError.message}`,
+        );
+        this.logger.warn(
+          `Attempting to process webhook without verification (proxy fallback)`,
+        );
 
         // Fallback: Process without signature verification
-        const bodyString = Buffer.isBuffer(payload) ? payload.toString('utf8') :
-                          typeof payload === 'string' ? payload : JSON.stringify(payload);
+        const bodyString = Buffer.isBuffer(payload)
+          ? payload.toString('utf8')
+          : typeof payload === 'string'
+            ? payload
+            : JSON.stringify(payload);
         const eventData = JSON.parse(bodyString);
 
         // Validate webhook structure
-        if (eventData.object === 'event' &&
-            eventData.type &&
-            eventData.data &&
-            eventData.id &&
-            eventData.id.startsWith('evt_')) {
+        if (
+          eventData.object === 'event' &&
+          eventData.type &&
+          eventData.data &&
+          eventData.id &&
+          eventData.id.startsWith('evt_')
+        ) {
           event = eventData as Stripe.Event;
-          this.logger.warn(`🔓 Processing webhook without signature verification`);
+          this.logger.warn(
+            `🔓 Processing webhook without signature verification`,
+          );
         } else {
           throw new Error('Invalid webhook structure');
         }
@@ -373,18 +401,26 @@ export class PaymentService {
     this.logger.log('=== HANDLING PAYMENT SUCCEEDED (GENERIC WEBHOOK) ===');
     this.logger.log(`Payment Intent ID: ${paymentIntent.id}`);
     this.logger.log(`Payment Intent Status: ${paymentIntent.status}`);
-    this.logger.log(`Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+    this.logger.log(
+      `Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`,
+    );
     this.logger.log(`Payment Intent Metadata:`, paymentIntent.metadata);
 
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (!bookingId) {
-      this.logger.error(`❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`);
-      this.logger.error(`Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`);
+      this.logger.error(
+        `❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`,
+      );
+      this.logger.error(
+        `Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`,
+      );
       return;
     }
 
-    this.logger.log(`✅ Processing successful payment for booking: ${bookingId}`);
+    this.logger.log(
+      `✅ Processing successful payment for booking: ${bookingId}`,
+    );
 
     try {
       // Find and update the booking
@@ -400,7 +436,7 @@ export class PaymentService {
         ref: booking.bookingRef,
         currentStatus: booking.status,
         currentPaymentStatus: booking.paymentStatus,
-        userId: booking.userId.toString()
+        userId: booking.userId.toString(),
       });
 
       // Update booking status
@@ -426,16 +462,25 @@ export class PaymentService {
         ref: updatedBooking.bookingRef,
         newStatus: updatedBooking.status,
         newPaymentStatus: updatedBooking.paymentStatus,
-        paymentCompletedAt: updatedBooking.paymentCompletedAt
+        paymentCompletedAt: updatedBooking.paymentCompletedAt,
       });
 
       // Check if payment record already exists to prevent duplicates
-      this.logger.log(`🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`);
-      const existingPayment = await this.paymentTransactionService.findByTransactionId(paymentIntent.id);
+      this.logger.log(
+        `🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`,
+      );
+      const existingPayment =
+        await this.paymentTransactionService.findByTransactionId(
+          paymentIntent.id,
+        );
 
       if (existingPayment) {
-        this.logger.log(`⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`);
-        this.logger.log(`Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`);
+        this.logger.log(
+          `⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`,
+        );
+        this.logger.log(
+          `Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`,
+        );
       } else {
         // Create payment record
         this.logger.log(`🔄 Creating payment record for booking: ${bookingId}`);
@@ -444,17 +489,23 @@ export class PaymentService {
         let paymentAmount = 0;
         if (paymentIntent.amount && typeof paymentIntent.amount === 'number') {
           paymentAmount = paymentIntent.amount / 100; // Convert from cents
-          this.logger.log(`💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`);
+          this.logger.log(
+            `💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`,
+          );
         } else {
           paymentAmount = updatedBooking.totalPrice;
-          this.logger.log(`💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`);
+          this.logger.log(
+            `💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`,
+          );
         }
 
         const paymentData: CreatePaymentDto = {
           userId: updatedBooking.userId.toString(),
           bookingId: updatedBooking._id.toString(),
           amount: paymentAmount,
-          currency: paymentIntent.currency ? paymentIntent.currency.toUpperCase() : updatedBooking.currency,
+          currency: paymentIntent.currency
+            ? paymentIntent.currency.toUpperCase()
+            : updatedBooking.currency,
           provider: PaymentProvider.STRIPE,
           method: PaymentMethod.CREDIT_CARD,
           transactionId: paymentIntent.id,
@@ -472,20 +523,23 @@ export class PaymentService {
           method: paymentData.method,
           transactionId: paymentData.transactionId,
           isTest: paymentData.isTest,
-          status: paymentData.status
+          status: paymentData.status,
         });
 
         try {
-          const createdPayment = await this.paymentTransactionService.createPayment(paymentData);
+          const createdPayment =
+            await this.paymentTransactionService.createPayment(paymentData);
           this.logger.log(`✅ Payment record created successfully:`, {
             paymentId: createdPayment._id.toString(),
             bookingId: createdPayment.bookingId,
             amount: createdPayment.amount,
             status: createdPayment.status,
-            transactionId: createdPayment.transactionId
+            transactionId: createdPayment.transactionId,
           });
         } catch (paymentError) {
-          this.logger.error(`❌ Failed to create payment record: ${paymentError.message}`);
+          this.logger.error(
+            `❌ Failed to create payment record: ${paymentError.message}`,
+          );
           this.logger.error(`Payment error stack:`, paymentError.stack);
           // Don't throw here - we still want to send the email even if payment record fails
         }
@@ -494,12 +548,16 @@ export class PaymentService {
       // Send booking confirmation email
       if (updatedBooking) {
         await this.sendBookingConfirmationEmail(updatedBooking);
-        this.logger.log(`📧 Booking confirmation email sent for booking: ${bookingId}`);
+        this.logger.log(
+          `📧 Booking confirmation email sent for booking: ${bookingId}`,
+        );
       }
 
       this.logger.log(`✅ Payment succeeded for booking: ${bookingId}`);
     } catch (error) {
-      this.logger.error(`❌ Error processing successful payment webhook: ${error.message}`);
+      this.logger.error(
+        `❌ Error processing successful payment webhook: ${error.message}`,
+      );
       this.logger.error(`Error stack:`, error.stack);
     }
   }
@@ -539,7 +597,7 @@ export class PaymentService {
     if (booking.bookingType === 'ROUND_TRIP' && booking.flightData) {
       return {
         ...baseData,
-        flightData: booking.flightData.map(flight => ({
+        flightData: booking.flightData.map((flight) => ({
           flightID: flight.flightID,
           typeOfFlight: flight.typeOfFlight,
           numberOfStops: flight.numberOfStops,
@@ -616,9 +674,8 @@ export class PaymentService {
     }
 
     if (booking.paymentStatus === 'pending') {
-      const payment = await this.paymentTransactionService.findByBookingId(
-        bookingId,
-      );
+      const payment =
+        await this.paymentTransactionService.findByBookingId(bookingId);
 
       if (
         payment &&
@@ -733,8 +790,10 @@ export class PaymentService {
       }
 
       // Check if booking is already confirmed/paid
-      if (booking.paymentStatus === 'completed' ||
-        booking.status === 'confirmed') {
+      if (
+        booking.paymentStatus === 'completed' ||
+        booking.status === 'confirmed'
+      ) {
         this.logger.log(`Payment already completed for booking: ${bookingId}`);
 
         return {
@@ -867,16 +926,22 @@ export class PaymentService {
   async handleStripeWebhook(rawBody: Buffer, signature: string) {
     this.logger.log('=== PROCESSING STRIPE WEBHOOK IN SERVICE ===');
 
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
-    const isDevelopment = this.configService.get<string>('NODE_ENV') === 'development';
-    const allowFallback = this.configService.get<string>('ALLOW_WEBHOOK_FALLBACK') !== 'false'; // Default to true
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
+    const isDevelopment =
+      this.configService.get<string>('NODE_ENV') === 'development';
+    const allowFallback =
+      this.configService.get<string>('ALLOW_WEBHOOK_FALLBACK') !== 'false'; // Default to true
 
     if (!webhookSecret) {
       this.logger.error('Stripe webhook secret not configured');
       if (!isDevelopment && !allowFallback) {
         throw new BadRequestException('Webhook secret not configured');
       } else {
-        this.logger.warn('⚠️ Proceeding without webhook secret (development or fallback enabled)');
+        this.logger.warn(
+          '⚠️ Proceeding without webhook secret (development or fallback enabled)',
+        );
       }
     }
 
@@ -884,55 +949,89 @@ export class PaymentService {
       rawBodyLength: rawBody ? rawBody.length : 0,
       signatureProvided: !!signature,
       webhookSecretConfigured: !!webhookSecret,
-      webhookSecretPrefix: webhookSecret ? webhookSecret.substring(0, 10) + '...' : 'NOT_SET'
+      webhookSecretPrefix: webhookSecret
+        ? webhookSecret.substring(0, 10) + '...'
+        : 'NOT_SET',
     });
 
     let event: Stripe.Event;
 
     try {
       // Check if we should bypass signature verification
-      const shouldBypassVerification = isDevelopment ||
-        this.configService.get<string>('BYPASS_WEBHOOK_VERIFICATION') === 'true';
+      const shouldBypassVerification =
+        isDevelopment ||
+        this.configService.get<string>('BYPASS_WEBHOOK_VERIFICATION') ===
+          'true';
 
       if (shouldBypassVerification && (!webhookSecret || !signature)) {
-        this.logger.warn('🔓 BYPASSING webhook signature verification (development or configured bypass)');
+        this.logger.warn(
+          '🔓 BYPASSING webhook signature verification (development or configured bypass)',
+        );
         const bodyString = rawBody.toString('utf8');
         event = JSON.parse(bodyString) as Stripe.Event;
-        this.logger.warn(`⚠️ Processing webhook without verification: ${event.type}`);
+        this.logger.warn(
+          `⚠️ Processing webhook without verification: ${event.type}`,
+        );
       } else {
         // Try different body formats for Fastify compatibility
         let bodyForVerification: string | Buffer = rawBody;
 
         // First attempt with raw body as-is
         try {
-          event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-          this.logger.log(`✅ Stripe webhook event verified successfully with raw body: ${event.type}`);
+          event = this.stripe.webhooks.constructEvent(
+            rawBody,
+            signature,
+            webhookSecret,
+          );
+          this.logger.log(
+            `✅ Stripe webhook event verified successfully with raw body: ${event.type}`,
+          );
         } catch (firstError) {
-        this.logger.warn(`First verification attempt failed: ${firstError.message}`);
+          this.logger.warn(
+            `First verification attempt failed: ${firstError.message}`,
+          );
 
-        // Second attempt: convert to string and back to buffer
-        try {
-          const bodyString = rawBody.toString('utf8');
-          const bodyBuffer = Buffer.from(bodyString, 'utf8');
-          event = this.stripe.webhooks.constructEvent(bodyBuffer, signature, webhookSecret);
-          this.logger.log(`✅ Stripe webhook event verified successfully with converted body: ${event.type}`);
-        } catch (secondError) {
-          this.logger.warn(`Second verification attempt failed: ${secondError.message}`);
-
-          // Third attempt: try with string directly
+          // Second attempt: convert to string and back to buffer
           try {
             const bodyString = rawBody.toString('utf8');
-            event = this.stripe.webhooks.constructEvent(bodyString, signature, webhookSecret);
-            this.logger.log(`✅ Stripe webhook event verified successfully with string body: ${event.type}`);
-          } catch (thirdError) {
-            this.logger.error(`All verification attempts failed. Last error: ${thirdError.message}`);
-            throw thirdError;
+            const bodyBuffer = Buffer.from(bodyString, 'utf8');
+            event = this.stripe.webhooks.constructEvent(
+              bodyBuffer,
+              signature,
+              webhookSecret,
+            );
+            this.logger.log(
+              `✅ Stripe webhook event verified successfully with converted body: ${event.type}`,
+            );
+          } catch (secondError) {
+            this.logger.warn(
+              `Second verification attempt failed: ${secondError.message}`,
+            );
+
+            // Third attempt: try with string directly
+            try {
+              const bodyString = rawBody.toString('utf8');
+              event = this.stripe.webhooks.constructEvent(
+                bodyString,
+                signature,
+                webhookSecret,
+              );
+              this.logger.log(
+                `✅ Stripe webhook event verified successfully with string body: ${event.type}`,
+              );
+            } catch (thirdError) {
+              this.logger.error(
+                `All verification attempts failed. Last error: ${thirdError.message}`,
+              );
+              throw thirdError;
+            }
           }
-        }
         }
       }
 
-      this.logger.log(`Event ID: ${event.id}, Created: ${new Date(event.created * 1000).toISOString()}`);
+      this.logger.log(
+        `Event ID: ${event.id}, Created: ${new Date(event.created * 1000).toISOString()}`,
+      );
 
       if (event.data && event.data.object) {
         const obj = event.data.object as any;
@@ -940,16 +1039,22 @@ export class PaymentService {
           id: obj.id,
           object: obj.object,
           status: obj.status,
-          metadata: obj.metadata
+          metadata: obj.metadata,
         });
       }
     } catch (error) {
-      this.logger.error(`❌ Webhook signature verification failed: ${error.message}`);
+      this.logger.error(
+        `❌ Webhook signature verification failed: ${error.message}`,
+      );
       this.logger.error(`Raw body type: ${typeof rawBody}`);
       this.logger.error(`Raw body length: ${rawBody ? rawBody.length : 0}`);
       this.logger.error(`Raw body is Buffer: ${Buffer.isBuffer(rawBody)}`);
-      this.logger.error(`Raw body preview: ${rawBody ? rawBody.toString().substring(0, 200) + '...' : 'NULL'}`);
-      this.logger.error(`Signature preview: ${signature ? signature.substring(0, 50) + '...' : 'NULL'}`);
+      this.logger.error(
+        `Raw body preview: ${rawBody ? rawBody.toString().substring(0, 200) + '...' : 'NULL'}`,
+      );
+      this.logger.error(
+        `Signature preview: ${signature ? signature.substring(0, 50) + '...' : 'NULL'}`,
+      );
       this.logger.error(`Webhook secret configured: ${!!webhookSecret}`);
 
       // PRODUCTION FALLBACK: Process webhook without signature verification
@@ -960,28 +1065,45 @@ export class PaymentService {
           const eventData = JSON.parse(bodyString);
 
           // Validate that this looks like a legitimate Stripe webhook
-          if (eventData.object === 'event' &&
-              eventData.type &&
-              eventData.data &&
-              eventData.id &&
-              eventData.id.startsWith('evt_')) {
-
-            this.logger.warn(`🔓 FALLBACK: Processing webhook without signature verification`);
-            this.logger.warn(`Event type: ${eventData.type}, Event ID: ${eventData.id}`);
-            this.logger.warn(`Reason: Signature verification failed (likely due to proxy/nginx)`);
+          if (
+            eventData.object === 'event' &&
+            eventData.type &&
+            eventData.data &&
+            eventData.id &&
+            eventData.id.startsWith('evt_')
+          ) {
+            this.logger.warn(
+              `🔓 FALLBACK: Processing webhook without signature verification`,
+            );
+            this.logger.warn(
+              `Event type: ${eventData.type}, Event ID: ${eventData.id}`,
+            );
+            this.logger.warn(
+              `Reason: Signature verification failed (likely due to proxy/nginx)`,
+            );
 
             event = eventData as Stripe.Event;
           } else {
             this.logger.error(`Invalid webhook structure - not processing`);
-            this.logger.error(`Missing required fields: object, type, data, or invalid event ID`);
-            throw new BadRequestException('Invalid webhook signature and invalid webhook structure');
+            this.logger.error(
+              `Missing required fields: object, type, data, or invalid event ID`,
+            );
+            throw new BadRequestException(
+              'Invalid webhook signature and invalid webhook structure',
+            );
           }
         } catch (parseError) {
-          this.logger.error(`Cannot parse webhook body as JSON: ${parseError.message}`);
-          throw new BadRequestException('Invalid webhook signature and unparseable body');
+          this.logger.error(
+            `Cannot parse webhook body as JSON: ${parseError.message}`,
+          );
+          throw new BadRequestException(
+            'Invalid webhook signature and unparseable body',
+          );
         }
       } else {
-        this.logger.error(`Webhook signature verification failed and fallback is disabled`);
+        this.logger.error(
+          `Webhook signature verification failed and fallback is disabled`,
+        );
         throw new BadRequestException('Invalid webhook signature');
       }
     }
@@ -990,13 +1112,19 @@ export class PaymentService {
       // Handle different event types
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentIntentSucceeded(
+            event.data.object as Stripe.PaymentIntent,
+          );
           break;
         case 'payment_intent.payment_failed':
-          await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentIntentFailed(
+            event.data.object as Stripe.PaymentIntent,
+          );
           break;
         case 'payment_intent.canceled':
-          await this.handlePaymentIntentCanceled(event.data.object as Stripe.PaymentIntent);
+          await this.handlePaymentIntentCanceled(
+            event.data.object as Stripe.PaymentIntent,
+          );
           break;
         default:
           this.logger.log(`Unhandled webhook event type: ${event.type}`);
@@ -1012,22 +1140,32 @@ export class PaymentService {
   /**
    * Handle successful payment intent
    */
-  private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  private async handlePaymentIntentSucceeded(
+    paymentIntent: Stripe.PaymentIntent,
+  ) {
     this.logger.log('=== HANDLING PAYMENT INTENT SUCCEEDED ===');
     this.logger.log(`Payment Intent ID: ${paymentIntent.id}`);
     this.logger.log(`Payment Intent Status: ${paymentIntent.status}`);
-    this.logger.log(`Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+    this.logger.log(
+      `Payment Intent Amount: ${paymentIntent.amount} ${paymentIntent.currency}`,
+    );
     this.logger.log(`Payment Intent Metadata:`, paymentIntent.metadata);
 
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (!bookingId) {
-      this.logger.error(`❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`);
-      this.logger.error(`Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`);
+      this.logger.error(
+        `❌ No booking ID found in payment intent metadata: ${paymentIntent.id}`,
+      );
+      this.logger.error(
+        `Available metadata keys: ${Object.keys(paymentIntent.metadata).join(', ')}`,
+      );
       return;
     }
 
-    this.logger.log(`✅ Processing successful payment for booking: ${bookingId}`);
+    this.logger.log(
+      `✅ Processing successful payment for booking: ${bookingId}`,
+    );
 
     try {
       // Find and update the booking
@@ -1035,7 +1173,9 @@ export class PaymentService {
       const booking = await this.bookingModel.findById(bookingId);
       if (!booking) {
         this.logger.error(`❌ Booking not found: ${bookingId}`);
-        this.logger.error(`This could indicate the booking was deleted or the ID is incorrect`);
+        this.logger.error(
+          `This could indicate the booking was deleted or the ID is incorrect`,
+        );
         return;
       }
 
@@ -1044,7 +1184,7 @@ export class PaymentService {
         ref: booking.bookingRef,
         currentStatus: booking.status,
         currentPaymentStatus: booking.paymentStatus,
-        userId: booking.userId.toString()
+        userId: booking.userId.toString(),
       });
 
       // Update booking status
@@ -1066,7 +1206,7 @@ export class PaymentService {
           ref: updatedBooking.bookingRef,
           newStatus: updatedBooking.status,
           newPaymentStatus: updatedBooking.paymentStatus,
-          paymentCompletedAt: updatedBooking.paymentCompletedAt
+          paymentCompletedAt: updatedBooking.paymentCompletedAt,
         });
       } else {
         this.logger.error(`❌ Failed to update booking ${bookingId}`);
@@ -1074,12 +1214,21 @@ export class PaymentService {
       }
 
       // Check if payment record already exists to prevent duplicates
-      this.logger.log(`🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`);
-      const existingPayment = await this.paymentTransactionService.findByTransactionId(paymentIntent.id);
+      this.logger.log(
+        `🔍 Checking for existing payment record for transaction: ${paymentIntent.id}`,
+      );
+      const existingPayment =
+        await this.paymentTransactionService.findByTransactionId(
+          paymentIntent.id,
+        );
 
       if (existingPayment) {
-        this.logger.log(`⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`);
-        this.logger.log(`Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`);
+        this.logger.log(
+          `⚠️ Payment record already exists for transaction ${paymentIntent.id}, skipping creation`,
+        );
+        this.logger.log(
+          `Existing payment ID: ${existingPayment._id}, Status: ${existingPayment.status}`,
+        );
       } else {
         // Create payment record
         this.logger.log(`🔄 Creating payment record for booking: ${bookingId}`);
@@ -1088,17 +1237,23 @@ export class PaymentService {
         let paymentAmount = 0;
         if (paymentIntent.amount && typeof paymentIntent.amount === 'number') {
           paymentAmount = paymentIntent.amount / 100; // Convert from cents
-          this.logger.log(`💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`);
+          this.logger.log(
+            `💰 Using payment intent amount: ${paymentIntent.amount} cents = $${paymentAmount}`,
+          );
         } else {
           paymentAmount = updatedBooking.totalPrice;
-          this.logger.log(`💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`);
+          this.logger.log(
+            `💰 Using booking total price: $${paymentAmount} (payment intent amount not available)`,
+          );
         }
 
         const paymentData: CreatePaymentDto = {
           userId: updatedBooking.userId.toString(),
           bookingId: updatedBooking._id.toString(),
           amount: paymentAmount,
-          currency: paymentIntent.currency ? paymentIntent.currency.toUpperCase() : updatedBooking.currency,
+          currency: paymentIntent.currency
+            ? paymentIntent.currency.toUpperCase()
+            : updatedBooking.currency,
           provider: PaymentProvider.STRIPE,
           method: PaymentMethod.CREDIT_CARD,
           transactionId: paymentIntent.id,
@@ -1116,20 +1271,23 @@ export class PaymentService {
           method: paymentData.method,
           transactionId: paymentData.transactionId,
           isTest: paymentData.isTest,
-          status: paymentData.status
+          status: paymentData.status,
         });
 
         try {
-          const createdPayment = await this.paymentTransactionService.createPayment(paymentData);
+          const createdPayment =
+            await this.paymentTransactionService.createPayment(paymentData);
           this.logger.log(`✅ Payment record created successfully:`, {
             paymentId: createdPayment._id.toString(),
             bookingId: createdPayment.bookingId,
             amount: createdPayment.amount,
             status: createdPayment.status,
-            transactionId: createdPayment.transactionId
+            transactionId: createdPayment.transactionId,
           });
         } catch (paymentError) {
-          this.logger.error(`❌ Failed to create payment record: ${paymentError.message}`);
+          this.logger.error(
+            `❌ Failed to create payment record: ${paymentError.message}`,
+          );
           this.logger.error(`Payment error stack:`, paymentError.stack);
           // Don't throw here - we still want to send the email even if payment record fails
         }
@@ -1138,9 +1296,10 @@ export class PaymentService {
       // Send confirmation email
       await this.sendBookingConfirmationEmail(updatedBooking);
       this.logger.log(`Sent confirmation email for booking: ${bookingId}`);
-
     } catch (error) {
-      this.logger.error(`Error processing successful payment webhook: ${error.message}`);
+      this.logger.error(
+        `Error processing successful payment webhook: ${error.message}`,
+      );
     }
   }
 
@@ -1151,7 +1310,9 @@ export class PaymentService {
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (!bookingId) {
-      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      this.logger.error(
+        `No booking ID found in payment intent metadata: ${paymentIntent.id}`,
+      );
       return;
     }
 
@@ -1166,18 +1327,24 @@ export class PaymentService {
 
       this.logger.log(`Updated booking ${bookingId} status to failed`);
     } catch (error) {
-      this.logger.error(`Error processing failed payment webhook: ${error.message}`);
+      this.logger.error(
+        `Error processing failed payment webhook: ${error.message}`,
+      );
     }
   }
 
   /**
    * Handle canceled payment intent
    */
-  private async handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) {
+  private async handlePaymentIntentCanceled(
+    paymentIntent: Stripe.PaymentIntent,
+  ) {
     const bookingId = paymentIntent.metadata.bookingId;
 
     if (!bookingId) {
-      this.logger.error(`No booking ID found in payment intent metadata: ${paymentIntent.id}`);
+      this.logger.error(
+        `No booking ID found in payment intent metadata: ${paymentIntent.id}`,
+      );
       return;
     }
 
@@ -1192,7 +1359,9 @@ export class PaymentService {
 
       this.logger.log(`Updated booking ${bookingId} status to canceled`);
     } catch (error) {
-      this.logger.error(`Error processing canceled payment webhook: ${error.message}`);
+      this.logger.error(
+        `Error processing canceled payment webhook: ${error.message}`,
+      );
     }
   }
 

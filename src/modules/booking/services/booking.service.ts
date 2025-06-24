@@ -1,8 +1,22 @@
-import { Injectable, NotFoundException, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Booking, BookingDocument, FlightData } from '../schemas/booking.schema';
-import { CreateBookingDto, BookingType, FlightType } from '../dto/create-booking.dto';
+import {
+  Booking,
+  BookingDocument,
+  FlightData,
+} from '../schemas/booking.schema';
+import {
+  CreateBookingDto,
+  BookingType,
+  FlightType,
+} from '../dto/create-booking.dto';
 import { FlightService } from 'src/modules/flight/flight.service';
 import { EmailService } from 'src/modules/email/email.service';
 import { SeatAssignmentService } from './seat-assignment.service';
@@ -21,8 +35,13 @@ export class BookingService {
     private readonly seatAssignmentService: SeatAssignmentService,
     private readonly configService: ConfigService,
   ) {
-    this.bookingTimeoutMinutes = this.configService.get<number>('BOOKING_TIMEOUT_MINUTES', 5);
-    this.logger.log(`Booking timeout set to ${this.bookingTimeoutMinutes} minutes`);
+    this.bookingTimeoutMinutes = this.configService.get<number>(
+      'BOOKING_TIMEOUT_MINUTES',
+      5,
+    );
+    this.logger.log(
+      `Booking timeout set to ${this.bookingTimeoutMinutes} minutes`,
+    );
   }
 
   async createBooking(
@@ -87,13 +106,15 @@ export class BookingService {
       // Handle one-way booking (backward compatibility)
       bookingData.flightId = createBookingDto.flightID;
       bookingData.originAirportCode = createBookingDto.originAirportCode;
-      bookingData.destinationAirportCode = createBookingDto.destinationAirportCode;
+      bookingData.destinationAirportCode =
+        createBookingDto.destinationAirportCode;
       bookingData.originCity = createBookingDto.originCIty;
       bookingData.destinationCity = createBookingDto.destinationCIty;
       bookingData.departureDate = new Date(createBookingDto.departureDate!);
       bookingData.arrivalDate = new Date(createBookingDto.arrivalDate!);
       bookingData.numberOfStops = createBookingDto.numberOfStops;
-      bookingData.selectedBaggageOption = createBookingDto.selectedBaggageOption;
+      bookingData.selectedBaggageOption =
+        createBookingDto.selectedBaggageOption;
     }
 
     const newBooking = new this.bookingModel(bookingData);
@@ -107,7 +128,9 @@ export class BookingService {
       // Assign seats to travelers after booking is created
       try {
         await this.assignSeatsToBooking(savedBooking._id.toString());
-        this.logger.log(`Seat assignment completed for booking: ${savedBooking._id.toString()}`);
+        this.logger.log(
+          `Seat assignment completed for booking: ${savedBooking._id.toString()}`,
+        );
       } catch (seatError) {
         this.logger.error(
           `Failed to assign seats for booking ${savedBooking._id.toString()}: ${seatError instanceof Error ? seatError.message : 'Unknown error'}`,
@@ -146,7 +169,7 @@ export class BookingService {
     // Generate seat assignments
     const seatAssignments = await this.seatAssignmentService.assignSeats(
       booking.travellersInfo,
-      'economy' // Default to economy class
+      'economy', // Default to economy class
     );
 
     if (seatAssignments.length === 0) {
@@ -155,47 +178,67 @@ export class BookingService {
     }
 
     // Apply seat assignments to travelers
-    const updatedTravelers = await this.seatAssignmentService.applySeatAssignments(
-      booking.travellersInfo,
-      seatAssignments
-    );
+    const updatedTravelers =
+      await this.seatAssignmentService.applySeatAssignments(
+        booking.travellersInfo,
+        seatAssignments,
+      );
 
     // Update the booking with seat assignments
-    await this.bookingModel.findByIdAndUpdate(
-      bookingId,
-      {
-        $set: {
-          travellersInfo: updatedTravelers
-        }
-      }
-    );
+    await this.bookingModel.findByIdAndUpdate(bookingId, {
+      $set: {
+        travellersInfo: updatedTravelers,
+      },
+    });
 
     // Log seat assignment summary
-    const summary = this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
-    this.logger.log(`Seat assignment completed for booking ${bookingId}: ${summary}`);
+    const summary =
+      this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
+    this.logger.log(
+      `Seat assignment completed for booking ${bookingId}: ${summary}`,
+    );
 
     // Validate assignments
-    const validation = this.seatAssignmentService.validateSeatAssignments(seatAssignments);
+    const validation =
+      this.seatAssignmentService.validateSeatAssignments(seatAssignments);
     if (!validation.isValid) {
-      this.logger.warn(`Seat assignment validation failed for booking ${bookingId}: ${validation.errors.join(', ')}`);
+      this.logger.warn(
+        `Seat assignment validation failed for booking ${bookingId}: ${validation.errors.join(', ')}`,
+      );
     }
   }
 
-  private validateBookingData(createBookingDto: CreateBookingDto, bookingType: BookingType): void {
+  private validateBookingData(
+    createBookingDto: CreateBookingDto,
+    bookingType: BookingType,
+  ): void {
     if (bookingType === BookingType.ROUND_TRIP) {
-      if (!createBookingDto.flightData || createBookingDto.flightData.length === 0) {
-        throw new BadRequestException('Flight data is required for round-trip bookings');
+      if (
+        !createBookingDto.flightData ||
+        createBookingDto.flightData.length === 0
+      ) {
+        throw new BadRequestException(
+          'Flight data is required for round-trip bookings',
+        );
       }
 
       if (createBookingDto.flightData.length !== 2) {
-        throw new BadRequestException('Round-trip bookings must have exactly 2 flights (GO and RETURN)');
+        throw new BadRequestException(
+          'Round-trip bookings must have exactly 2 flights (GO and RETURN)',
+        );
       }
 
-      const goFlight = createBookingDto.flightData.find(f => f.typeOfFlight === FlightType.GO);
-      const returnFlight = createBookingDto.flightData.find(f => f.typeOfFlight === FlightType.RETURN);
+      const goFlight = createBookingDto.flightData.find(
+        (f) => f.typeOfFlight === FlightType.GO,
+      );
+      const returnFlight = createBookingDto.flightData.find(
+        (f) => f.typeOfFlight === FlightType.RETURN,
+      );
 
       if (!goFlight || !returnFlight) {
-        throw new BadRequestException('Round-trip bookings must have one GO flight and one RETURN flight');
+        throw new BadRequestException(
+          'Round-trip bookings must have one GO flight and one RETURN flight',
+        );
       }
 
       // Validate that return flight departs after go flight arrives
@@ -203,14 +246,22 @@ export class BookingService {
       const returnDeparture = new Date(returnFlight.departureDate);
 
       if (returnDeparture <= goArrival) {
-        throw new BadRequestException('Return flight must depart after the arrival of the outbound flight');
+        throw new BadRequestException(
+          'Return flight must depart after the arrival of the outbound flight',
+        );
       }
     } else {
       // Validate one-way booking fields
-      if (!createBookingDto.flightID || !createBookingDto.originAirportCode ||
-          !createBookingDto.destinationAirportCode || !createBookingDto.departureDate ||
-          !createBookingDto.arrivalDate) {
-        throw new BadRequestException('All flight details are required for one-way bookings');
+      if (
+        !createBookingDto.flightID ||
+        !createBookingDto.originAirportCode ||
+        !createBookingDto.destinationAirportCode ||
+        !createBookingDto.departureDate ||
+        !createBookingDto.arrivalDate
+      ) {
+        throw new BadRequestException(
+          'All flight details are required for one-way bookings',
+        );
       }
     }
   }
@@ -244,14 +295,16 @@ export class BookingService {
    */
   async assignSeatsToExistingBooking(
     bookingId: string,
-    cabinClass: 'economy' | 'business' = 'economy'
+    cabinClass: 'economy' | 'business' = 'economy',
   ): Promise<BookingDocument> {
     this.logger.log(`Manually assigning seats to booking: ${bookingId}`);
 
     const booking = await this.getBookingById(bookingId);
 
     // Check if seats are already assigned
-    const hasSeats = booking.travellersInfo.some(traveler => traveler.seatNumber);
+    const hasSeats = booking.travellersInfo.some(
+      (traveler) => traveler.seatNumber,
+    );
     if (hasSeats) {
       this.logger.warn(`Booking ${bookingId} already has seat assignments`);
       return booking;
@@ -260,7 +313,7 @@ export class BookingService {
     // Generate and apply seat assignments
     const seatAssignments = await this.seatAssignmentService.assignSeats(
       booking.travellersInfo,
-      cabinClass
+      cabinClass,
     );
 
     if (seatAssignments.length === 0) {
@@ -268,24 +321,28 @@ export class BookingService {
       return booking;
     }
 
-    const updatedTravelers = await this.seatAssignmentService.applySeatAssignments(
-      booking.travellersInfo,
-      seatAssignments
-    );
+    const updatedTravelers =
+      await this.seatAssignmentService.applySeatAssignments(
+        booking.travellersInfo,
+        seatAssignments,
+      );
 
     // Update the booking
     const updatedBooking = await this.bookingModel.findByIdAndUpdate(
       bookingId,
       {
         $set: {
-          travellersInfo: updatedTravelers
-        }
+          travellersInfo: updatedTravelers,
+        },
       },
-      { new: true }
+      { new: true },
     );
 
-    const summary = this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
-    this.logger.log(`Manual seat assignment completed for booking ${bookingId}: ${summary}`);
+    const summary =
+      this.seatAssignmentService.getSeatAssignmentSummary(seatAssignments);
+    this.logger.log(
+      `Manual seat assignment completed for booking ${bookingId}: ${summary}`,
+    );
 
     return updatedBooking;
   }
@@ -329,31 +386,35 @@ export class BookingService {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async handlePendingBookingsTimeout() {
-    const timeoutDate = new Date(Date.now() - this.bookingTimeoutMinutes * 60 * 1000);
+    const timeoutDate = new Date(
+      Date.now() - this.bookingTimeoutMinutes * 60 * 1000,
+    );
 
     try {
       const result = await this.bookingModel.updateMany(
         {
           status: 'pending',
           paymentStatus: 'pending',
-          createdAt: { $lt: timeoutDate }
+          createdAt: { $lt: timeoutDate },
         },
         {
           $set: {
             status: 'cancelled',
-            paymentStatus: 'failed'
-          }
-        }
+            paymentStatus: 'failed',
+          },
+        },
       );
 
       if (result.modifiedCount > 0) {
-        this.logger.log(`Cancelled ${result.modifiedCount} pending bookings due to timeout`);
-        
+        this.logger.log(
+          `Cancelled ${result.modifiedCount} pending bookings due to timeout`,
+        );
+
         // Get the cancelled bookings to send notifications
         const cancelledBookings = await this.bookingModel.find({
           status: 'cancelled',
           paymentStatus: 'failed',
-          updatedAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // Last 5 minutes
+          updatedAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // Last 5 minutes
         });
 
         // Send notifications for each cancelled booking
@@ -374,10 +435,13 @@ export class BookingService {
             await this.emailService.sendImportantEmail(
               booking.contactDetails.email,
               'Booking Cancelled - Payment Timeout',
-              html
+              html,
             );
           } catch (emailError) {
-            this.logger.error(`Failed to send cancellation email for booking ${booking.bookingRef}:`, emailError);
+            this.logger.error(
+              `Failed to send cancellation email for booking ${booking.bookingRef}:`,
+              emailError,
+            );
           }
         }
       }
@@ -389,9 +453,11 @@ export class BookingService {
   async cancelBooking(
     bookingId: string,
     userId: string,
-    reason?: string
+    reason?: string,
   ): Promise<BookingDocument> {
-    this.logger.log(`Attempting to cancel booking ${bookingId} for user ${userId}`);
+    this.logger.log(
+      `Attempting to cancel booking ${bookingId} for user ${userId}`,
+    );
 
     // 1. Find and validate booking
     const booking = await this.bookingModel.findById(bookingId);
@@ -401,7 +467,9 @@ export class BookingService {
 
     // 2. Verify ownership
     if (booking.userId.toString() !== userId) {
-      throw new ForbiddenException('You are not authorized to cancel this booking');
+      throw new ForbiddenException(
+        'You are not authorized to cancel this booking',
+      );
     }
 
     // 3. Check if booking is already cancelled
@@ -421,10 +489,10 @@ export class BookingService {
         $set: {
           status: 'cancelled',
           cancellationReason: reason,
-          cancelledAt: new Date()
-        }
+          cancelledAt: new Date(),
+        },
       },
-      { new: true }
+      { new: true },
     );
 
     // 6. Send cancellation notification
@@ -444,10 +512,13 @@ export class BookingService {
       await this.emailService.sendImportantEmail(
         booking.contactDetails.email,
         'Booking Cancelled',
-        html
+        html,
       );
     } catch (emailError) {
-      this.logger.error(`Failed to send cancellation email for booking ${booking.bookingRef}:`, emailError);
+      this.logger.error(
+        `Failed to send cancellation email for booking ${booking.bookingRef}:`,
+        emailError,
+      );
     }
 
     this.logger.log(`Booking ${bookingId} cancelled successfully`);

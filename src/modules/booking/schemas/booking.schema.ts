@@ -1,6 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { BookingType, FlightType, TravelerType } from '../dto/create-booking.dto';
+import {
+  BookingType,
+  FlightType,
+  TravelerType,
+} from '../dto/create-booking.dto';
 
 export type BookingDocument = Booking & Document;
 
@@ -18,7 +22,7 @@ export class TravelerInfo {
   @Prop({
     required: true,
     type: String,
-    enum: Object.values(TravelerType)
+    enum: Object.values(TravelerType),
   })
   travelerType: TravelerType;
 
@@ -86,7 +90,7 @@ export class Booking {
   @Prop({
     type: String,
     enum: ['ONE_WAY', 'ROUND_TRIP'],
-    default: 'ONE_WAY'
+    default: 'ONE_WAY',
   })
   bookingType: BookingType;
 

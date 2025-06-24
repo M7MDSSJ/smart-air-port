@@ -275,7 +275,8 @@ export class CreateBookingDto {
   // For round-trip bookings, use flightData array
   @ApiProperty({
     type: [FlightDataDto],
-    description: 'Array of flight data (required for round-trip, optional for one-way)',
+    description:
+      'Array of flight data (required for round-trip, optional for one-way)',
     required: false,
   })
   @IsOptional()
@@ -306,7 +307,9 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
-  @IsNotEmpty({ message: 'Origin airport code is required for one-way bookings' })
+  @IsNotEmpty({
+    message: 'Origin airport code is required for one-way bookings',
+  })
   @MinLength(3, { message: 'Airport code must be 3 characters' })
   originAirportCode?: string;
 
@@ -318,7 +321,9 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !o.flightData || o.bookingType === BookingType.ONE_WAY)
-  @IsNotEmpty({ message: 'Destination airport code is required for one-way bookings' })
+  @IsNotEmpty({
+    message: 'Destination airport code is required for one-way bookings',
+  })
   @MinLength(3, { message: 'Airport code must be 3 characters' })
   destinationAirportCode?: string;
 

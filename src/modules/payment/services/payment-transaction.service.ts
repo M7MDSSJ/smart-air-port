@@ -87,7 +87,9 @@ export class PaymentTransactionService {
   /**
    * Find payment by transaction ID
    */
-  async findByTransactionId(transactionId: string): Promise<PaymentDocument | null> {
+  async findByTransactionId(
+    transactionId: string,
+  ): Promise<PaymentDocument | null> {
     return this.paymentModel.findOne({ transactionId }).exec();
   }
 
@@ -101,7 +103,9 @@ export class PaymentTransactionService {
   /**
    * Find payment by booking ID (alias for compatibility)
    */
-  async findPaymentByBookingId(bookingId: string): Promise<PaymentDocument | null> {
+  async findPaymentByBookingId(
+    bookingId: string,
+  ): Promise<PaymentDocument | null> {
     return this.findByBookingId(bookingId);
   }
 
@@ -112,7 +116,9 @@ export class PaymentTransactionService {
     try {
       return await this.paymentModel.find({ bookingId }).exec();
     } catch (error) {
-      this.logger.error(`Failed to find payments by booking ID: ${error.message}`);
+      this.logger.error(
+        `Failed to find payments by booking ID: ${error.message}`,
+      );
       throw error;
     }
   }

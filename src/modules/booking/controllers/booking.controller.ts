@@ -128,14 +128,14 @@ export class BookingController {
   async cancelBooking(
     @Param('id') bookingId: string,
     @User() user: JwtUser,
-    @Body() cancelBookingDto: CancelBookingDto
+    @Body() cancelBookingDto: CancelBookingDto,
   ) {
     this.logger.log(`Cancelling booking ${bookingId} for user ${user.id}`);
 
     const cancelledBooking = await this.bookingService.cancelBooking(
       bookingId,
       user.id,
-      cancelBookingDto.reason
+      cancelBookingDto.reason,
     );
 
     return {
@@ -146,10 +146,10 @@ export class BookingController {
         bookingRef: cancelledBooking.bookingRef,
         status: cancelledBooking.status,
         cancelledAt: cancelledBooking.cancelledAt,
-        cancellationReason: cancelledBooking.cancellationReason
+        cancellationReason: cancelledBooking.cancellationReason,
       },
       error: null,
-      meta: null
+      meta: null,
     };
   }
 
@@ -159,9 +159,11 @@ export class BookingController {
   async assignSeats(
     @Param('id') bookingId: string,
     @User() user: JwtUser,
-    @Query('cabinClass') cabinClass?: 'economy' | 'business'
+    @Query('cabinClass') cabinClass?: 'economy' | 'business',
   ) {
-    this.logger.log(`Assigning seats to booking ${bookingId} for user ${user.id}`);
+    this.logger.log(
+      `Assigning seats to booking ${bookingId} for user ${user.id}`,
+    );
 
     // First verify the booking belongs to the user
     const booking = await this.bookingService.getBookingById(bookingId);
@@ -171,10 +173,11 @@ export class BookingController {
       );
     }
 
-    const updatedBooking = await this.bookingService.assignSeatsToExistingBooking(
-      bookingId,
-      cabinClass || 'economy'
-    );
+    const updatedBooking =
+      await this.bookingService.assignSeatsToExistingBooking(
+        bookingId,
+        cabinClass || 'economy',
+      );
 
     return {
       success: true,
@@ -184,16 +187,16 @@ export class BookingController {
         bookingRef: updatedBooking.bookingRef,
         travellersInfo: updatedBooking.travellersInfo,
         seatAssignments: updatedBooking.travellersInfo
-          .filter(traveler => traveler.seatNumber)
-          .map(traveler => ({
+          .filter((traveler) => traveler.seatNumber)
+          .map((traveler) => ({
             name: `${traveler.firstName} ${traveler.lastName}`,
             travelerType: traveler.travelerType,
             seatNumber: traveler.seatNumber,
-            assignedAt: traveler.seatAssignedAt
-          }))
+            assignedAt: traveler.seatAssignedAt,
+          })),
       },
       error: null,
-      meta: null
+      meta: null,
     };
   }
 }

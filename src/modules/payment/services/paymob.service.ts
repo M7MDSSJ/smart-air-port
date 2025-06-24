@@ -104,8 +104,6 @@ export class PaymobService {
     }
   }
 
-
-
   /**
    * Get transaction details from Paymob
    */
@@ -909,7 +907,7 @@ export class PaymobService {
     if (booking.bookingType === 'ROUND_TRIP' && booking.flightData) {
       return {
         ...baseData,
-        flightData: booking.flightData.map(flight => ({
+        flightData: booking.flightData.map((flight) => ({
           flightID: flight.flightID,
           typeOfFlight: flight.typeOfFlight,
           numberOfStops: flight.numberOfStops,

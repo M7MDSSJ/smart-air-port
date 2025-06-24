@@ -10,4 +10,4 @@ export class CancelBookingDto {
   @IsString()
   @IsOptional()
   reason?: string;
-} 
+}

@@ -141,17 +141,26 @@ export class EmailTemplateService {
     );
 
     // Determine if this is a round-trip or one-way booking
-    const isRoundTrip = bookingData.bookingType === BookingType.ROUND_TRIP && bookingData.flightData;
+    const isRoundTrip =
+      bookingData.bookingType === BookingType.ROUND_TRIP &&
+      bookingData.flightData;
 
     let flightDetailsHtml = '';
 
     if (isRoundTrip && bookingData.flightData) {
       // Handle round-trip booking
-      const goFlight = bookingData.flightData.find(f => f.typeOfFlight === FlightType.GO);
-      const returnFlight = bookingData.flightData.find(f => f.typeOfFlight === FlightType.RETURN);
+      const goFlight = bookingData.flightData.find(
+        (f) => f.typeOfFlight === FlightType.GO,
+      );
+      const returnFlight = bookingData.flightData.find(
+        (f) => f.typeOfFlight === FlightType.RETURN,
+      );
 
       if (goFlight && returnFlight) {
-        flightDetailsHtml = this.generateRoundTripFlightHtml(goFlight, returnFlight);
+        flightDetailsHtml = this.generateRoundTripFlightHtml(
+          goFlight,
+          returnFlight,
+        );
       }
     } else {
       // Handle one-way booking (legacy)
@@ -171,7 +180,7 @@ export class EmailTemplateService {
           departureTime,
           arrivalDate,
           arrivalTime,
-          selectedBaggageOption: bookingData.selectedBaggageOption
+          selectedBaggageOption: bookingData.selectedBaggageOption,
         });
       }
     }
@@ -453,7 +462,10 @@ export class EmailTemplateService {
   /**
    * Generate HTML for round-trip flights
    */
-  private generateRoundTripFlightHtml(goFlight: FlightEmailData, returnFlight: FlightEmailData): string {
+  private generateRoundTripFlightHtml(
+    goFlight: FlightEmailData,
+    returnFlight: FlightEmailData,
+  ): string {
     const goDepartureDate = this.formatDate(goFlight.departureDate);
     const goDepartureTime = this.formatTime(goFlight.departureDate);
     const goArrivalDate = this.formatDate(goFlight.arrivalDate);
@@ -464,8 +476,12 @@ export class EmailTemplateService {
     const returnArrivalDate = this.formatDate(returnFlight.arrivalDate);
     const returnArrivalTime = this.formatTime(returnFlight.arrivalDate);
 
-    const goBaggageHtml = this.generateBaggageHtml(goFlight.selectedBaggageOption);
-    const returnBaggageHtml = this.generateBaggageHtml(returnFlight.selectedBaggageOption);
+    const goBaggageHtml = this.generateBaggageHtml(
+      goFlight.selectedBaggageOption,
+    );
+    const returnBaggageHtml = this.generateBaggageHtml(
+      returnFlight.selectedBaggageOption,
+    );
 
     return `
       <div class="flight-info">
@@ -545,7 +561,9 @@ export class EmailTemplateService {
     arrivalTime: string;
     selectedBaggageOption?: any;
   }): string {
-    const baggageHtml = this.generateBaggageHtml(flightData.selectedBaggageOption);
+    const baggageHtml = this.generateBaggageHtml(
+      flightData.selectedBaggageOption,
+    );
 
     return `
       <div class="flight-info">
