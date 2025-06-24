@@ -8,7 +8,7 @@ export class HealthController {
   @ApiOperation({ summary: 'Check API health status' })
   healthCheck() {
     return {
-     "VM2 TEST"
+     "change ip domain"
     };
   }
 }
