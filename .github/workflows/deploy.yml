@@ -3,28 +3,40 @@ name: Deploy to Azure VM
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "🚀 Starting deployment script..."
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+            cd smart-air-port
 
-    - name: Deploy and Restart App
-      run: |
-        ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-          cd ~/smart-air-port
-          git pull origin main
-          bun run build
-          pm2 restart smart-airport
-        EOF
+            echo "📦 Stashing any local changes..."
+            git stash || true
+
+            echo "⬇️ Pulling latest code from main branch..."
+            git pull origin main --rebase
+
+            echo "📤 Re-applying local changes (if any)..."
+            git stash pop || true
+
+            echo "🔧 Exporting bun path..."
+            export PATH="$HOME/.bun/bin:$PATH"
+
+            echo "🔨 Building the application..."
+            bun run build
+
+            echo "♻️ Restarting application with PM2..."
+            pm2 restart smart-airport
+
+            echo "✅ Deployment finished successfully!"
