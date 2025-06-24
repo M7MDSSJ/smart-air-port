@@ -7,7 +7,7 @@ export class HealthController {
   @Get()
   healthCheck() {
     return {
-      message: "sss test"
+      message: "test mg"
     };
   }
 }
