@@ -252,6 +252,8 @@ export class UserManagementService {
     });
   }
 
+
+
   async getProfile(userId: string): Promise<ProfileResponseDto> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -271,6 +273,8 @@ export class UserManagementService {
     };
   }
 
+
+
   async updateProfile(
     userId: string,
     updateProfileDto: UpdateProfileDto,
@@ -288,10 +292,8 @@ export class UserManagementService {
 
       const updateData: Partial<User> = {};
 
-      if (updateProfileDto.firstName)
-        updateData.firstName = updateProfileDto.firstName;
-      if (updateProfileDto.lastName)
-        updateData.lastName = updateProfileDto.lastName;
+      if (updateProfileDto.firstName) updateData.firstName = updateProfileDto.firstName;
+      if (updateProfileDto.lastName) updateData.lastName = updateProfileDto.lastName;
       if (updateProfileDto.phoneNumber) {
         if (updateProfileDto.phoneNumber !== user.phoneNumber) {
           const phoneExists = await this.userRepository.findByPhoneNumber(
@@ -307,6 +309,9 @@ export class UserManagementService {
         }
         updateData.phoneNumber = updateProfileDto.phoneNumber;
       }
+
+      if (updateProfileDto.country) updateData.country = updateProfileDto.country;
+
       if (updateProfileDto.email && updateProfileDto.email !== user.email) {
         const existingUser = await this.userRepository.findByEmail(
           updateProfileDto.email,
@@ -380,6 +385,8 @@ export class UserManagementService {
       };
     });
   }
+
+
 
   async getById(userId: string): Promise<UserDocument | null> {
     return this.userRepository.findById(userId);
