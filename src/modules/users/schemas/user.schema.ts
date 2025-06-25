@@ -31,35 +31,23 @@ export class User {
   @Prop({ default: false })
   isVerified?: boolean;
 
-
-
-
-
-
-
+  // for email verification
   @Prop()
   verificationToken?: string;
 
   @Prop({ type: Date })
   verificationTokenExpiry?: Date;
 
-  @Prop()
-  resetToken?: string;
-
-  @Prop({ type: Date })
-  resetTokenExpiry?: Date;
-
+  // for password reset
   @Prop()
   resetCode?: string;
 
   @Prop({ type: Date })
   resetCodeExpiry?: Date;
 
+  // for JWT refresh token
   @Prop()
   refreshToken?: string;
-
-
-
 
 
 

@@ -1,11 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  UnauthorizedException,
-  ConflictException,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ConflictException, NotFoundException, Logger, ForbiddenException } from '@nestjs/common';
 import { IUserRepository } from '../repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/register-user.dto';
 import { UpdateProfileDto } from '../dto/updateProfile.dto';
@@ -13,24 +6,27 @@ import { User, UserDocument } from '../schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../../email/email.service';
 import { Inject } from '@nestjs/common';
-import {
-  UserResponseDto,
-  RegisterResponseDto,
-  BasicUserResponseDto,
-} from '../dto/register-response.dto';
+import { UserResponseDto, RegisterResponseDto, BasicUserResponseDto } from '../dto/register-response.dto';
 import { VerifyEmailResponseDto } from '../dto/verifyEmail-response.dto';
 import { ResendVerificationResponseDto } from '../dto/resendVerificationResponse.dto';
 import { LogoutResponseDto } from '../dto/logout-response.dto';
 import { ProfileResponseDto } from '../dto/profile-response.dto';
 
+
 @Injectable()
+
+
 export class UserManagementService {
+
+
   private readonly logger = new Logger(UserManagementService.name);
 
   constructor(
     @Inject('IUserRepository') private readonly userRepository: IUserRepository,
     private readonly emailService: EmailService,
   ) {}
+
+
 
   async getAllUsers(): Promise<{ message: string; users: UserResponseDto[] }> {
     const users = await this.userRepository.findAll();
@@ -40,43 +36,32 @@ export class UserManagementService {
     };
   }
 
+
+
   async register(createUserDto: CreateUserDto): Promise<RegisterResponseDto> {
-    if ('roles' in createUserDto) {
-      throw new BadRequestException('Role assignment is not allowed');
-    }
+
+    if ('roles' in createUserDto) throw new BadRequestException('Role assignment is not allowed');
 
     return this.userRepository.withTransaction(async (session) => {
       // Check for existing email
-      const existingUser = await this.userRepository.findByEmail(
-        createUserDto.email,
-        { session },
-      );
+      const existingUser = await this.userRepository.findByEmail(createUserDto.email, { session } );
       if (existingUser) {
-        this.logger.warn(
-          `Registration failed: Email ${createUserDto.email} already exists`,
-        );
+        this.logger.warn(`Registration failed: Email ${createUserDto.email} already exists`);
         throw new ConflictException('Email already exists');
       }
 
       // Check for existing phone number (if provided)
       if (createUserDto.phoneNumber) {
-        const existingPhone = await this.userRepository.findByPhoneNumber(
-          createUserDto.phoneNumber,
-          { session },
-        );
+        const existingPhone = await this.userRepository.findByPhoneNumber(createUserDto.phoneNumber, { session });
         if (existingPhone) {
-          this.logger.warn(
-            `Registration failed: Phone number ${createUserDto.phoneNumber} already exists`,
-          );
+          this.logger.warn(`Registration failed: Phone number ${createUserDto.phoneNumber} already exists`);
           throw new ConflictException('Phone number already exists');
         }
       }
 
       // Determine roles (admin for first user, user for others)
-      const userCount = await this.userRepository.countByRole('admin', {
-        session,
-      });
-      const assignedRoles = userCount === 0 ? ['admin'] : ['user'];
+      const userCount = await this.userRepository.countByRole('admin', {session});
+      const assignedRoles = userCount == 0 ? ['admin'] : ['user'];
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
@@ -85,18 +70,16 @@ export class UserManagementService {
       let birthdate: Date | undefined;
       if (createUserDto.birthdate) {
         try {
+
           birthdate = new Date(createUserDto.birthdate);
+
           if (isNaN(birthdate.getTime())) {
-            this.logger.error(
-              `Invalid birthdate format: ${createUserDto.birthdate}`,
-            );
+            this.logger.error(`Invalid birthdate format: ${createUserDto.birthdate}`);
             throw new BadRequestException('Invalid birthdate format');
           }
+
         } catch (error) {
-          this.logger.error(
-            `Failed to parse birthdate: ${createUserDto.birthdate}`,
-            error,
-          );
+          this.logger.error(`Failed to parse birthdate: ${createUserDto.birthdate}`, error);
           throw new BadRequestException('Invalid birthdate format');
         }
       }
@@ -116,23 +99,11 @@ export class UserManagementService {
 
       // Send verification email
       try {
-        await this.emailService.sendVerificationEmail(
-          savedUser.email,
-          savedUser.verificationToken,
-        );
+        await this.emailService.sendVerificationEmail(savedUser.email, savedUser.verificationToken);
       } catch (error) {
-        this.logger.error(
-          `Failed to send verification email to ${savedUser.email}`,
-          error,
-        );
-        await this.userRepository.update(
-          savedUser._id.toString(),
-          { needsEmailResend: true },
-          { session },
-        );
-        throw new BadRequestException(
-          'Failed to send verification email. Please try resending.',
-        );
+        this.logger.error(`Failed to send verification email to ${savedUser.email}`, error);
+        await this.userRepository.update( savedUser._id.toString(), { needsEmailResend: true }, { session });
+        throw new BadRequestException('Failed to send verification email. Please try resending.');
       }
 
       const userResponse = this.getBasicUserFields(savedUser);
@@ -140,54 +111,45 @@ export class UserManagementService {
       return {
         success: true,
         data: {
-          message:
-            userCount === 0
-              ? 'First admin user created successfully'
-              : 'User registered successfully, Check your Email for code verification',
+          message: userCount == 0? 'First admin user created successfully' : 'User registered successfully, Check your Email for code verification',
           user: userResponse,
         },
       };
     });
   }
 
-  async verifyEmail(
-    email: string,
-    code: string,
-  ): Promise<VerifyEmailResponseDto> {
+
+
+  async verifyEmail( email: string, code: string ): Promise<VerifyEmailResponseDto> {
     return this.userRepository.withTransaction(async (session) => {
+
       const user = await this.userRepository.findByEmail(email, { session });
+
       if (!user) {
         this.logger.warn(`Email verification failed: Email ${email} not found`);
         throw new NotFoundException('Email not found');
       }
+
       if (!user.verificationToken || !user.verificationTokenExpiry) {
-        this.logger.warn(
-          `Email verification failed: No verification code for ${email}`,
-        );
-        throw new BadRequestException(
-          'No verification code found for this email',
-        );
+        this.logger.warn(`Email verification failed: No verification code for ${email}`);
+        throw new BadRequestException('No verification code found for this email');
       }
-      if (user.verificationToken !== code) {
-        this.logger.warn(
-          `Email verification failed: Invalid code for ${email}`,
-        );
+      if (user.verificationToken != code) {
+        this.logger.warn(`Email verification failed: Invalid code for ${email}`);
         throw new BadRequestException('Invalid verification code');
       }
       const expirationDate = new Date(user.verificationTokenExpiry);
       const currentDate = new Date();
       if (expirationDate < currentDate) {
-        this.logger.warn(
-          `Email verification failed: Code expired for ${email}`,
-        );
+        this.logger.warn(`Email verification failed: Code expired for ${email}`);
         throw new BadRequestException('Verification code has expired');
       }
+
       if (user.isVerified) {
-        this.logger.warn(
-          `Email verification failed: ${email} already verified`,
-        );
+        this.logger.warn(`Email verification failed: ${email} already verified`);
         throw new BadRequestException('User is already verified');
       }
+
       const updatedUser = await this.userRepository.update(
         user._id.toString(),
         {
@@ -196,37 +158,36 @@ export class UserManagementService {
         },
         { session },
       );
+
       if (!updatedUser) {
-        this.logger.error(
-          `Email verification failed: Failed to update user ${email}`,
-        );
+        this.logger.error(`Email verification failed: Failed to update user ${email}`);
         throw new NotFoundException('Failed to update user verification');
       }
+
       this.logger.log(`Email ${email} verified successfully`);
       return {
         success: true,
         data: { message: 'Email verified successfully' },
       };
+
     });
   }
 
-  async resendVerificationEmail(
-    email: string,
-  ): Promise<ResendVerificationResponseDto> {
+  async resendVerificationEmail(email: string,): Promise<ResendVerificationResponseDto> {
     return this.userRepository.withTransaction(async (session) => {
+
       const user = await this.userRepository.findByEmail(email, { session });
+
       if (!user) {
-        this.logger.warn(
-          `Resend verification failed: Email ${email} not found`,
-        );
+        this.logger.warn(`Resend verification failed: Email ${email} not found`);
         throw new NotFoundException('Email not found');
       }
-      if (user.isVerified) {
-        this.logger.warn(
-          `Resend verification failed: ${email} already verified`,
-        );
+
+      if(user.isVerified) {
+        this.logger.warn(`Resend verification failed: ${email} already verified`);
         throw new BadRequestException('User is already verified');
       }
+
       const verificationCode = this.generateCode();
       const verificationTokenExpiry = new Date(Date.now() + 3600000);
       const updatedUser = await this.userRepository.update(
@@ -234,36 +195,43 @@ export class UserManagementService {
         { verificationToken: verificationCode, verificationTokenExpiry },
         { session },
       );
+
       if (!updatedUser) {
-        this.logger.error(
-          `Resend verification failed: Failed to update user ${email}`,
-        );
+        this.logger.error(`Resend verification failed: Failed to update user ${email}`);
         throw new NotFoundException('Failed to update user');
       }
+
       await this.emailService.sendVerificationEmail(
         user.email,
         verificationCode,
       );
+
       this.logger.log(`Verification email resent to ${email}`);
+
       return {
         success: true,
         data: { message: 'Verification email sent successfully' },
       };
+      
     });
   }
 
 
 
   async getProfile(userId: string): Promise<ProfileResponseDto> {
+
     const user = await this.userRepository.findById(userId);
-    if (!user) {
+
+    if(!user) {
       this.logger.warn(`Get profile failed: User ${userId} not found`);
       throw new NotFoundException('User not found');
     }
-    if (!user.isVerified) {
+
+    if(!user.isVerified) {
       this.logger.warn(`Get profile failed: User ${userId} not verified`);
-      throw new UnauthorizedException('Verify your account please');
+      throw new ForbiddenException('Verify your account please');
     }
+
     return {
       success: true,
       data: {
@@ -271,76 +239,75 @@ export class UserManagementService {
         user: this.excludeSensitiveFields(user),
       },
     };
+
   }
 
 
 
-  async updateProfile(
-    userId: string,
-    updateProfileDto: UpdateProfileDto,
-  ): Promise<ProfileResponseDto> {
+  async updateProfile( userId: string, updateProfileDto: UpdateProfileDto): Promise<ProfileResponseDto> {
     return this.userRepository.withTransaction(async (session) => {
+
       const user = await this.userRepository.findById(userId, { session });
       if (!user) {
         this.logger.warn(`Update profile failed: User ${userId} not found`);
         throw new NotFoundException('User not found');
       }
+
       if (!user.isVerified) {
         this.logger.warn(`Update profile failed: User ${userId} not verified`);
-        throw new UnauthorizedException('Verify your account please');
+        throw new ForbiddenException('Verify your account please');
       }
 
       const updateData: Partial<User> = {};
 
       if (updateProfileDto.firstName) updateData.firstName = updateProfileDto.firstName;
+
       if (updateProfileDto.lastName) updateData.lastName = updateProfileDto.lastName;
-      if (updateProfileDto.phoneNumber) {
-        if (updateProfileDto.phoneNumber !== user.phoneNumber) {
-          const phoneExists = await this.userRepository.findByPhoneNumber(
-            updateProfileDto.phoneNumber,
-            { session },
-          );
-          if (phoneExists && phoneExists._id.toString() !== userId) {
-            this.logger.warn(
-              `Update profile failed: Phone number ${updateProfileDto.phoneNumber} already in use`,
-            );
-            throw new ConflictException('Phone number already in use');
-          }
+
+      if (updateProfileDto.phoneNumber != user.phoneNumber) {
+        const phoneExists = await this.userRepository.findByPhoneNumber(
+          updateProfileDto.phoneNumber,
+          { session },
+        );
+        if (phoneExists) {
+          this.logger.warn(`Update profile failed: Phone number ${updateProfileDto.phoneNumber} already in use`);
+          throw new ConflictException('Phone number already in use');
         }
         updateData.phoneNumber = updateProfileDto.phoneNumber;
       }
 
       if (updateProfileDto.country) updateData.country = updateProfileDto.country;
 
-      if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-        const existingUser = await this.userRepository.findByEmail(
-          updateProfileDto.email,
-          { session },
-        );
-        if (existingUser) {
-          this.logger.warn(
-            `Update profile failed: Email ${updateProfileDto.email} already in use`,
-          );
-          throw new ConflictException(
-            'Email is already in use by another account',
-          );
-        }
-        updateData.email = updateProfileDto.email;
-        updateData.isVerified = false;
-        updateData.verificationToken = this.generateCode();
-        updateData.verificationTokenExpiry = new Date(Date.now() + 3600000);
-      }
+      // if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      //   const existingUser = await this.userRepository.findByEmail(
+      //     updateProfileDto.email,
+      //     { session },
+      //   );
+      //   if (existingUser) {
+      //     this.logger.warn(
+      //       `Update profile failed: Email ${updateProfileDto.email} already in use`,
+      //     );
+      //     throw new ConflictException(
+      //       'Email is already in use by another account',
+      //     );
+      //   }
+      //   updateData.email = updateProfileDto.email;
+      //   updateData.isVerified = false;
+      //   updateData.verificationToken = this.generateCode();
+      //   updateData.verificationTokenExpiry = new Date(Date.now() + 3600000);
+      // }
 
-      if (updateProfileDto.gender) updateData.gender = updateProfileDto.gender;
-      if (updateProfileDto.preferredLanguage)
-        updateData.preferredLanguage = updateProfileDto.preferredLanguage;
-      if (updateProfileDto.preferredAirlines)
-        updateData.preferredAirlines = updateProfileDto.preferredAirlines;
-      if (updateProfileDto.deviceType)
-        updateData.deviceType = updateProfileDto.deviceType;
-      if (updateProfileDto.loyaltyProgram)
-        updateData.loyaltyProgram = updateProfileDto.loyaltyProgram;
-      if (updateProfileDto.bookingHistory)
+      if(updateProfileDto.gender) updateData.gender = updateProfileDto.gender;
+
+      if(updateProfileDto.preferredLanguage) updateData.preferredLanguage = updateProfileDto.preferredLanguage;
+
+      if(updateProfileDto.preferredAirlines) updateData.preferredAirlines = updateProfileDto.preferredAirlines;
+
+      if(updateProfileDto.deviceType) updateData.deviceType = updateProfileDto.deviceType;
+
+      if(updateProfileDto.loyaltyProgram) updateData.loyaltyProgram = updateProfileDto.loyaltyProgram;
+
+      if(updateProfileDto.bookingHistory)
         updateData.bookingHistory = updateProfileDto.bookingHistory.map(
           (bh) => ({
             airline: bh.airline,
@@ -348,28 +315,23 @@ export class UserManagementService {
             cabinClass: bh.cabinClass,
           }),
         );
-      if (updateProfileDto.preferredCabinClass)
-        updateData.preferredCabinClass = updateProfileDto.preferredCabinClass;
-      if (updateProfileDto.useRecommendationSystem !== undefined)
-        updateData.useRecommendationSystem =
-          updateProfileDto.useRecommendationSystem;
 
-      const updatedUser = await this.userRepository.update(userId, updateData, {
-        session,
-      });
+      if (updateProfileDto.preferredCabinClass) updateData.preferredCabinClass = updateProfileDto.preferredCabinClass;
+
+      if (updateProfileDto.useRecommendationSystem !== undefined) updateData.useRecommendationSystem = updateProfileDto.useRecommendationSystem;
+
+      const updatedUser = await this.userRepository.update(userId, updateData, {session});
       if (!updatedUser) {
-        this.logger.error(
-          `Update profile failed: Failed to update user ${userId}`,
-        );
+        this.logger.error(`Update profile failed: Failed to update user ${userId}`,);
         throw new NotFoundException('Failed to update user profile');
       }
 
-      if (updateProfileDto.email && updateProfileDto.email !== user.email) {
-        await this.emailService.sendVerificationEmail(
-          updateData.email,
-          updateData.verificationToken,
-        );
-      }
+      // if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      //   await this.emailService.sendVerificationEmail(
+      //     updateData.email,
+      //     updateData.verificationToken,
+      //   );
+      // }
 
       this.logger.log(`Profile updated successfully for user ${userId}`);
       return {
@@ -377,12 +339,11 @@ export class UserManagementService {
         data: {
           message:
             'Profile updated successfully' +
-            (updateProfileDto.email && updateProfileDto.email !== user.email
-              ? ' - Please verify your new email'
-              : ''),
+            (updateProfileDto.email && updateProfileDto.email != user.email? ' - Please verify your new email' : ''),
           user: this.excludeSensitiveFields(updatedUser),
         },
       };
+
     });
   }
 
@@ -438,9 +399,7 @@ export class UserManagementService {
       country: plainUser.country,
       phoneNumber: plainUser.phoneNumber,
       isVerified: plainUser.isVerified,
-      birthdate: plainUser.birthdate
-        ? plainUser.birthdate.toISOString().split('T')[0]
-        : undefined,
+      birthdate: plainUser.birthdate? plainUser.birthdate.toISOString().split('T')[0] : undefined,
     };
   }
 

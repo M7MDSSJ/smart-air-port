@@ -1,11 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, BadRequestException, ForbiddenException, NotFoundException, NotAcceptableException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -33,16 +26,17 @@ export class AuthenticationService {
     private readonly userRepository: IUserRepository,
   ) {}
 
+
+
   async validateUser(loginDto: LoginUserDto): Promise<LoginResponseDto> {
-    const user = await this.userRepository.findByEmailWithPassword(
-      loginDto.email,
-    );
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
+
+    const user = await this.userRepository.findByEmailWithPassword(loginDto.email);
+
+    if(!user || !(await bcrypt.compare(loginDto.password, user.password))) {
+      throw new BadRequestException('Invalid credentials');
     }
-    if (!user.isVerified) {
-      throw new UnauthorizedException('Email not verified');
-    }
+
+    if(!user.isVerified) throw new BadRequestException('Email not verified');
 
     return this.userRepository.withTransaction(async (session) => {
       const accessToken = this.jwtService.sign(
@@ -69,14 +63,12 @@ export class AuthenticationService {
           refreshToken,
         },
       };
+      
     });
+
   }
 
-  async generateTokens(
-    userId: string,
-    email: string,
-    roles: string[],
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async generateTokens( userId: string, email: string, roles: string[] ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, email, roles },
       { secret: this.config.get('JWT_SECRET'), expiresIn: '1d' },
@@ -90,6 +82,7 @@ export class AuthenticationService {
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
     try {
+
       console.log('Verifying refresh token...');
       const payload = this.jwtService.verify<{
         sub: string;
@@ -98,21 +91,18 @@ export class AuthenticationService {
       }>(refreshToken, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
+
       console.log('Refresh token verified successfully.');
 
       console.log('Finding and validating user...');
       const user = await this.userRepository.update(
         payload.sub,
         { $set: { refreshToken: null } }, // Clear the old token
-        {
-          query: { refreshToken }, // Additional condition to match refresh token
-          new: false, // Return the original document
-        },
       );
 
       if (!user) {
         console.error('Invalid or expired refresh token.');
-        throw new UnauthorizedException('Invalid or expired refresh token');
+        throw new NotAcceptableException('Invalid or expired refresh token');
       }
 
       console.log('Generating new tokens...');
@@ -132,8 +122,8 @@ export class AuthenticationService {
       };
     } catch (error) {
       console.error('Error refreshing token:', error);
-      if (error instanceof UnauthorizedException) throw error;
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      if (error instanceof NotAcceptableException) throw error;
+      throw new NotAcceptableException('Invalid or expired refresh token');
     }
   }
 
@@ -197,8 +187,6 @@ export class AuthenticationService {
       verificationToken,
       verificationTokenExpiry,
       refreshToken,
-      resetToken,
-      resetTokenExpiry,
       __v,
       ...safeUser
     } = plainUser;

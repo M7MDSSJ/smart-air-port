@@ -92,20 +92,14 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
-  async updateRefreshToken(
-    userId: string,
-    refreshToken: string | null,
-    options?: { session: ClientSession },
-  ): Promise<void> {
+  async updateRefreshToken( userId: string, refreshToken: string | null, options?: { session: ClientSession } ): Promise<void> {
     try {
       console.log(`Updating refresh token for user ID: ${userId}`);
-      await this.userModel
-        .findByIdAndUpdate(
-          userId,
-          { refreshToken },
-          { new: true, session: options?.session ?? null },
-        )
-        .exec();
+      await this.userModel.findByIdAndUpdate(
+        userId,
+        { refreshToken },
+        { new: true, session: options?.session ?? null }
+      ).exec();
       console.log('Refresh token updated successfully.');
     } catch (error) {
       console.error('Error updating refresh token:', error);
