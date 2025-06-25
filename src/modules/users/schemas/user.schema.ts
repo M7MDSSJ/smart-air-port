@@ -3,6 +3,7 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User {
+
   @Prop({ required: true })
   firstName: string;
 
@@ -30,6 +31,12 @@ export class User {
   @Prop({ default: false })
   isVerified?: boolean;
 
+
+
+
+
+
+
   @Prop()
   verificationToken?: string;
 
@@ -51,12 +58,12 @@ export class User {
   @Prop()
   refreshToken?: string;
 
-  @Prop({ type: Date })
-  createdAt?: Date;
 
-  @Prop({ type: Date })
-  updatedAt?: Date;
 
+
+
+
+  // this fields not used in the application, but can be used in the future
   @Prop()
   gender?: string;
 
@@ -98,6 +105,7 @@ export class User {
 
   @Prop({ default: false })
   useRecommendationSystem?: boolean;
+
 }
 
 export type UserDocument = User & Document & { _id: Types.ObjectId };
