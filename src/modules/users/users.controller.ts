@@ -1,17 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Put,
-  UseGuards,
-  Get,
-  Patch,
-  UnauthorizedException,
-  Query,
-  Param,
-  Delete,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Put, UseGuards, Get, Patch, UnauthorizedException, Param, Delete, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserManagementService } from './services/user-management.service';
 import { AuthenticationService } from './services/authentication.service';
@@ -26,12 +13,10 @@ import { RefreshTokenDto } from './dto/refreshToken.dto';
 import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
 import { UpdateUserRolesDto } from './dto/update-user-roles.dto';
 import { UpdateProfileDto } from './dto/updateProfile.dto';
-import { UserDocument } from './schemas/user.schema';
 import { User } from '../../common/decorators/user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Role } from '../../common/enums/role.enum';
-import { ErrorResponseDto } from './dto/error-response.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
 import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
 
@@ -44,7 +29,7 @@ export class UsersController {
   ) {}
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.Admin, Role.Mod)
+  @Roles(Role.Admin)
   @Get('all')
   async getAllUsers() {
     return this.userManagementService.getAllUsers();
@@ -57,19 +42,12 @@ export class UsersController {
 
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
-    return this.userManagementService.verifyEmail(
-      verifyEmailDto.email,
-      verifyEmailDto.code,
-    );
+    return this.userManagementService.verifyEmail( verifyEmailDto.email, verifyEmailDto.code );
   }
 
   @Post('resend-verification')
-  async resendVerificationEmail(
-    @Body() resendEmailDto: ResendEmailVerificationDto,
-  ) {
-    return this.userManagementService.resendVerificationEmail(
-      resendEmailDto.email,
-    );
+  async resendVerificationEmail( @Body() resendEmailDto: ResendEmailVerificationDto ) {
+    return this.userManagementService.resendVerificationEmail(resendEmailDto.email);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -89,9 +67,6 @@ export class UsersController {
     @User() user: JwtUser,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    if (!user || !user.id) {
-      throw new UnauthorizedException('User not found');
-    }
     return this.passwordResetService.changePassword(user.id, changePasswordDto);
   }
 
@@ -99,42 +74,29 @@ export class UsersController {
   async requestPasswordReset(
     @Body() requestPasswordResetDto: RequestResetPasswordDto,
   ) {
-    return this.passwordResetService.requestPasswordReset(
-      requestPasswordResetDto.email,
-    );
+    return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
   }
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    if (!resetPasswordDto.code || !resetPasswordDto.newPassword) {
-      throw new BadRequestException('Reset code and new password are required');
-    }
     return this.passwordResetService.resetPassword(resetPasswordDto);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   async getProfile(@User() user: JwtUser) {
-    if (!user || !user.id) {
-      throw new UnauthorizedException('Invalid user credentials');
-    }
     return this.userManagementService.getProfile(user.id);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
-  async updateProfile(
-    @User() user: JwtUser,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ): Promise<ProfileResponseDto> {
-    if (!user || !user.id) {
-      throw new UnauthorizedException('Invalid user credentials');
-    }
-    return this.userManagementService.updateProfile(
-      user.id.toString(),
-      updateProfileDto,
-    );
+  async updateProfile( @User() user: JwtUser, @Body() updateProfileDto: UpdateProfileDto ): Promise<ProfileResponseDto> {
+    return this.userManagementService.updateProfile( user.id.toString(), updateProfileDto );
   }
+
+  //////// continu from here //////////
+  //////// continu from here //////////
+  //////// continu from here //////////
 
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
@@ -154,14 +116,14 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.Admin, Role.Mod)
+  @Roles(Role.Admin)
   @Get('admin-dashboard')
   getAdminDashboard() {
     return { message: 'Admin-only content' };
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.Admin, Role.Mod)
+  @Roles(Role.Admin)
   @Get('flight-management')
   manageFlights() {
     return { message: 'Flight management dashboard' };
