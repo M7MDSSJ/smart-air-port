@@ -6,9 +6,12 @@ import { IUserRepository } from './user.repository.interface';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
+
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
+
+
 
   async withTransaction<T>(
     callback: (session: ClientSession) => Promise<T>,
@@ -27,12 +30,16 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+
+
   async findAll(options?: { session: ClientSession }): Promise<UserDocument[]> {
     return this.userModel
       .find()
       .session(options?.session ?? null)
       .exec();
   }
+
+
 
   async findByEmail(
     email: string,
@@ -44,6 +51,8 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+
+
   async findByEmailWithPassword(
     email: string,
     options?: { session: ClientSession },
@@ -54,6 +63,8 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+
+
   async findByIdWithPassword(
     userId: string,
     options?: { session: ClientSession },
@@ -64,6 +75,9 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+
+
+
   async findById(
     userId: string,
     options?: { session: ClientSession },
@@ -73,6 +87,8 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+
+
 
   async create(
     user: Partial<User>,
@@ -92,14 +108,12 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+
+
   async updateRefreshToken( userId: string, refreshToken: string | null, options?: { session: ClientSession } ): Promise<void> {
     try {
       console.log(`Updating refresh token for user ID: ${userId}`);
-      await this.userModel.findByIdAndUpdate(
-        userId,
-        { refreshToken },
-        { new: true, session: options?.session ?? null }
-      ).exec();
+      await this.userModel.findByIdAndUpdate( userId, { refreshToken }, { new: true, session: options?.session ?? null } ).exec();
       console.log('Refresh token updated successfully.');
     } catch (error) {
       console.error('Error updating refresh token:', error);
@@ -107,27 +121,20 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async findByPhoneNumber(
-    phoneNumber: string,
-    options?: { session: ClientSession },
-  ): Promise<UserDocument | null> {
-    return this.userModel
-      .findOne({ phoneNumber })
-      .session(options?.session ?? null)
-      .exec();
+
+
+  async findByPhoneNumber( phoneNumber: string, options?: { session: ClientSession } ): Promise<UserDocument | null> {
+    return this.userModel.findOne({ phoneNumber }).session(options?.session ?? null).exec();
   }
+
+
 
   async findByIdAndUpdate(
     userId: string,
     options?: { session: ClientSession },
   ): Promise<{ message: string }> {
     await this.userModel
-      .findByIdAndUpdate(
-        userId,
-        { refreshToken: null },
-        { new: true, session: options?.session ?? null },
-      )
-      .exec();
+      .findByIdAndUpdate( userId, { refreshToken: null }, { new: true, session: options?.session ?? null } ).exec();
     return { message: 'Logged out successfully' };
   }
 
@@ -145,6 +152,8 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+
+
   async updateRoles(
     userId: string,
     roles: string[],
@@ -159,18 +168,17 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
-  async delete(
-    email: string,
-    options?: { session: ClientSession },
-  ): Promise<void> {
-    const result = await this.userModel
-      .findOneAndDelete({ email })
-      .session(options?.session ?? null)
-      .exec();
-    if (!result) {
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
+
+
+  async delete( email: string, options?: { session: ClientSession } ): Promise<void> {
+
+    const result = await this.userModel.findOneAndUpdate({ email }, { isDeleted: true }).session(options?.session ?? null).exec();
+
+    if(!result) throw new NotFoundException(`User with email ${email} not found`);
+
   }
+
+
 
   async countByRole(
     role: string,
@@ -182,6 +190,8 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+
+
   async findByResetCode(
     code: string,
     options?: { session: ClientSession },
@@ -192,4 +202,6 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+
+
 }

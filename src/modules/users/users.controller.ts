@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Put, UseGuards, Get, Patch, UnauthorizedException, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Put, UseGuards, Get, Patch, Param, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserManagementService } from './services/user-management.service';
 import { AuthenticationService } from './services/authentication.service';
@@ -28,6 +28,8 @@ export class UsersController {
     private readonly passwordResetService: PasswordResetService,
   ) {}
 
+
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('all')
@@ -35,10 +37,14 @@ export class UsersController {
     return this.userManagementService.getAllUsers();
   }
 
+
+
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userManagementService.register(createUserDto);
   }
+
+
 
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
@@ -50,16 +56,22 @@ export class UsersController {
     return this.userManagementService.resendVerificationEmail(resendEmailDto.email);
   }
 
+
+
   @UseGuards(AuthGuard('jwt'))
   @Post('refresh-token')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
+
+
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.validateUser(loginUserDto);
   }
+
+
 
   @UseGuards(AuthGuard('jwt'))
   @Put('change-password')
@@ -70,6 +82,8 @@ export class UsersController {
     return this.passwordResetService.changePassword(user.id, changePasswordDto);
   }
 
+
+
   @Post('request-password-reset')
   async requestPasswordReset(
     @Body() requestPasswordResetDto: RequestResetPasswordDto,
@@ -77,10 +91,14 @@ export class UsersController {
     return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
   }
 
+
+
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.passwordResetService.resetPassword(resetPasswordDto);
   }
+
+
 
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
@@ -88,46 +106,42 @@ export class UsersController {
     return this.userManagementService.getProfile(user.id);
   }
 
+
+
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   async updateProfile( @User() user: JwtUser, @Body() updateProfileDto: UpdateProfileDto ): Promise<ProfileResponseDto> {
     return this.userManagementService.updateProfile( user.id.toString(), updateProfileDto );
   }
 
-  //////// continu from here //////////
-  //////// continu from here //////////
-  //////// continu from here //////////
+
 
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
-  async logout(
-    @User() user: JwtUser,
-    @Body('refreshToken') refreshToken: string,
-  ) {
-    if (!user || !user.id) {
-      throw new UnauthorizedException('Invalid user credentials');
-    }
+  async logout( @User() user: JwtUser, @Body('refreshToken') refreshToken: string ) {
     return this.userManagementService.logout(user.id, refreshToken);
   }
+
 
   @Delete(':email')
   async deleteUserByEmail(@Param('email') email: string) {
     return this.userManagementService.deleteUserByEmail(email);
   }
 
+
+
+  //////// not used //////////
+  //////// not used //////////
+  //////// not used //////////
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('admin-dashboard')
-  getAdminDashboard() {
-    return { message: 'Admin-only content' };
-  }
+  getAdminDashboard() { return { message: 'Admin-only content' }; }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('flight-management')
-  manageFlights() {
-    return { message: 'Flight management dashboard' };
-  }
+  manageFlights() { return { message: 'Flight management dashboard' }; }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
@@ -136,9 +150,6 @@ export class UsersController {
     @Body() updateUserRolesDto: UpdateUserRolesDto,
     @User() currentUser: JwtUser,
   ) {
-    if (!currentUser || !currentUser.id) {
-      throw new UnauthorizedException('Unauthorized');
-    }
     return this.authService.updateRoles(
       updateUserRolesDto.email,
       updateUserRolesDto,

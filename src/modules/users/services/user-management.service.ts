@@ -353,41 +353,54 @@ export class UserManagementService {
     return this.userRepository.findById(userId);
   }
 
-  async logout(
-    userId: string,
-    providedRefreshToken: string,
-  ): Promise<LogoutResponseDto> {
+
+
+  async logout( userId: string, providedRefreshToken: string ):Promise<LogoutResponseDto> {
     return this.userRepository.withTransaction(async (session) => {
+
       const user = await this.userRepository.findById(userId, { session });
-      if (!user) {
+
+      if(!user) {
         this.logger.warn(`Logout failed: User ${userId} not found`);
         throw new NotFoundException('User not found');
       }
-      if (user.refreshToken !== providedRefreshToken) {
-        this.logger.warn(
-          `Logout failed: Invalid refresh token for user ${userId}`,
-        );
-        throw new UnauthorizedException('Invalid refresh token');
+
+      if(user.refreshToken != providedRefreshToken){
+        this.logger.warn(`Logout failed: Invalid refresh token for user ${userId}`);
+        throw new UnauthorizedException('Invalid refresh token'); // go get new tokens
       }
+
       await this.userRepository.updateRefreshToken(userId, null, { session });
       this.logger.log(`User ${userId} logged out successfully`);
+
       return {
         success: true,
         data: { message: 'User logged out successfully' },
       };
+
     });
   }
 
+
+
   async deleteUserByEmail(email: string): Promise<{ message: string }> {
+
     const user = await this.userRepository.findByEmail(email);
+
     if (!user) {
       this.logger.warn(`Delete user failed: Email ${email} not found`);
       throw new NotFoundException(`User with email ${email} not found`);
     }
+
     await this.userRepository.delete(email);
+
     this.logger.log(`User with email ${email} deleted successfully`);
+
     return { message: `User with email ${email} deleted successfully` };
+    
   }
+
+
 
   private getBasicUserFields(user: User): BasicUserResponseDto {
     const plainUser = (user as UserDocument).toObject();

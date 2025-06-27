@@ -1,11 +1,10 @@
-import { Inject, Injectable, UnauthorizedException, BadRequestException, ForbiddenException, NotFoundException, NotAcceptableException } from '@nestjs/common';
+import { Inject, Injectable, BadRequestException, ForbiddenException, NotFoundException, NotAcceptableException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { IUserRepository } from '../repositories/user.repository.interface';
-import { User, UserDocument } from '../schemas/user.schema';
+import { UserDocument } from '../schemas/user.schema';
 import { LoginUserDto } from '../dto/login-user.dto';
-import { Types } from 'mongoose';
 import { Role } from 'src/common/enums/role.enum';
 import { UpdateUserRolesDto } from '../dto/update-user-roles.dto';
 import { Logger } from '@nestjs/common';
@@ -35,6 +34,8 @@ export class AuthenticationService {
     if(!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new BadRequestException('Invalid credentials');
     }
+
+    if(!user.isDeleted) throw new BadRequestException('User account is deleted');
 
     if(!user.isVerified) throw new BadRequestException('Email not verified');
 
@@ -69,6 +70,8 @@ export class AuthenticationService {
 
   }
 
+
+
   async generateTokens( userId: string, email: string, roles: string[] ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, email, roles },
@@ -80,6 +83,8 @@ export class AuthenticationService {
     );
     return { accessToken, refreshToken };
   }
+
+
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
     try {
@@ -128,48 +133,34 @@ export class AuthenticationService {
     }
   }
 
-  async updateRoles(
-    email: string,
-    updateUserRolesDto: UpdateUserRolesDto,
-    currentUser: JwtUser,
-  ): Promise<UpdateRolesResponseDto> {
-    if (updateUserRolesDto.roles.length === 0) {
-      throw new BadRequestException('User must have at least one role');
-    }
-    if (
-      updateUserRolesDto.roles.some(
-        (role) => !Object.values(Role).includes(role),
-      )
-    ) {
-      throw new BadRequestException('Invalid role provided');
-    }
-    if (!currentUser.roles?.includes(Role.Admin)) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
+
+
+  async updateRoles( email: string, updateUserRolesDto: UpdateUserRolesDto, currentUser: JwtUser ): Promise<UpdateRolesResponseDto> {
+    
+    if(!updateUserRolesDto.roles.length) throw new BadRequestException('User must have at least one role');
+
+    if(updateUserRolesDto.roles.some((role) => !Object.values(Role).includes(role)) ) throw new BadRequestException('Invalid role provided');
+ 
+    if(!currentUser.roles?.includes(Role.Admin)) throw new ForbiddenException('Insufficient permissions');
 
     // Find user by email
     const user = await this.userRepository.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (currentUser.id === user._id.toString()) {
-      throw new BadRequestException('Admins cannot modify their own roles');
-    }
 
-    this.logger.log(
-      `Admin ${currentUser.email} updating roles for user ${user._id}`,
-    );
+    if(!user) throw new NotFoundException('User not found');
+
+    if(currentUser.id === user._id.toString()) throw new BadRequestException('Admins cannot modify their own roles');
+
+    this.logger.log(`Admin ${currentUser.email} updating roles for user ${user._id}`);
 
     return this.userRepository.withTransaction(async (session) => {
+
       const updatedUser = await this.userRepository.updateRoles(
         user.id,
         updateUserRolesDto.roles,
         { session },
       );
 
-      this.logger.log(
-        `Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`,
-      );
+      this.logger.log(`Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`);
 
       return {
         success: true,
@@ -178,8 +169,12 @@ export class AuthenticationService {
           user: this.excludeSensitiveFields(updatedUser),
         },
       };
+
     });
+
   }
+
+
 
   private excludeSensitiveFields(user: UserDocument): UserResponseDto {
     const plainUser = user.toObject();
@@ -196,4 +191,6 @@ export class AuthenticationService {
       id: safeUser._id.toString(),
     } as UserResponseDto;
   }
+
+
 }
