@@ -59,6 +59,7 @@ export class AuthenticationService {
         success: true,
         data: {
           message: 'User logged in successfully',
+          userId: user._id,
           accessToken,
           refreshToken,
         },
