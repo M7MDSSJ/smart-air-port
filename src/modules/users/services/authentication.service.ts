@@ -35,7 +35,7 @@ export class AuthenticationService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    if(!user.isDeleted) throw new BadRequestException('User account is deleted');
+    if(user.isDeleted) throw new BadRequestException('User account is deleted');
 
     if(!user.isVerified) throw new BadRequestException('Email not verified');
 
