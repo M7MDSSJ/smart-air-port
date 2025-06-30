@@ -49,13 +49,10 @@ export class User {
   @Prop()
   refreshToken?: string;
 
-<<<<<<< HEAD
-=======
   // for status of account deleted or not
   @Prop({ default: false })
   isDeleted: boolean;
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 
 
   // this fields not used in the application, but can be used in the future

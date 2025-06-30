@@ -1,20 +1,10 @@
-<<<<<<< HEAD
-import { Inject, Injectable, UnauthorizedException, BadRequestException, ForbiddenException, NotFoundException, NotAcceptableException } from '@nestjs/common';
-=======
 import { Inject, Injectable, BadRequestException, ForbiddenException, NotFoundException, NotAcceptableException } from '@nestjs/common';
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { IUserRepository } from '../repositories/user.repository.interface';
-<<<<<<< HEAD
-import { User, UserDocument } from '../schemas/user.schema';
-import { LoginUserDto } from '../dto/login-user.dto';
-import { Types } from 'mongoose';
-=======
 import { UserDocument } from '../schemas/user.schema';
 import { LoginUserDto } from '../dto/login-user.dto';
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 import { Role } from 'src/common/enums/role.enum';
 import { UpdateUserRolesDto } from '../dto/update-user-roles.dto';
 import { Logger } from '@nestjs/common';
@@ -45,11 +35,8 @@ export class AuthenticationService {
       throw new BadRequestException('Invalid credentials');
     }
 
-<<<<<<< HEAD
-=======
     if(user.isDeleted) throw new BadRequestException('User account is deleted');
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
     if(!user.isVerified) throw new BadRequestException('Email not verified');
 
     return this.userRepository.withTransaction(async (session) => {
@@ -73,10 +60,7 @@ export class AuthenticationService {
         success: true,
         data: {
           message: 'User logged in successfully',
-<<<<<<< HEAD
-=======
           userId: user._id,
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
           accessToken,
           refreshToken,
         },
@@ -86,11 +70,8 @@ export class AuthenticationService {
 
   }
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async generateTokens( userId: string, email: string, roles: string[] ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, email, roles },
@@ -103,11 +84,8 @@ export class AuthenticationService {
     return { accessToken, refreshToken };
   }
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
     try {
 
@@ -155,41 +133,6 @@ export class AuthenticationService {
     }
   }
 
-<<<<<<< HEAD
-  async updateRoles(
-    email: string,
-    updateUserRolesDto: UpdateUserRolesDto,
-    currentUser: JwtUser,
-  ): Promise<UpdateRolesResponseDto> {
-    if (updateUserRolesDto.roles.length === 0) {
-      throw new BadRequestException('User must have at least one role');
-    }
-    if (
-      updateUserRolesDto.roles.some(
-        (role) => !Object.values(Role).includes(role),
-      )
-    ) {
-      throw new BadRequestException('Invalid role provided');
-    }
-    if (!currentUser.roles?.includes(Role.Admin)) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
-
-    // Find user by email
-    const user = await this.userRepository.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (currentUser.id === user._id.toString()) {
-      throw new BadRequestException('Admins cannot modify their own roles');
-    }
-
-    this.logger.log(
-      `Admin ${currentUser.email} updating roles for user ${user._id}`,
-    );
-
-    return this.userRepository.withTransaction(async (session) => {
-=======
 
 
   async updateRoles( email: string, updateUserRolesDto: UpdateUserRolesDto, currentUser: JwtUser ): Promise<UpdateRolesResponseDto> {
@@ -211,20 +154,13 @@ export class AuthenticationService {
 
     return this.userRepository.withTransaction(async (session) => {
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
       const updatedUser = await this.userRepository.updateRoles(
         user.id,
         updateUserRolesDto.roles,
         { session },
       );
 
-<<<<<<< HEAD
-      this.logger.log(
-        `Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`,
-      );
-=======
       this.logger.log(`Roles updated for ${user.email}: ${updateUserRolesDto.roles.join(', ')}`);
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 
       return {
         success: true,
@@ -233,11 +169,6 @@ export class AuthenticationService {
           user: this.excludeSensitiveFields(updatedUser),
         },
       };
-<<<<<<< HEAD
-    });
-  }
-
-=======
 
     });
 
@@ -245,7 +176,6 @@ export class AuthenticationService {
 
 
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   private excludeSensitiveFields(user: UserDocument): UserResponseDto {
     const plainUser = user.toObject();
     const {
@@ -261,9 +191,6 @@ export class AuthenticationService {
       id: safeUser._id.toString(),
     } as UserResponseDto;
   }
-<<<<<<< HEAD
-=======
 
 
->>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 }
