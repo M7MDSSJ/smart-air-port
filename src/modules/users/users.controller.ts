@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Controller, Post, Body, Put, UseGuards, Get, Patch, UnauthorizedException, Param, Delete, BadRequestException } from '@nestjs/common';
+=======
+import { Controller, Post, Body, Put, UseGuards, Get, Patch, Param, Delete } from '@nestjs/common';
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 import { AuthGuard } from '@nestjs/passport';
 import { UserManagementService } from './services/user-management.service';
 import { AuthenticationService } from './services/authentication.service';
@@ -28,6 +32,11 @@ export class UsersController {
     private readonly passwordResetService: PasswordResetService,
   ) {}
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('all')
@@ -35,11 +44,21 @@ export class UsersController {
     return this.userManagementService.getAllUsers();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.userManagementService.register(createUserDto);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Post('verify-email')
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return this.userManagementService.verifyEmail( verifyEmailDto.email, verifyEmailDto.code );
@@ -50,17 +69,32 @@ export class UsersController {
     return this.userManagementService.resendVerificationEmail(resendEmailDto.email);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @UseGuards(AuthGuard('jwt'))
   @Post('refresh-token')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.validateUser(loginUserDto);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @UseGuards(AuthGuard('jwt'))
   @Put('change-password')
   async changePassword(
@@ -70,6 +104,11 @@ export class UsersController {
     return this.passwordResetService.changePassword(user.id, changePasswordDto);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Post('request-password-reset')
   async requestPasswordReset(
     @Body() requestPasswordResetDto: RequestResetPasswordDto,
@@ -77,23 +116,39 @@ export class UsersController {
     return this.passwordResetService.requestPasswordReset(requestPasswordResetDto.email);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.passwordResetService.resetPassword(resetPasswordDto);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   async getProfile(@User() user: JwtUser) {
     return this.userManagementService.getProfile(user.id);
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   async updateProfile( @User() user: JwtUser, @Body() updateProfileDto: UpdateProfileDto ): Promise<ProfileResponseDto> {
     return this.userManagementService.updateProfile( user.id.toString(), updateProfileDto );
   }
 
+<<<<<<< HEAD
   //////// continu from here //////////
   //////// continu from here //////////
   //////// continu from here //////////
@@ -110,24 +165,51 @@ export class UsersController {
     return this.userManagementService.logout(user.id, refreshToken);
   }
 
+=======
+
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('logout')
+  async logout( @User() user: JwtUser, @Body('refreshToken') refreshToken: string ) {
+    return this.userManagementService.logout(user.id, refreshToken);
+  }
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   @Delete(':email')
   async deleteUserByEmail(@Param('email') email: string) {
     return this.userManagementService.deleteUserByEmail(email);
   }
 
+<<<<<<< HEAD
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('admin-dashboard')
   getAdminDashboard() {
     return { message: 'Admin-only content' };
   }
+=======
+
+
+  //////// not used //////////
+  //////// not used //////////
+  //////// not used //////////
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.Admin)
+  @Get('admin-dashboard')
+  getAdminDashboard() { return { message: 'Admin-only content' }; }
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
   @Get('flight-management')
+<<<<<<< HEAD
   manageFlights() {
     return { message: 'Flight management dashboard' };
   }
+=======
+  manageFlights() { return { message: 'Flight management dashboard' }; }
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.Admin)
@@ -136,9 +218,12 @@ export class UsersController {
     @Body() updateUserRolesDto: UpdateUserRolesDto,
     @User() currentUser: JwtUser,
   ) {
+<<<<<<< HEAD
     if (!currentUser || !currentUser.id) {
       throw new UnauthorizedException('Unauthorized');
     }
+=======
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
     return this.authService.updateRoles(
       updateUserRolesDto.email,
       updateUserRolesDto,

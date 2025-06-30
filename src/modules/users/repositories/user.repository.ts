@@ -6,10 +6,19 @@ import { IUserRepository } from './user.repository.interface';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
+<<<<<<< HEAD
+=======
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async withTransaction<T>(
     callback: (session: ClientSession) => Promise<T>,
   ): Promise<T> {
@@ -27,6 +36,11 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findAll(options?: { session: ClientSession }): Promise<UserDocument[]> {
     return this.userModel
       .find()
@@ -34,6 +48,11 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findByEmail(
     email: string,
     options?: { session: ClientSession },
@@ -44,6 +63,11 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findByEmailWithPassword(
     email: string,
     options?: { session: ClientSession },
@@ -54,6 +78,11 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findByIdWithPassword(
     userId: string,
     options?: { session: ClientSession },
@@ -64,6 +93,12 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findById(
     userId: string,
     options?: { session: ClientSession },
@@ -74,6 +109,11 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async create(
     user: Partial<User>,
     options?: { session: ClientSession },
@@ -92,6 +132,7 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
   async updateRefreshToken( userId: string, refreshToken: string | null, options?: { session: ClientSession } ): Promise<void> {
     try {
       console.log(`Updating refresh token for user ID: ${userId}`);
@@ -100,6 +141,14 @@ export class UserRepository implements IUserRepository {
         { refreshToken },
         { new: true, session: options?.session ?? null }
       ).exec();
+=======
+
+
+  async updateRefreshToken( userId: string, refreshToken: string | null, options?: { session: ClientSession } ): Promise<void> {
+    try {
+      console.log(`Updating refresh token for user ID: ${userId}`);
+      await this.userModel.findByIdAndUpdate( userId, { refreshToken }, { new: true, session: options?.session ?? null } ).exec();
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
       console.log('Refresh token updated successfully.');
     } catch (error) {
       console.error('Error updating refresh token:', error);
@@ -107,6 +156,7 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+<<<<<<< HEAD
   async findByPhoneNumber(
     phoneNumber: string,
     options?: { session: ClientSession },
@@ -117,17 +167,31 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+=======
+
+
+  async findByPhoneNumber( phoneNumber: string, options?: { session: ClientSession } ): Promise<UserDocument | null> {
+    return this.userModel.findOne({ phoneNumber }).session(options?.session ?? null).exec();
+  }
+
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findByIdAndUpdate(
     userId: string,
     options?: { session: ClientSession },
   ): Promise<{ message: string }> {
     await this.userModel
+<<<<<<< HEAD
       .findByIdAndUpdate(
         userId,
         { refreshToken: null },
         { new: true, session: options?.session ?? null },
       )
       .exec();
+=======
+      .findByIdAndUpdate( userId, { refreshToken: null }, { new: true, session: options?.session ?? null } ).exec();
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
     return { message: 'Logged out successfully' };
   }
 
@@ -145,6 +209,11 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async updateRoles(
     userId: string,
     roles: string[],
@@ -159,6 +228,7 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
   async delete(
     email: string,
     options?: { session: ClientSession },
@@ -172,6 +242,20 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+=======
+
+
+  async delete( email: string, options?: { session: ClientSession } ): Promise<void> {
+
+    const result = await this.userModel.findOneAndUpdate({ email }, { isDeleted: true }).session(options?.session ?? null).exec();
+
+    if(!result) throw new NotFoundException(`User with email ${email} not found`);
+
+  }
+
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async countByRole(
     role: string,
     options?: { session: ClientSession },
@@ -182,6 +266,11 @@ export class UserRepository implements IUserRepository {
       .exec();
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
   async findByResetCode(
     code: string,
     options?: { session: ClientSession },
@@ -192,4 +281,9 @@ export class UserRepository implements IUserRepository {
       .session(options?.session ?? null)
       .exec();
   }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> deed8c1292e66803a57ad369fda12775a2f8ee53
 }
