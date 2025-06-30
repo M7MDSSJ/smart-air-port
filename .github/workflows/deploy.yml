@@ -30,6 +30,7 @@ jobs:
             git pull origin main
 
             echo "Building application..."
+            bun install
             bun run build
 
             echo "Restarting application with PM2..."
