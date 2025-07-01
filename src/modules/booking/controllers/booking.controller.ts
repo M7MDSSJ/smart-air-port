@@ -19,12 +19,16 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { VerifiedUserGuard } from 'src/common/guards/verifiedUser.guard';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtUser } from 'src/common/interfaces/jwtUser.interface';
+import { AgendaService } from 'src/modules/agenda/agenda.service';
 
 @Controller('booking')
 export class BookingController {
   private readonly logger = new Logger(BookingController.name);
 
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private agendaService: AgendaService,
+  ) {}
 
   @Post('book-flight')
   @UseGuards(JwtAuthGuard, VerifiedUserGuard)
@@ -40,6 +44,15 @@ export class BookingController {
       user.id,
       createBookingDto,
     );
+
+    // send notification to user
+    await this.agendaService.scheduleNotification({
+      topic: user.id,
+      title: 'تنبيه بموعد الرحلة',
+      body: 'اقترب موعد الرحلة برجاء الذهاب لرؤية تفاصيل الرحلة',
+      bookingId: booking._id.toString(),
+      departureDate: booking.departureDate.toISOString(),
+    })
 
     return {
       success: true,

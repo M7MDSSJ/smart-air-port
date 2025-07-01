@@ -43,6 +43,7 @@
     "@types/date-fns": "^2.6.3",
     "@types/mongoose": "^5.11.97",
     "@types/qrcode": "^1.5.5",
+    "agenda": "^5.0.0",
     "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
     "cache-manager": "^6.4.3",

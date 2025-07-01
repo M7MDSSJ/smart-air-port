@@ -12,6 +12,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AgendaModule } from '../agenda/agenda.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     EmailModule,
     UsersModule,
+    AgendaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ScheduleModule.forRoot(),
     JwtModule.registerAsync({

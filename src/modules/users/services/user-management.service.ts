@@ -383,20 +383,13 @@ export class UserManagementService {
 
 
 
-  async deleteUserByEmail(email: string): Promise<{ message: string }> {
+  async deleteUserAccount(userId: string): Promise<{ message: string }> {
 
-    const user = await this.userRepository.findByEmail(email);
+    await this.userRepository.delete(userId);
 
-    if (!user) {
-      this.logger.warn(`Delete user failed: Email ${email} not found`);
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
+    this.logger.log(`User deleted successfully`);
 
-    await this.userRepository.delete(email);
-
-    this.logger.log(`User with email ${email} deleted successfully`);
-
-    return { message: `User with email ${email} deleted successfully` };
+    return { message: `User deleted successfully` };
     
   }
 

@@ -8,4 +8,5 @@ export interface NotificationData {
   title: string;
   body: string;
   bookingId: string;
+  departureDate: string
 }

@@ -14,7 +14,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import {
   I18nModule,
-  HeaderResolver,
   I18nService,
   QueryResolver,
   AcceptLanguageResolver,
@@ -27,6 +26,7 @@ import { HealthController } from './app.controller';
 import { NotificationModule } from 'src/modules/notification/notification.module';
 import { FavoritesModule } from 'src/modules/favorites/favorites.module';
 import { PaymentModule } from 'src/modules/payment/payment.module';
+import { AgendaModule } from 'src/modules/agenda/agenda.module';
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -90,6 +90,7 @@ import { PaymentModule } from 'src/modules/payment/payment.module';
     NotificationModule,
     FavoritesModule,
     ScheduleModule.forRoot(),
+    AgendaModule
   ],
   controllers: [HealthController],
   providers: [
@@ -112,7 +113,7 @@ import { PaymentModule } from 'src/modules/payment/payment.module';
       useFactory: (i18n: I18nService) => new TransformInterceptor(i18n),
       inject: [I18nService],
     },
-    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter }
   ],
 })
 export class AppModule {}

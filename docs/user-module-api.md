@@ -1,4 +1,8 @@
 
+if statusCode 401 this means UnauthorizedException so you need to gen new access and refresh tokens 
+if statusCode 406 this means NotAcceptableException so logOut from your application
+
+
 ## Authentication Endpoints
 
 ### 1. Register User
@@ -67,6 +71,7 @@ Authenticate user and receive access/refresh tokens.
   "success": true,
   "data": {
     "message": "User logged in successfully",
+    "userId": "id of user",
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
   }
@@ -401,10 +406,8 @@ Update user roles (admin access only).
 ```
 
 ### 14. Delete User
-**DELETE** `/users/:email`
-**Authentication:** Required (Admin only)
-
-Delete user by email (admin access only).
+**DELETE** `/users/delete-account`
+**Authentication:** Required
 
 **Response (200):**
 ```json
@@ -413,6 +416,15 @@ Delete user by email (admin access only).
   "message": "User deleted successfully"
 }
 ```
+
+
+
+
+
+
+
+
+
 
 ### 15. Admin Dashboard
 **GET** `/users/admin-dashboard`

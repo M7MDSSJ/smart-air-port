@@ -53,3 +53,9 @@ Get Count of new notifications to put on the icon of notifications badge
     "meta": null
 }
 ```
+
+
+
+### Subscripe on totification
+
+you need to subscripe on userId coming from login

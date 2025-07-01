@@ -57,7 +57,7 @@ export interface IUserRepository {
     roles: string[],
     options?: { session: ClientSession },
   ): Promise<UserDocument | null>;
-  delete(email: string, options?: { session: ClientSession }): Promise<void>;
+  delete(userId: string, options?: { session: ClientSession }): Promise<void>;
   countByRole(
     role: string,
     options?: { session: ClientSession },

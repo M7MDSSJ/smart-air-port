@@ -123,9 +123,10 @@ export class UsersController {
   }
 
 
-  @Delete(':email')
-  async deleteUserByEmail(@Param('email') email: string) {
-    return this.userManagementService.deleteUserByEmail(email);
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('delete-account')
+  async deleteUserByEmail( @User() user: JwtUser ) {
+    return this.userManagementService.deleteUserAccount(user.id);
   }
 
 

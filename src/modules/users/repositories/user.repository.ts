@@ -169,11 +169,9 @@ export class UserRepository implements IUserRepository {
 
 
 
-  async delete( email: string, options?: { session: ClientSession } ): Promise<void> {
+  async delete( userId: string, options?: { session: ClientSession } ): Promise<void> {
 
-    const result = await this.userModel.findOneAndUpdate({ email }, { isDeleted: true }).session(options?.session ?? null).exec();
-
-    if(!result) throw new NotFoundException(`User with email ${email} not found`);
+    await this.userModel.findByIdAndUpdate(userId, { isDeleted: true }).session(options?.session ?? null).exec();
 
   }
 
