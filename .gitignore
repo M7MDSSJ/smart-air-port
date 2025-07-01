@@ -42,7 +42,6 @@ lerna-debug.log*
 .env.production.local
 .env.local
 .firebase.json
-src/modules/notification/firebase.json
 
 # temp directory
 .temp
