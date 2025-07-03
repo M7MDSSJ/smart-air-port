@@ -46,8 +46,12 @@ export class UserManagementService {
       // Check for existing email
       const existingUser = await this.userRepository.findByEmail(createUserDto.email, { session } );
       if (existingUser) {
+
+        if(existingUser.isDeleted) throw new BadRequestException('User account is deleted');
+
         this.logger.warn(`Registration failed: Email ${createUserDto.email} already exists`);
         throw new ConflictException('Email already exists');
+        
       }
 
       // Check for existing phone number (if provided)
